@@ -1,0 +1,417 @@
+GREEN CARD APPLICATION SERVICES - REQUIREMENTS
+Last updated: 2026-05-17
+
+Purpose
+-------
+This file is the living requirements document for a Diversity Visa (DV) / Green Card application services webpage. It is for internal planning, product decisions, legal/compliance review, form design, automation design, and future implementation.
+
+Official source baseline
+------------------------
+Use official U.S. government sources as the source of truth before every application season:
+
+1. U.S. Department of State Diversity Visa instructions:
+   https://travel.state.gov/content/travel/en/us-visas/immigrate/diversity-visa-program-entry/diversity-visa-instructions.html
+
+2. Official DV entry / entrant status website:
+   https://dvprogram.state.gov/
+
+3. U.S. Department of State photo requirements:
+   https://travel.state.gov/content/travel/en/us-visas/visa-information-resources/photos.html
+
+4. U.S. Department of State fraud warning:
+   https://travel.state.gov/content/travel/en/us-visas/visa-information-resources/fraud.html
+
+5. USCIS Diversity Visa overview:
+   https://www.uscis.gov/green-card/green-card-eligibility/green-card-through-the-diversity-immigrant-visa-program
+
+Important official facts verified on 2026-05-17
+-----------------------------------------------
+1. The Diversity Visa program is administered by the U.S. Department of State, not by private companies.
+
+2. The official entry and status website is https://dvprogram.state.gov/.
+
+3. Up to approximately 55,000 diversity visas are made available annually. Do not claim 130,000 annual green card winners unless a verified official source supports that number for a specific context.
+
+4. The Department of State states there is no cost to register for the DV Program in the currently published DV-2026 materials. A proposed or new $1 registration fee has been discussed publicly, but must be re-verified against the current official DV instructions before publishing pricing for a future cycle.
+
+5. For DV-2026, the registration period began on 2024-10-02 at 12:00 noon Eastern Daylight Time and ended on 2024-11-07 at 12:00 noon Eastern Standard Time.
+
+6. As of 2026-05-17, the DV-2027 registration start date should not be assumed. The Department of State announced that it would publish the start date as soon as practicable. Do not publish a September or October countdown unless the page clearly says it is an estimated planning countdown and not an official deadline.
+
+7. Submission of more than one entry for the same person during a registration period can disqualify all entries for that person.
+
+8. Selection does not guarantee a visa, green card, interview, admission to the United States, or future U.S. citizenship.
+
+9. Entrant Status Check at dvprogram.state.gov is the official way to determine selection. The Department of State does not notify selectees by mailed letter or direct "you won" email.
+
+10. The principal applicant must generally meet the education or work experience requirement: high school education or equivalent, or two years of qualifying work experience as defined in official instructions.
+
+Compliance and legal positioning
+--------------------------------
+Required public disclaimers:
+
+1. We are not a law firm.
+
+2. We are not attorneys, immigration lawyers, accredited representatives, USCIS, the U.S. Department of State, or any U.S. government agency.
+
+3. We do not provide legal advice.
+
+4. We provide paid document review, application preparation assistance, photo compliance review, submission support, recordkeeping, and follow-up support.
+
+5. Customers may submit their own DV entry directly through the official U.S. government website.
+
+6. Our service fee is separate from any government fee.
+
+7. We cannot increase anyone's odds of selection. The DV program is a random lottery.
+
+8. We cannot guarantee selection, visa approval, green card issuance, entry into the United States, or U.S. citizenship.
+
+9. We will only submit information that the customer reviews, confirms, and authorizes.
+
+10. We will provide the customer with their official confirmation number / confirmation page after successful submission.
+
+Marketing language rules:
+
+1. Avoid: "Become a U.S. citizen by applying."
+   Use: "Start your Diversity Visa entry with careful application support."
+
+2. Avoid: "Guaranteed green card."
+   Use: "Professional support to reduce avoidable errors."
+
+3. Avoid: "We improve your chances of winning."
+   Use: "We help make sure your entry is complete, accurate, and submitted during the official window."
+
+4. Avoid using USCIS or Department of State logos in a way that implies endorsement, affiliation, partnership, or government authorization. If official logos are referenced, include clear attribution and use only where permitted by official brand/use rules. Safer alternative: use text links to official sources and original patriotic design elements.
+
+Eligible countries requirement
+------------------------------
+The application form country dropdown must include only countries/areas eligible for the active DV program year.
+
+Critical rule:
+Eligibility is normally based on country of birth / chargeability, not passport, citizenship, or current residence. The form label should say "Country of birth / DV chargeability country" and include help text.
+
+For DV-2026, natives of the following countries were not eligible:
+Bangladesh
+Brazil
+Canada
+China, including Hong Kong SAR
+Colombia
+Cuba
+Dominican Republic
+El Salvador
+Haiti
+Honduras
+India
+Jamaica
+Mexico
+Nigeria
+Pakistan
+Philippines
+South Korea
+Venezuela
+Vietnam
+
+Notes:
+1. Macau SAR and Taiwan were eligible under DV-2026 rules.
+2. Some dependent territories are charged to the governing country. Example from official instructions: Macau SAR should select Portugal, and Martinique should select France.
+3. Eligibility changes by program year. The site must support a maintained country list per DV year, not hard-coded permanent eligibility.
+4. Build a separate "Eligible Countries" page that explains that eligibility changes annually and links to the official instructions.
+5. In the form, use the eligible country list for the active DV year only.
+6. Add an admin-maintained country data file later, such as data/dv-2026-eligible-countries.json and data/dv-2027-eligible-countries.json.
+
+Photo requirements
+------------------
+The website and intake form must explain and validate the core official DV digital photo requirements:
+
+1. JPEG (.jpg) format.
+2. File size equal to or less than 240 KB.
+3. Square aspect ratio.
+4. Exactly 600 x 600 pixels.
+5. Color photo.
+6. Taken within the last 6 months.
+7. Plain white or off-white background.
+8. Full-face view directly facing the camera.
+9. Neutral facial expression with both eyes open.
+10. Head size between 50 percent and 69 percent of the image height, from chin to top of head.
+11. No copied/scanned driver license or official document photos.
+12. No digitally enhanced or altered appearance.
+13. No hats/head coverings unless worn daily for religious purposes and the full face remains visible.
+14. No uniforms except religious clothing worn daily.
+
+Photo upload UX requirements:
+
+1. Accept only .jpg/.jpeg.
+2. Check dimensions client-side before upload.
+3. Check file size client-side before upload.
+4. Show a clear pass/fail photo checklist.
+5. Allow the client to request professional photo correction/review.
+6. Store original upload plus any reviewed/corrected version.
+7. Mark photo review status internally: pending, accepted, needs replacement, corrected.
+
+Customer form requirements
+--------------------------
+Initial lead/payment intake should collect enough information to start service, but final DV details may be collected in a secure follow-up process.
+
+Minimum public form fields:
+
+1. First name.
+2. Middle name, optional.
+3. Last/family name.
+4. Date of birth.
+5. Gender as required by the active DV form.
+6. City of birth.
+7. Country of birth / DV chargeability country, eligible countries only.
+8. Current country of residence.
+9. Email address.
+10. Confirm email address.
+11. Phone number.
+12. WhatsApp number, optional if different from phone.
+13. Preferred language.
+14. Marital status.
+15. Number of children under 21.
+16. Highest education level.
+17. Work experience summary, if education requirement may not be met.
+18. Passport document upload if required by the active DV year instructions.
+19. Government ID upload, if needed for identity verification.
+20. DV photo upload.
+21. Consent checkbox confirming accuracy of information.
+22. Consent checkbox authorizing us to prepare and submit the entry on the customer's behalf.
+23. Acknowledgement checkbox: service fee does not guarantee selection or approval.
+24. Acknowledgement checkbox: customer can apply independently on the official government website.
+25. Privacy consent checkbox.
+
+Follow-up collection may include:
+
+1. Full legal name exactly as on passport or official documents.
+2. Previous names, if required.
+3. Mailing address.
+4. Full spouse details, if married.
+5. Full details for all unmarried children under 21, including adopted children and stepchildren where required.
+6. Parents' names, if required by the active form or follow-up process.
+7. Prior DV entries and confirmation numbers, if relevant.
+8. Clarification for alternate chargeability, if claimed.
+9. Additional supporting documents based on country, family status, and program year.
+
+Email confirmation requirement:
+
+1. The form must require email and confirm email fields.
+2. The fields must match before submission.
+3. On submission, send an automatic confirmation email.
+4. Important updates, receipts, and confirmation numbers must be sent to the verified email.
+5. If email bounces, staff must follow up by WhatsApp/phone.
+
+Payment requirements
+--------------------
+Proposed pricing:
+
+1. Service fee: USD 100.
+2. Government DV registration fee: must be verified for the active DV year before collection or publication. Current DV-2026 official source says no cost to register.
+3. Transfer/payment processing allowance: USD 15 if applicable.
+
+Payment method requirements:
+
+1. Support international clients.
+2. Prefer secure payment processors over publishing raw bank or wire credentials on the website.
+3. Evaluate Stripe, PayPal, Wise Business, Payoneer, and bank transfer by invoice.
+4. If wire transfer is offered, show it only after the customer starts checkout or receives an invoice, not as public static credentials.
+5. Payment page must clearly separate our service fee from any government fee.
+6. Receipt must identify the business, fee, date, customer name, and what service was purchased.
+7. Refund policy must be written before launch.
+8. Chargeback and duplicate payment handling must be defined.
+
+Google Drive and Apps Script automation
+---------------------------------------
+Goal:
+When a customer submits the form, create a Google Drive folder using the customer's first and last name and upload all submitted files into that folder.
+
+Folder naming:
+1. Format: LASTNAME_Firstname_DOB_YYYYMMDD_SubmissionID.
+2. Avoid only first and last name because duplicates are likely.
+3. Sanitize unsupported characters.
+4. Store a unique submission ID with every record.
+
+Folder contents:
+1. Customer photo.
+2. Passport document, if collected.
+3. Government ID, if collected.
+4. Payment receipt.
+5. Intake summary PDF or text export.
+6. Staff notes.
+7. Official DV confirmation page after successful submission.
+
+Apps Script requirements:
+1. Receive form submission securely.
+2. Validate required fields server-side.
+3. Verify email and confirm email match.
+4. Create or locate customer folder in the configured parent Google Drive folder.
+5. Upload files to the folder.
+6. Save a submission record to Google Sheets or a database.
+7. Send customer receipt and internal notification.
+8. Return success/failure state to the webpage.
+9. Log errors without exposing private data publicly.
+10. Require anti-spam protections such as reCAPTCHA or equivalent.
+
+Privacy and data protection
+---------------------------
+The website will collect sensitive personal information and identity documents. This requires strict privacy handling.
+
+Privacy policy must explain:
+1. What information we collect.
+2. Why we collect it.
+3. How we use it.
+4. How we store it.
+5. Who can access it.
+6. How long we retain it.
+7. How customers can request deletion.
+8. How customers can contact us.
+9. That documents may be used only for application preparation and customer support.
+
+Operational privacy requirements:
+1. Use HTTPS only.
+2. Do not email full identity documents unless encrypted or strictly necessary.
+3. Limit Google Drive access to authorized staff.
+4. Enable two-factor authentication on all business Google accounts.
+5. Maintain access logs where possible.
+6. Define retention period, for example delete nonessential documents after a defined time unless the customer requests continued support.
+7. Never sell personal data.
+8. Never use customer documents for marketing without explicit written consent.
+
+Website pages
+-------------
+Required pages:
+
+1. Home
+   Positive, trustworthy service overview.
+   Clear "Start Application" call to action.
+   Clear disclaimer that we are not a government agency or law firm.
+   Use patriotic but professional visuals: American flag, diverse smiling applicants, travel/family success imagery.
+
+2. Apply / Start Application
+   The form.
+   Country dropdown limited to eligible countries for the active DV year.
+   Email confirmation.
+   Photo upload validation.
+   Payment flow.
+
+3. Eligible Countries
+   Active DV year list.
+   Excluded countries for transparency.
+   Explanation that eligibility is usually country of birth / chargeability.
+   Link to official instructions.
+
+4. Photo Requirements
+   DV photo checklist.
+   Upload examples or guidance.
+   Link to official State Department photo page.
+
+5. How It Works
+   Step 1: Customer submits information and payment.
+   Step 2: We review documents and photo.
+   Step 3: We prepare the DV entry.
+   Step 4: Customer confirms accuracy.
+   Step 5: We submit during the official window.
+   Step 6: We send official confirmation number/page.
+   Step 7: We follow up on status and next steps.
+
+6. Pricing
+   Service fee.
+   Transfer/payment fees.
+   Government fee status for active year, verified before launch.
+   Refund policy.
+
+7. About Us
+   Miami-based service team.
+   10+ years of application support experience, only if true and verifiable.
+   Not attorneys.
+   Focus on careful, accurate, customer-first support.
+
+8. Legal Disclaimer
+   Not legal advice.
+   Not government affiliated.
+   No guarantee.
+   Official links.
+
+9. Privacy Policy
+   Full privacy policy.
+
+10. Contact
+   Email.
+   Phone.
+   WhatsApp.
+   Miami location.
+
+Header and footer requirements
+------------------------------
+Header:
+1. Keep compact.
+2. Include logo/business name.
+3. Navigation: Home, Apply, Eligible Countries, Pricing, Contact.
+4. Primary CTA: Start Application.
+5. Secondary trust link: Official DV Website.
+
+Footer:
+1. Can include a longer business description.
+2. Include disclaimer.
+3. Include official resource links.
+4. Include contact details.
+5. Include privacy/legal links.
+6. Include "Not affiliated with USCIS, the U.S. Department of State, or any U.S. government agency."
+
+Visual direction
+----------------
+1. Positive and hopeful.
+2. Use American flag imagery carefully and respectfully.
+3. Use diverse smiling people/families, but avoid implying guaranteed success.
+4. Use warm, professional trust design rather than exaggerated promises.
+5. Use real photos or high-quality generated bitmap images, not only gradients or abstract shapes.
+6. Avoid cluttered hero sections.
+7. Important first-screen signals: Green Card support, Diversity Visa application service, Start Application CTA, legal disclaimer.
+
+Stats and facts for content
+---------------------------
+Approved stats/facts to use after source verification:
+
+1. Up to approximately 55,000 diversity visas are available annually.
+2. The program is for natives of countries with historically low rates of immigration to the United States.
+3. The United States declared independence in 1776. In 2026, it is 250 years since 1776.
+4. Selection is random and does not guarantee a visa.
+5. The process has strict rules, deadlines, photo requirements, and family/member disclosure requirements.
+
+Content angle:
+1. Focus on avoiding preventable errors.
+2. Focus on organization, document review, photo review, deadline monitoring, and follow-up.
+3. Make it clear that careful submission matters, but do not claim that most rejections are caused by mistakes unless we can source the claim.
+
+Countdown requirement
+---------------------
+1. Do not show a fake official deadline.
+2. If no official active registration date exists, show "Next registration window: awaiting official announcement."
+3. Optional planning countdown may count to an estimated historical window only if labeled "Estimated planning date, not official."
+4. Once official dates are published, update countdown to the official registration close deadline.
+
+Future technical requirements
+-----------------------------
+1. Build frontend with a fast, accessible web stack.
+2. Use a maintained country eligibility data source per DV year.
+3. Use client-side and server-side validation.
+4. Use secure file upload handling.
+5. Use Google Apps Script or a backend service for Drive upload.
+6. Store submissions in Google Sheets or a database.
+7. Generate customer receipt emails.
+8. Generate internal staff review dashboard or queue.
+9. Add analytics for conversion and drop-off.
+10. Add multilingual support for target countries.
+
+Open business decisions
+-----------------------
+1. Final business name.
+2. Exact Miami address or whether to show only "Miami, Florida."
+3. Verified years of experience.
+4. Payment processor.
+5. Refund policy.
+6. Data retention period.
+7. Target languages.
+8. Whether to offer photo editing/correction as included or paid add-on.
+9. Whether staff will submit directly while customer is present by video/phone, or after written authorization.
+10. Whether to collect all DV fields upfront or use staged intake.
+
