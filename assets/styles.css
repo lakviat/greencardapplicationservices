@@ -85,20 +85,13 @@ a {
   width: 52%;
   height: 54%;
   content: "";
-  background: var(--blue);
+  background:
+    radial-gradient(circle, #fff 0 1.2px, transparent 1.5px) 4px 4px / 8px 7px,
+    var(--blue);
 }
 
 .brand-mark span {
-  position: relative;
-  z-index: 1;
-  width: 8px;
-  height: 8px;
-  background: #fff;
-  border-radius: 50%;
-  box-shadow:
-    10px 0 #fff,
-    0 10px #fff,
-    10px 10px #fff;
+  display: none;
 }
 
 .site-nav {
@@ -180,6 +173,9 @@ a {
   height: 214px;
   content: "";
   background:
+    radial-gradient(circle, #fff 0 2px, transparent 2.4px) 12px 11px / 22px 19px,
+    radial-gradient(circle, #fff 0 2px, transparent 2.4px) 23px 20px / 22px 19px,
+    linear-gradient(var(--blue), var(--blue)) 0 0 / 40% 53.85% no-repeat,
     linear-gradient(#b22234 0 7.69%, #fff 7.69% 15.38%, #b22234 15.38% 23.07%, #fff 23.07% 30.76%, #b22234 30.76% 38.45%, #fff 38.45% 46.14%, #b22234 46.14% 53.83%, #fff 53.83% 61.52%, #b22234 61.52% 69.21%, #fff 69.21% 76.9%, #b22234 76.9% 84.59%, #fff 84.59% 92.28%, #b22234 92.28% 100%);
   border-radius: 8px;
   box-shadow: var(--shadow);
@@ -289,9 +285,21 @@ h3 {
 }
 
 .process-grid {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 18px;
+}
+
+.process-grid::before {
+  position: absolute;
+  top: 44px;
+  right: 9%;
+  left: 9%;
+  height: 3px;
+  content: "";
+  background: linear-gradient(90deg, var(--blue), var(--red));
+  opacity: 0.18;
 }
 
 .process-grid article,
@@ -307,20 +315,49 @@ h3 {
 }
 
 .process-grid article {
-  min-height: 260px;
-  padding: 22px;
+  position: relative;
+  min-height: 210px;
+  overflow: hidden;
+  padding: 58px 20px 22px;
+  box-shadow: 0 10px 28px rgba(23, 32, 51, 0.06);
+}
+
+.process-grid article::before {
+  position: absolute;
+  top: -24px;
+  right: 12px;
+  content: attr(data-step);
+  color: rgba(23, 78, 166, 0.08);
+  font-size: 8.2rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.process-grid article::after {
+  position: absolute;
+  top: 35px;
+  left: 20px;
+  width: 18px;
+  height: 18px;
+  content: "";
+  background: #fff;
+  border: 5px solid var(--blue);
+  border-radius: 50%;
+  box-shadow: 0 0 0 8px #eef5ff;
 }
 
 .process-grid span {
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  margin-bottom: 18px;
-  color: #fff;
-  background: var(--blue);
-  border-radius: 50%;
-  font-weight: 950;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.process-grid h3,
+.process-grid p {
+  position: relative;
+  z-index: 1;
 }
 
 .timeline-section {
@@ -617,6 +654,34 @@ small {
   .faq-grid,
   .intake-form {
     grid-template-columns: 1fr;
+  }
+
+  .process-grid {
+    gap: 14px;
+  }
+
+  .process-grid::before {
+    top: 0;
+    bottom: 0;
+    left: 29px;
+    width: 3px;
+    height: auto;
+    background: linear-gradient(180deg, var(--blue), var(--red));
+  }
+
+  .process-grid article {
+    padding: 24px 20px 22px 68px;
+  }
+
+  .process-grid article::before {
+    top: -15px;
+    right: 12px;
+    font-size: 6rem;
+  }
+
+  .process-grid article::after {
+    top: 26px;
+    left: 21px;
   }
 
   .process-grid article,
