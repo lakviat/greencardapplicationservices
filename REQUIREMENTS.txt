@@ -361,10 +361,17 @@ Added on 2026-05-17:
 6. Add a prominent payment notice: communication and follow-up begin after payment is received.
 7. Keep payment implementation flexible until Stripe / PayPal / Wise / invoice options are chosen.
 8. Use a frontend-only intake form sketch first, then connect secure payment, Google Apps Script, Google Drive upload, and email notifications in later phases.
-9. Make the language layer easy to expand. The first implementation includes a simple in-browser translation dictionary and can later be expanded to separate pages or JSON files for English, Spanish, Russian, Uzbek, Turkish, and other target languages.
+9. Keep the first production page in English only. Do not show a visible language dropdown yet. Later, implement language targeting through a backend or content layer that can serve translated content based on selected market/language.
 10. Deploy the static site to production with GitHub Pages using "Deploy from a branch": main branch, root folder.
 11. Use bright colors, a light background, American flag styling, and hopeful people-focused imagery, while avoiding any implication of government affiliation.
 12. Production custom domain: greencardapplicationservices.com.
+13. Redesign the page around a very clear mobile experience with a large "Submit Application" call to action in the hero and a sticky mobile CTA.
+14. Add a "What does a Green Card give you?" section explaining permanent residence, consular interview steps, legal entry, and possible future citizenship eligibility without promising approval.
+15. Add three visual date/status blocks. For the current DV-2027 situation, show that official registration dates and result-check dates are pending, rather than reusing outdated DV-2026 dates.
+16. Add transparent pricing blocks: one submission $100, two submissions $140, three submissions $155.
+17. Replace the initial process copy with applicant-focused steps: submit form/documents/payment, receive follow-up, review/prepare entry, receive confirmation.
+18. Keep the intake form short. Combine country guidance into the country dropdown helper text: if a country is not listed, it may not be eligible for the active DV year.
+19. Improve the small logo mark so it carries American flag styling.
 
 First-build implementation files:
 
