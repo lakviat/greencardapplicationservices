@@ -224,6 +224,15 @@ Google Drive and Apps Script automation
 Goal:
 When a customer submits the form, create a Google Drive folder using the customer's first and last name and upload all submitted files into that folder.
 
+Canonical applicant uploads parent folder:
+1. Google Drive URL:
+   https://drive.google.com/drive/folders/151_CJaXfXwBt0vBQ4E4SNOdmR2OL0pSH?usp=drive_link
+2. Google Drive folder ID:
+   151_CJaXfXwBt0vBQ4E4SNOdmR2OL0pSH
+3. This folder is the parent container for applicant folders.
+4. Do not upload applicant documents directly into the parent folder.
+5. For each applicant submission, create one child folder inside this parent folder and upload every submitted document into that applicant-specific child folder.
+
 Folder naming:
 1. Format: LASTNAME_Firstname_DOB_YYYYMMDD_SubmissionID.
 2. Avoid only first and last name because duplicates are likely.
