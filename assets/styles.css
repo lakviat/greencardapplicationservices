@@ -64,30 +64,18 @@ a {
   width: 42px;
   height: 42px;
   overflow: hidden;
-  background: #fff;
+  background: url("us-flag.svg") center / cover no-repeat;
   border: 1px solid rgba(16, 33, 61, 0.14);
   border-radius: 8px;
   box-shadow: 0 8px 18px rgba(23, 32, 51, 0.12);
 }
 
 .brand-mark::before {
-  position: absolute;
-  inset: 0;
-  content: "";
-  background:
-    linear-gradient(#b22234 0 14%, #fff 14% 28%, #b22234 28% 42%, #fff 42% 56%, #b22234 56% 70%, #fff 70% 84%, #b22234 84% 100%);
+  display: none;
 }
 
 .brand-mark::after {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 52%;
-  height: 54%;
-  content: "";
-  background:
-    radial-gradient(circle, #fff 0 1.2px, transparent 1.5px) 4px 4px / 8px 7px,
-    var(--blue);
+  display: none;
 }
 
 .brand-mark span {
@@ -173,13 +161,13 @@ a {
   height: 214px;
   content: "";
   background:
-    radial-gradient(circle, #fff 0 2px, transparent 2.4px) 12px 11px / 22px 19px,
-    radial-gradient(circle, #fff 0 2px, transparent 2.4px) 23px 20px / 22px 19px,
-    linear-gradient(var(--blue), var(--blue)) 0 0 / 40% 53.85% no-repeat,
-    linear-gradient(#b22234 0 7.69%, #fff 7.69% 15.38%, #b22234 15.38% 23.07%, #fff 23.07% 30.76%, #b22234 30.76% 38.45%, #fff 38.45% 46.14%, #b22234 46.14% 53.83%, #fff 53.83% 61.52%, #b22234 61.52% 69.21%, #fff 69.21% 76.9%, #b22234 76.9% 84.59%, #fff 84.59% 92.28%, #b22234 92.28% 100%);
-  border-radius: 8px;
+    linear-gradient(110deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0) 34%, rgba(16, 33, 61, 0.12) 64%, rgba(255, 255, 255, 0.16)),
+    url("us-flag.svg") center / cover no-repeat;
+  border-radius: 10px;
   box-shadow: var(--shadow);
   opacity: 0.92;
+  transform: rotate(-1.5deg) skewY(-1.5deg);
+  clip-path: polygon(0 5%, 15% 1%, 31% 4%, 47% 0, 63% 4%, 79% 1%, 100% 5%, 100% 94%, 82% 99%, 65% 95%, 49% 100%, 32% 96%, 15% 99%, 0 94%);
 }
 
 .hero-content {
@@ -284,6 +272,19 @@ h3 {
   background: #fff;
 }
 
+@keyframes stepPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 8px #eef5ff, 0 0 0 8px rgba(23, 78, 166, 0);
+    transform: scale(1);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px #eef5ff, 0 0 0 18px rgba(23, 78, 166, 0.1);
+    transform: scale(1.06);
+  }
+}
+
 .process-grid {
   position: relative;
   display: grid;
@@ -344,6 +345,19 @@ h3 {
   border: 5px solid var(--blue);
   border-radius: 50%;
   box-shadow: 0 0 0 8px #eef5ff;
+  animation: stepPulse 2.8s ease-in-out infinite;
+}
+
+.process-grid article:nth-child(2)::after {
+  animation-delay: 0.35s;
+}
+
+.process-grid article:nth-child(3)::after {
+  animation-delay: 0.7s;
+}
+
+.process-grid article:nth-child(4)::after {
+  animation-delay: 1.05s;
 }
 
 .process-grid span {
@@ -386,6 +400,17 @@ h3 {
   letter-spacing: 0.1em;
 }
 
+.timeline-note {
+  max-width: 980px;
+  margin-top: 18px;
+  padding: 20px 22px;
+  color: var(--navy);
+  background: #fff8e7;
+  border: 1px solid #f1d184;
+  border-radius: 8px;
+  font-weight: 800;
+}
+
 .benefits-section {
   background: #fff;
 }
@@ -401,6 +426,50 @@ h3 {
 .faq-grid article {
   padding: 22px;
   min-height: 190px;
+}
+
+.benefit-grid article {
+  position: relative;
+  overflow: hidden;
+  padding-top: 74px;
+  background:
+    linear-gradient(180deg, rgba(234, 244, 255, 0.9), rgba(255, 255, 255, 0) 52%),
+    #fff;
+}
+
+.benefit-grid article::after {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  content: attr(data-label);
+  color: rgba(23, 78, 166, 0.13);
+  font-size: 1.05rem;
+  font-weight: 950;
+  letter-spacing: 0.02em;
+}
+
+.benefit-icon {
+  position: absolute;
+  top: 20px;
+  left: 22px;
+  width: 36px;
+  height: 36px;
+  background:
+    linear-gradient(var(--blue), var(--blue)) 0 0 / 45% 52% no-repeat,
+    url("us-flag.svg") center / cover no-repeat;
+  border: 1px solid rgba(16, 33, 61, 0.12);
+  border-radius: 50%;
+  box-shadow: 0 10px 22px rgba(23, 32, 51, 0.12);
+}
+
+.benefit-grid h3,
+.benefit-grid p {
+  position: relative;
+  z-index: 1;
+}
+
+.benefit-grid h3 {
+  color: var(--navy);
 }
 
 .pricing-section {
@@ -709,5 +778,11 @@ small {
     border-radius: 8px;
     box-shadow: 0 16px 36px rgba(16, 33, 61, 0.28);
     font-weight: 950;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .process-grid article::after {
+    animation: none;
   }
 }
