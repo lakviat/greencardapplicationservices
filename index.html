@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Careful Diversity Visa application preparation, photo review, submission support, and follow-up for applicants around the world."
+    />
+    <title>Green Card Application Services</title>
+    <link rel="preconnect" href="https://images.unsplash.com" />
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="Green Card Application Services home">
+        <span class="brand-mark">US</span>
+        <span>Green Card Services</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="#service" data-i18n="navService">Service</a>
+        <a href="#apply" data-i18n="navApply">Apply</a>
+        <a href="#payment" data-i18n="navPayment">Payment</a>
+        <a href="#faq" data-i18n="navFaq">FAQ</a>
+      </nav>
+      <div class="header-actions">
+        <select id="languageSelect" class="language-select" aria-label="Select language">
+          <option value="en">EN</option>
+          <option value="es">ES</option>
+          <option value="ru">RU</option>
+        </select>
+        <a class="button button-small" href="#apply" data-i18n="startApplication">Start Application</a>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-media" aria-hidden="true"></div>
+        <div class="hero-content">
+          <p class="eyebrow" data-i18n="heroEyebrow">Diversity Visa application support</p>
+          <h1 data-i18n="heroTitle">Become a U.S. green card holder</h1>
+          <p class="hero-copy" data-i18n="heroCopy">
+            We help you prepare a careful Diversity Visa entry, review your photo, organize your
+            documents, and follow up after submission.
+          </p>
+          <div class="hero-actions">
+            <a class="button" href="#apply" data-i18n="startApplication">Start Application</a>
+            <a class="button button-light" href="#service" data-i18n="howItWorks">How it works</a>
+          </div>
+          <p class="micro-disclaimer" data-i18n="heroDisclaimer">
+            Not a law firm. Not affiliated with USCIS or the U.S. Department of State.
+          </p>
+        </div>
+      </section>
+
+      <section class="trust-strip" aria-label="Service highlights">
+        <div>
+          <strong data-i18n="statVisa">Up to 55,000</strong>
+          <span data-i18n="statVisaLabel">diversity visas annually</span>
+        </div>
+        <div>
+          <strong data-i18n="statFee">$100</strong>
+          <span data-i18n="statFeeLabel">service fee</span>
+        </div>
+        <div>
+          <strong data-i18n="statFollow">Follow-up</strong>
+          <span data-i18n="statFollowLabel">after payment is received</span>
+        </div>
+      </section>
+
+      <section id="service" class="section split">
+        <div>
+          <p class="eyebrow" data-i18n="serviceEyebrow">Trusted service, simple process</p>
+          <h2 data-i18n="serviceTitle">We focus on the details that matter.</h2>
+          <p data-i18n="serviceCopy">
+            The DV entry has strict rules for photos, country eligibility, family details, names,
+            dates, and deadlines. Our job is to help reduce preventable mistakes and keep your
+            application organized.
+          </p>
+        </div>
+        <div class="steps">
+          <article>
+            <span>1</span>
+            <h3 data-i18n="stepOneTitle">Submit request</h3>
+            <p data-i18n="stepOneCopy">Send your basic information, email, phone, and photo.</p>
+          </article>
+          <article>
+            <span>2</span>
+            <h3 data-i18n="stepTwoTitle">Pay service fee</h3>
+            <p data-i18n="stepTwoCopy">Once payment is received, our team contacts you directly.</p>
+          </article>
+          <article>
+            <span>3</span>
+            <h3 data-i18n="stepThreeTitle">Review and submit</h3>
+            <p data-i18n="stepThreeCopy">We review, prepare, confirm details with you, and submit in the official window.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section light-band">
+        <div class="band-content">
+          <p class="eyebrow" data-i18n="paymentNoticeEyebrow">Important payment notice</p>
+          <h2 data-i18n="paymentNoticeTitle">Communication starts after payment is received.</h2>
+          <p data-i18n="paymentNoticeCopy">
+            After we receive your service payment, we will contact you by email, phone, or WhatsApp
+            to continue the application process, request missing details, and confirm next steps.
+          </p>
+        </div>
+      </section>
+
+      <section id="apply" class="section apply-layout">
+        <div class="apply-intro">
+          <p class="eyebrow" data-i18n="applyEyebrow">Start here</p>
+          <h2 data-i18n="applyTitle">Application support request</h2>
+          <p data-i18n="applyCopy">
+            This is the first version of the intake form. Payment processing and secure document
+            upload will be connected in the next build step.
+          </p>
+          <ul class="check-list">
+            <li data-i18n="checkEmail">Email must be entered twice.</li>
+            <li data-i18n="checkCountry">Country field will use eligible DV countries only.</li>
+            <li data-i18n="checkPhoto">Photo review follows official DV requirements.</li>
+          </ul>
+        </div>
+
+        <form class="intake-form" id="intakeForm">
+          <label>
+            <span data-i18n="firstName">First name</span>
+            <input name="firstName" autocomplete="given-name" required />
+          </label>
+          <label>
+            <span data-i18n="lastName">Last name</span>
+            <input name="lastName" autocomplete="family-name" required />
+          </label>
+          <label>
+            <span data-i18n="email">Email</span>
+            <input name="email" type="email" autocomplete="email" required />
+          </label>
+          <label>
+            <span data-i18n="confirmEmail">Confirm email</span>
+            <input name="confirmEmail" type="email" autocomplete="email" required />
+          </label>
+          <label>
+            <span data-i18n="phone">Phone / WhatsApp</span>
+            <input name="phone" type="tel" autocomplete="tel" required />
+          </label>
+          <label>
+            <span data-i18n="country">Country of birth / chargeability</span>
+            <select name="country" required>
+              <option value="" data-i18n="chooseCountry">Choose eligible country</option>
+              <option>Albania</option>
+              <option>Argentina</option>
+              <option>Australia</option>
+              <option>Egypt</option>
+              <option>France</option>
+              <option>Germany</option>
+              <option>Japan</option>
+              <option>Kazakhstan</option>
+              <option>Morocco</option>
+              <option>Poland</option>
+              <option>Portugal</option>
+              <option>Taiwan</option>
+              <option>Turkey</option>
+              <option>Ukraine</option>
+              <option>United Kingdom</option>
+              <option>Uzbekistan</option>
+            </select>
+          </label>
+          <label class="full">
+            <span data-i18n="notes">What language should we use when contacting you?</span>
+            <input name="language" placeholder="English, Spanish, Russian, Uzbek..." />
+          </label>
+          <label class="consent full">
+            <input type="checkbox" required />
+            <span data-i18n="consent">
+              I understand this is paid preparation support, not legal advice or a government service.
+            </span>
+          </label>
+          <button class="button full" type="submit" data-i18n="requestCallback">Request payment details</button>
+          <p class="form-message" id="formMessage" role="status"></p>
+        </form>
+      </section>
+
+      <section id="payment" class="section payment-section">
+        <div>
+          <p class="eyebrow" data-i18n="paymentEyebrow">Payment</p>
+          <h2 data-i18n="paymentTitle">$100 service fee</h2>
+          <p data-i18n="paymentCopy">
+            We plan to support secure online payment first. If Stripe is not available for the
+            final setup, we can add invoice-based options such as PayPal, Wise Business, or bank
+            transfer after review.
+          </p>
+        </div>
+        <div class="payment-card">
+          <strong data-i18n="paymentCardTitle">After payment</strong>
+          <p data-i18n="paymentCardCopy">
+            We contact you, verify your information, review your photo, prepare the entry, and send
+            the official confirmation details after successful submission.
+          </p>
+        </div>
+      </section>
+
+      <section id="faq" class="section faq-section">
+        <p class="eyebrow" data-i18n="faqEyebrow">Clear expectations</p>
+        <h2 data-i18n="faqTitle">Small page. Big clarity.</h2>
+        <div class="faq-grid">
+          <article>
+            <h3 data-i18n="faqOneTitle">Can you guarantee selection?</h3>
+            <p data-i18n="faqOneCopy">No. The DV program is a random lottery. We help with accurate preparation and submission support.</p>
+          </article>
+          <article>
+            <h3 data-i18n="faqTwoTitle">Can I apply myself?</h3>
+            <p data-i18n="faqTwoCopy">Yes. You can apply directly through the official government website during the registration period.</p>
+          </article>
+          <article>
+            <h3 data-i18n="faqThreeTitle">When will you contact me?</h3>
+            <p data-i18n="faqThreeCopy">We begin direct communication after your payment is received and matched to your request.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div>
+        <strong>Green Card Application Services</strong>
+        <p data-i18n="footerCopy">
+          Miami-based application support for Diversity Visa applicants around the world.
+        </p>
+      </div>
+      <p class="footer-disclaimer" data-i18n="footerDisclaimer">
+        Not a law firm. Not legal advice. Not affiliated with USCIS, the U.S. Department of State,
+        or any U.S. government agency. Official DV information: dvprogram.state.gov.
+      </p>
+    </footer>
+
+    <script src="assets/app.js"></script>
+  </body>
+</html>

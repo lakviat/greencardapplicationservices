@@ -340,6 +340,29 @@ Required pages:
    WhatsApp.
    Miami location.
 
+Current first-build website direction
+-------------------------------------
+Added on 2026-05-17:
+
+1. Start with a small, bright, static landing page hosted on GitHub Pages.
+2. Keep the first page focused and not overwhelming.
+3. Use a large first-screen headline such as "Become a U.S. green card holder," while keeping nearby legal disclaimers visible.
+4. Use compact navigation and a compact header.
+5. Emphasize trusted service, careful preparation, and follow-up support.
+6. Add a prominent payment notice: communication and follow-up begin after payment is received.
+7. Keep payment implementation flexible until Stripe / PayPal / Wise / invoice options are chosen.
+8. Use a frontend-only intake form sketch first, then connect secure payment, Google Apps Script, Google Drive upload, and email notifications in later phases.
+9. Make the language layer easy to expand. The first implementation includes a simple in-browser translation dictionary and can later be expanded to separate pages or JSON files for English, Spanish, Russian, Uzbek, Turkish, and other target languages.
+10. Use GitHub Actions for GitHub Pages deployment from the main branch.
+11. Use bright colors, a light background, American flag styling, and hopeful people-focused imagery, while avoiding any implication of government affiliation.
+
+First-build implementation files:
+
+1. index.html
+2. assets/styles.css
+3. assets/app.js
+4. .github/workflows/deploy.yml
+
 Header and footer requirements
 ------------------------------
 Header:
@@ -414,4 +437,3 @@ Open business decisions
 8. Whether to offer photo editing/correction as included or paid add-on.
 9. Whether staff will submit directly while customer is present by video/phone, or after written authorization.
 10. Whether to collect all DV fields upfront or use staged intake.
-
