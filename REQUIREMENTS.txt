@@ -362,15 +362,16 @@ Added on 2026-05-17:
 7. Keep payment implementation flexible until Stripe / PayPal / Wise / invoice options are chosen.
 8. Use a frontend-only intake form sketch first, then connect secure payment, Google Apps Script, Google Drive upload, and email notifications in later phases.
 9. Make the language layer easy to expand. The first implementation includes a simple in-browser translation dictionary and can later be expanded to separate pages or JSON files for English, Spanish, Russian, Uzbek, Turkish, and other target languages.
-10. Use GitHub Actions for GitHub Pages deployment from the main branch.
+10. Deploy the static site to production with GitHub Pages using "Deploy from a branch": main branch, root folder.
 11. Use bright colors, a light background, American flag styling, and hopeful people-focused imagery, while avoiding any implication of government affiliation.
+12. Production custom domain: greencardapplicationservices.com.
 
 First-build implementation files:
 
 1. index.html
 2. assets/styles.css
 3. assets/app.js
-4. .github/workflows/deploy.yml
+4. CNAME
 
 Header and footer requirements
 ------------------------------
