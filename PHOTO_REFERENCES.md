@@ -25,7 +25,14 @@ These notes preserve the photo-example ideas provided during planning without co
 
 ## Implementation Decision
 
-Use our own UI cards and official links instead of embedding unsourced screenshots. This keeps the website cleaner and avoids accidental copyright/source issues.
+Use official Department of State visual examples and composition templates directly where possible. The user-provided screenshots are useful as direction, but we should avoid embedding screenshots from unknown pages unless we confirm the original source and usage rights.
+
+Current website implementation uses:
+
+- Official acceptable photo examples from the Department of State Photo Examples page.
+- Official 600 px digital image head-size template.
+- Official well-composed photo examples.
+- A compact "common rejection risks" checklist for glasses, hats, shadows, and background objects.
 
 ## Validation Button Scope
 

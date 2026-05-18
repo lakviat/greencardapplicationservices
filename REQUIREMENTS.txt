@@ -147,7 +147,7 @@ Photo upload UX requirements:
 5. Allow the client to request professional photo correction/review.
 6. Store original upload plus any reviewed/corrected version.
 7. Mark photo review status internally: pending, accepted, needs replacement, corrected.
-8. Show visual good/bad sample cards for common rejection risks: glasses, hats, head tilt, leaning forward/backward, busy background, shadows, overexposure, blur, and incorrect framing.
+8. Show official Department of State visual examples and composition templates wherever possible, plus compact good/bad checklist cards for common rejection risks: glasses, hats, head tilt, leaning forward/backward, busy background, shadows, overexposure, blur, and incorrect framing.
 9. Preserve planning/reference notes in PHOTO_REFERENCES.md and avoid embedding unsourced third-party screenshots directly unless rights/source are confirmed.
 
 Selfie/photo capture feature requirements:
