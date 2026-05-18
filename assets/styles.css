@@ -854,8 +854,9 @@ small {
 
 .photo-sample-card img {
   width: 100%;
-  height: 128px;
-  object-fit: cover;
+  height: auto;
+  max-height: 220px;
+  object-fit: contain;
   object-position: center;
   padding: 0;
   background: #fff;
@@ -864,7 +865,8 @@ small {
 }
 
 .photo-sample-card-wide img {
-  height: 190px;
+  height: auto;
+  max-height: 230px;
 }
 
 .sample-pass {
@@ -1202,6 +1204,15 @@ small {
   .requirement-steps article::after {
     top: 26px;
     left: 23px;
+  }
+
+  .photo-sample-card-wide {
+    min-height: auto;
+  }
+
+  .photo-sample-card img,
+  .photo-sample-card-wide img {
+    max-height: none;
   }
 }
 
