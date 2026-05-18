@@ -30,9 +30,7 @@ Use official Department of State visual examples and composition templates direc
 Current website implementation uses:
 
 - Official acceptable photo examples from the Department of State Photo Examples page.
-- Official 600 px digital image head-size template.
-- Official well-composed photo examples.
-- A compact "common rejection risks" checklist for glasses, hats, shadows, and background objects.
+- A red-flag photo examples row using official real photo examples as the base image, with visual overlays that demonstrate common failure risks: glasses, tilted pose, background objects, and harsh shadows.
 
 ## Validation Button Scope
 

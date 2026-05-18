@@ -817,7 +817,7 @@ small {
 
 .photo-sample-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 16px;
 }
 
@@ -862,25 +862,111 @@ small {
   border-top: 6px solid var(--red);
 }
 
-.photo-rule-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  min-height: 128px;
+.bad-photo-example {
+  position: relative;
+  height: 128px;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.14)),
+    url("https://travel.state.gov/content/travel/en/us-visas/visa-information-resources/photos/photo-examples/_jcr_content/tsg-rwd-content-page-parsysxxx/image.img.jpg/1595428938234.jpg");
+  background-repeat: no-repeat;
+  background-size: 410px 92px;
+  border: 3px solid var(--red);
+  border-radius: 8px;
 }
 
-.photo-rule-list span {
-  display: grid;
-  place-items: center;
-  min-height: 58px;
-  padding: 8px;
-  color: var(--red);
-  background: #fff5f5;
-  border: 1px solid #f2c2c0;
-  border-radius: 8px;
-  font-size: 0.84rem;
+.bad-photo-example::before,
+.bad-photo-example::after {
+  position: absolute;
+  content: "";
+}
+
+.bad-photo-example::after {
+  right: 10px;
+  bottom: 10px;
+  width: 42px;
+  height: 42px;
+  background:
+    linear-gradient(45deg, transparent 42%, #fff 42% 58%, transparent 58%),
+    linear-gradient(135deg, transparent 42%, #fff 42% 58%, transparent 58%),
+    var(--red);
+  border: 5px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 6px 14px rgba(16, 33, 61, 0.22);
+}
+
+.bad-photo-example span {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  padding: 4px 8px;
+  color: #fff;
+  background: var(--red);
+  border-radius: 999px;
+  font-size: 0.72rem;
   font-weight: 950;
-  text-align: center;
+  text-transform: uppercase;
+}
+
+.bad-photo-glasses {
+  background-color: #fff;
+  background-position: 45% 31px;
+  background-size: 565px 128px;
+}
+
+.bad-photo-glasses::before {
+  top: 53px;
+  left: 50%;
+  width: 72px;
+  height: 24px;
+  transform: translateX(-50%);
+  background:
+    radial-gradient(ellipse at center, rgba(4, 10, 22, 0.72) 0 58%, transparent 60%) left center / 32px 22px no-repeat,
+    radial-gradient(ellipse at center, rgba(4, 10, 22, 0.72) 0 58%, transparent 60%) right center / 32px 22px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) center / 16px 4px no-repeat;
+}
+
+.bad-photo-tilt {
+  background-color: #fff;
+  background-position: 10% 29px;
+  background-size: 565px 128px;
+  transform: rotate(-1deg);
+}
+
+.bad-photo-tilt::before {
+  inset: 0;
+  background: inherit;
+  transform: rotate(-13deg) scale(1.18);
+  transform-origin: center;
+}
+
+.bad-photo-background {
+  background-color: #fff;
+  background-position: 76% 31px;
+  background-size: 565px 128px;
+}
+
+.bad-photo-background::before {
+  inset: 0;
+  background:
+    linear-gradient(90deg, transparent 0 58%, rgba(40, 104, 62, 0.25) 58% 100%),
+    radial-gradient(circle at 80% 31%, #2f7d4b 0 9px, transparent 10px),
+    radial-gradient(circle at 88% 45%, #3f9f5f 0 13px, transparent 14px),
+    radial-gradient(circle at 77% 62%, #2d6d43 0 16px, transparent 17px),
+    linear-gradient(35deg, transparent 0 63%, #a86f39 64% 67%, transparent 68%);
+}
+
+.bad-photo-shadow {
+  background-color: #fff;
+  background-position: 100% 31px;
+  background-size: 565px 128px;
+}
+
+.bad-photo-shadow::before {
+  inset: 0;
+  background: linear-gradient(105deg, rgba(16, 33, 61, 0.44) 0 38%, transparent 39% 100%);
+  mix-blend-mode: multiply;
 }
 
 .selfie-layout {

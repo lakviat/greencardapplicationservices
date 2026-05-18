@@ -65,7 +65,7 @@ Current selfie prototype:
 - Includes a `Validate photo` button that returns a browser-side pass/fail result for dimensions, JPEG output, file size, and a basic plain-background estimate.
 - Provides upload fallback when camera access is blocked.
 - Pulses the capture button after the camera is ready.
-- Shows official Department of State photo examples and composition templates, plus a compact checklist for common rejection risks.
+- Shows official Department of State good photo examples plus red-flag photo cards for glasses, tilt, background objects, and bad lighting.
 - Links to official Department of State photo examples and composition guidance.
 - Runs locally in the browser until secure backend upload is added.
 
