@@ -810,10 +810,16 @@ small {
   align-items: center;
 }
 
+.selfie-camera-widget {
+  display: grid;
+  gap: 14px;
+}
+
 .selfie-preview {
   position: relative;
-  min-height: 360px;
   aspect-ratio: 1;
+  width: min(100%, 430px);
+  margin-inline: auto;
   overflow: hidden;
   background: linear-gradient(180deg, #f7fbff, #fff);
   border: 1px solid var(--line);
@@ -830,38 +836,54 @@ small {
   object-fit: cover;
 }
 
+.selfie-preview video {
+  transform: scaleX(-1);
+}
+
 .selfie-preview::before {
   position: absolute;
   z-index: 2;
-  inset: 28px;
+  inset: 7%;
   content: "";
-  border: 3px dashed rgba(23, 78, 166, 0.28);
-  border-radius: 50%;
+  border: 2px dashed rgba(23, 78, 166, 0.18);
+  border-radius: 8px;
+  pointer-events: none;
 }
 
 .face-guide {
   position: absolute;
   z-index: 3;
-  top: 72px;
+  inset: 8% 12% 9%;
+  background: transparent;
+  border: 2px dashed rgba(23, 78, 166, 0.42);
+  border-radius: 46% 46% 48% 48%;
+  pointer-events: none;
+}
+
+.face-guide::before {
+  position: absolute;
+  top: 11%;
   left: 50%;
-  width: 122px;
-  height: 122px;
+  width: 34%;
+  height: 28%;
+  content: "";
   transform: translateX(-50%);
-  background: #d9e7f7;
+  background: rgba(255, 255, 255, 0.16);
+  border: 2px solid rgba(23, 78, 166, 0.25);
   border-radius: 50%;
 }
 
 .face-guide::after {
   position: absolute;
-  top: 124px;
+  top: 43%;
   left: 50%;
-  width: 168px;
-  height: 150px;
+  width: 58%;
+  height: 32%;
   content: "";
   transform: translateX(-50%);
-  background: #174ea6;
-  border-radius: 52% 52% 20% 20%;
-  opacity: 0.18;
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px solid rgba(23, 78, 166, 0.2);
+  border-radius: 50% 50% 26% 26%;
 }
 
 .requirements-list {
@@ -899,14 +921,16 @@ small {
 }
 
 .selfie-controls {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-top: 20px;
 }
 
 .selfie-controls .button {
   min-height: 46px;
+  width: 100%;
+  text-align: center;
 }
 
 .upload-fallback {
@@ -919,7 +943,7 @@ small {
 
 .selfie-status {
   min-height: 24px;
-  margin-top: 14px;
+  margin: 0;
   color: var(--muted);
   font-weight: 750;
 }
@@ -929,6 +953,11 @@ small {
 }
 
 .mobile-cta {
+  display: none;
+}
+
+.camera-active .mobile-cta,
+.requirements-page .mobile-cta {
   display: none;
 }
 
@@ -1138,6 +1167,11 @@ small {
     border-radius: 8px;
     box-shadow: 0 16px 36px rgba(16, 33, 61, 0.28);
     font-weight: 950;
+  }
+
+  .camera-active .mobile-cta,
+  .requirements-page .mobile-cta {
+    display: none;
   }
 }
 

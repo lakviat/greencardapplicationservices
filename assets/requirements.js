@@ -22,10 +22,25 @@ function showCameraPanel() {
   cameraPanel?.removeAttribute("hidden");
 }
 
+function setCameraActive(isActive) {
+  document.body.classList.toggle("camera-active", isActive);
+}
+
 function stopCamera() {
   if (!activeStream) return;
   activeStream.getTracks().forEach((track) => track.stop());
   activeStream = null;
+  setCameraActive(false);
+}
+
+function waitForVideoMetadata(targetVideo) {
+  if (targetVideo.readyState >= 1 && targetVideo.videoWidth && targetVideo.videoHeight) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    targetVideo.addEventListener("loadedmetadata", resolve, { once: true });
+  });
 }
 
 function blobFromCanvas(targetCanvas, quality) {
@@ -81,12 +96,19 @@ async function renderImageToDvCanvas(source) {
 
 async function startCamera() {
   showCameraPanel();
+  setCameraActive(true);
+  document.querySelector(".selfie-camera-widget")?.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
   resultImage.hidden = true;
   downloadLink.hidden = true;
   retakeButton.hidden = true;
+  captureButton.setAttribute("disabled", "");
 
   if (!navigator.mediaDevices?.getUserMedia) {
     setStatus("Camera is not available in this browser. Please upload a photo instead.", true);
+    setCameraActive(false);
     return;
   }
 
@@ -101,11 +123,13 @@ async function startCamera() {
       }
     });
     video.srcObject = activeStream;
+    await waitForVideoMetadata(video);
     await video.play();
     captureButton.removeAttribute("disabled");
     setStatus("Camera ready. Align your face inside the guide and use a real white or off-white background.");
   } catch (error) {
     setStatus("Camera access was blocked or unavailable. You can upload a photo file instead.", true);
+    setCameraActive(false);
   }
 }
 

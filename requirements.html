@@ -10,7 +10,7 @@
     <title>Application Requirements | Green Card Services</title>
     <link rel="stylesheet" href="assets/styles.css" />
   </head>
-  <body>
+  <body class="requirements-page">
     <header class="site-header">
       <a class="brand" href="index.html#top" aria-label="Green Card Application Services home">
         <span class="brand-mark" aria-hidden="true">
@@ -137,11 +137,23 @@
           <h2>How we can simplify photos without risking rejection.</h2>
         </div>
         <div class="selfie-layout">
-          <div class="selfie-preview">
-            <video id="selfieVideo" playsinline muted></video>
-            <img id="selfieResult" alt="Captured 600 by 600 DV photo preview" hidden />
-            <canvas id="selfieCanvas" hidden></canvas>
-            <div class="face-guide" aria-hidden="true"></div>
+          <div class="selfie-camera-widget">
+            <div class="selfie-preview">
+              <video id="selfieVideo" playsinline muted></video>
+              <img id="selfieResult" alt="Captured 600 by 600 DV photo preview" hidden />
+              <canvas id="selfieCanvas" hidden></canvas>
+              <div class="face-guide" aria-hidden="true"></div>
+            </div>
+            <div class="selfie-controls">
+              <button class="button selfie-button" id="startSelfie" type="button">Take a selfie</button>
+              <button class="button button-light" id="captureSelfie" type="button" disabled>Capture photo</button>
+              <button class="button button-light" id="retakeSelfie" type="button" hidden>Retake</button>
+              <a class="button button-light" id="downloadSelfie" hidden>Download test photo</a>
+            </div>
+            <p class="selfie-status" id="selfieStatus" role="status">
+              Camera works on HTTPS production pages and localhost. iPhone, Android, and desktop
+              browsers may ask permission before opening the camera.
+            </p>
           </div>
           <div>
             <p>
@@ -164,20 +176,10 @@
               <span>Target 200 KB or less</span>
               <span>Face alignment outline before capture</span>
             </div>
-            <div class="selfie-controls">
-              <button class="button selfie-button" id="startSelfie" type="button">Take a selfie</button>
-              <button class="button button-light" id="captureSelfie" type="button" disabled>Capture photo</button>
-              <button class="button button-light" id="retakeSelfie" type="button" hidden>Retake</button>
-              <a class="button button-light" id="downloadSelfie" hidden>Download test photo</a>
-            </div>
             <label class="upload-fallback">
               <span>Camera not working? Upload a photo instead.</span>
               <input id="photoUpload" type="file" accept="image/*" capture="user" />
             </label>
-            <p class="selfie-status" id="selfieStatus" role="status">
-              Camera works on HTTPS production pages and localhost. iPhone, Android, and desktop
-              browsers may ask permission before opening the camera.
-            </p>
           </div>
         </div>
       </section>
@@ -222,8 +224,6 @@
         </div>
       </section>
     </main>
-
-    <a class="mobile-cta" href="index.html#apply">Submit Application</a>
 
     <footer class="site-footer">
       <div>
