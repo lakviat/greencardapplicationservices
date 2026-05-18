@@ -49,3 +49,364 @@ Official Diversity Visa information should always be verified at:
 - https://dvprogram.state.gov/
 - https://travel.state.gov/content/travel/en/us-visas/immigrate/diversity-visa-program-entry.html
 
+## DV-2026 Eligible Countries
+
+This list is based on the currently published U.S. Department of State DV-2026 instructions and matches the country dropdown used on the website. Refresh this list when DV-2027 instructions are published.
+
+Copyable Google Ads country list, one country per line:
+
+```text
+Afghanistan
+Albania
+Algeria
+Andorra
+Angola
+Antigua and Barbuda
+Argentina
+Armenia
+Australia
+Austria
+Azerbaijan
+Bahamas
+Bahrain
+Barbados
+Belarus
+Belgium
+Belize
+Benin
+Bhutan
+Bolivia
+Bosnia and Herzegovina
+Botswana
+Brunei
+Bulgaria
+Burkina Faso
+Burundi
+Cabo Verde
+Cambodia
+Cameroon
+Central African Republic
+Chad
+Chile
+Comoros
+Congo, Democratic Republic of the
+Congo, Republic of the
+Costa Rica
+Cote d'Ivoire
+Croatia
+Cyprus
+Czech Republic
+Denmark
+Djibouti
+Dominica
+Ecuador
+Egypt
+Equatorial Guinea
+Eritrea
+Estonia
+Eswatini
+Ethiopia
+Fiji
+Finland
+France
+Gabon
+Gambia
+Georgia
+Germany
+Ghana
+Greece
+Grenada
+Guatemala
+Guinea
+Guinea-Bissau
+Guyana
+Iceland
+Indonesia
+Iran
+Iraq
+Ireland
+Israel
+Italy
+Japan
+Jordan
+Kazakhstan
+Kenya
+Kiribati
+Kosovo
+Kuwait
+Kyrgyzstan
+Laos
+Latvia
+Lebanon
+Lesotho
+Liberia
+Libya
+Liechtenstein
+Lithuania
+Luxembourg
+Madagascar
+Malawi
+Malaysia
+Maldives
+Mali
+Malta
+Marshall Islands
+Mauritania
+Mauritius
+Micronesia
+Moldova
+Monaco
+Mongolia
+Montenegro
+Morocco
+Mozambique
+Myanmar
+Namibia
+Nauru
+Nepal
+Netherlands
+New Zealand
+Nicaragua
+Niger
+North Korea
+North Macedonia
+Norway
+Oman
+Palau
+Panama
+Papua New Guinea
+Paraguay
+Peru
+Poland
+Portugal
+Qatar
+Romania
+Russia
+Rwanda
+Saint Kitts and Nevis
+Saint Lucia
+Saint Vincent and the Grenadines
+Samoa
+San Marino
+Sao Tome and Principe
+Saudi Arabia
+Senegal
+Serbia
+Seychelles
+Sierra Leone
+Singapore
+Slovakia
+Slovenia
+Solomon Islands
+Somalia
+South Africa
+South Sudan
+Spain
+Sri Lanka
+Sudan
+Suriname
+Sweden
+Switzerland
+Syria
+Taiwan
+Tajikistan
+Tanzania
+Thailand
+Timor-Leste
+Togo
+Tonga
+Trinidad and Tobago
+Tunisia
+Turkey
+Turkmenistan
+Tuvalu
+Uganda
+Ukraine
+United Arab Emirates
+United Kingdom
+Uruguay
+Uzbekistan
+Vanuatu
+Vatican City
+Yemen
+Zambia
+Zimbabwe
+```
+
+Readable list:
+
+- Afghanistan
+- Albania
+- Algeria
+- Andorra
+- Angola
+- Antigua and Barbuda
+- Argentina
+- Armenia
+- Australia
+- Austria
+- Azerbaijan
+- Bahamas
+- Bahrain
+- Barbados
+- Belarus
+- Belgium
+- Belize
+- Benin
+- Bhutan
+- Bolivia
+- Bosnia and Herzegovina
+- Botswana
+- Brunei
+- Bulgaria
+- Burkina Faso
+- Burundi
+- Cabo Verde
+- Cambodia
+- Cameroon
+- Central African Republic
+- Chad
+- Chile
+- Comoros
+- Congo, Democratic Republic of the
+- Congo, Republic of the
+- Costa Rica
+- Cote d'Ivoire
+- Croatia
+- Cyprus
+- Czech Republic
+- Denmark
+- Djibouti
+- Dominica
+- Ecuador
+- Egypt
+- Equatorial Guinea
+- Eritrea
+- Estonia
+- Eswatini
+- Ethiopia
+- Fiji
+- Finland
+- France
+- Gabon
+- Gambia
+- Georgia
+- Germany
+- Ghana
+- Greece
+- Grenada
+- Guatemala
+- Guinea
+- Guinea-Bissau
+- Guyana
+- Iceland
+- Indonesia
+- Iran
+- Iraq
+- Ireland
+- Israel
+- Italy
+- Japan
+- Jordan
+- Kazakhstan
+- Kenya
+- Kiribati
+- Kosovo
+- Kuwait
+- Kyrgyzstan
+- Laos
+- Latvia
+- Lebanon
+- Lesotho
+- Liberia
+- Libya
+- Liechtenstein
+- Lithuania
+- Luxembourg
+- Madagascar
+- Malawi
+- Malaysia
+- Maldives
+- Mali
+- Malta
+- Marshall Islands
+- Mauritania
+- Mauritius
+- Micronesia
+- Moldova
+- Monaco
+- Mongolia
+- Montenegro
+- Morocco
+- Mozambique
+- Myanmar
+- Namibia
+- Nauru
+- Nepal
+- Netherlands
+- New Zealand
+- Nicaragua
+- Niger
+- North Korea
+- North Macedonia
+- Norway
+- Oman
+- Palau
+- Panama
+- Papua New Guinea
+- Paraguay
+- Peru
+- Poland
+- Portugal
+- Qatar
+- Romania
+- Russia
+- Rwanda
+- Saint Kitts and Nevis
+- Saint Lucia
+- Saint Vincent and the Grenadines
+- Samoa
+- San Marino
+- Sao Tome and Principe
+- Saudi Arabia
+- Senegal
+- Serbia
+- Seychelles
+- Sierra Leone
+- Singapore
+- Slovakia
+- Slovenia
+- Solomon Islands
+- Somalia
+- South Africa
+- South Sudan
+- Spain
+- Sri Lanka
+- Sudan
+- Suriname
+- Sweden
+- Switzerland
+- Syria
+- Taiwan
+- Tajikistan
+- Tanzania
+- Thailand
+- Timor-Leste
+- Togo
+- Tonga
+- Trinidad and Tobago
+- Tunisia
+- Turkey
+- Turkmenistan
+- Tuvalu
+- Uganda
+- Ukraine
+- United Arab Emirates
+- United Kingdom
+- Uruguay
+- Uzbekistan
+- Vanuatu
+- Vatican City
+- Yemen
+- Zambia
+- Zimbabwe
