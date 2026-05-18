@@ -30,7 +30,7 @@ Use official Department of State visual examples and composition templates direc
 Current website implementation uses:
 
 - Official acceptable photo examples from the Department of State Photo Examples page.
-- A separate real bad-photo examples block for common failure risks: glasses, tilted/sideways face, wrong background, smile/expression, and bad lighting.
+- A separate real bad-photo examples block, saved locally as `assets/images/bad-photo-examples.jpg`, cropped to remove in-image labels and focus on glasses, wrong background, smile/expression, and bad lighting.
 
 ## Validation Button Scope
 
