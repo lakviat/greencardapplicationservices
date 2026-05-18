@@ -167,6 +167,9 @@ Selfie/photo capture feature requirements:
    - Export as JPEG and reduce quality until the target is under 200 KB where possible.
    - Provide a file upload fallback for browsers/devices that block camera access.
    - Keep all processing local in the browser until backend upload is implemented.
+   - Show top-of-head, eye-line, chin, and shoulder framing guidance.
+   - Make the capture button visually pulse once camera access is ready.
+   - Link to official Department of State photo examples, composition template, and digital image requirements.
 12. Production camera access requires HTTPS. It should work on the production GitHub Pages/custom domain once HTTPS is active, and on localhost during development.
 
 Customer form requirements

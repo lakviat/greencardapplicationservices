@@ -142,7 +142,11 @@
               <video id="selfieVideo" playsinline muted></video>
               <img id="selfieResult" alt="Captured 600 by 600 DV photo preview" hidden />
               <canvas id="selfieCanvas" hidden></canvas>
-              <div class="face-guide" aria-hidden="true"></div>
+              <div class="face-guide" aria-hidden="true">
+                <span class="guide-label guide-label-top">Top of head</span>
+                <span class="guide-label guide-label-eyes">Eyes</span>
+                <span class="guide-label guide-label-chin">Chin</span>
+              </div>
             </div>
             <div class="selfie-controls">
               <button class="button selfie-button" id="startSelfie" type="button">Take a selfie</button>
@@ -181,6 +185,41 @@
               <input id="photoUpload" type="file" accept="image/*" capture="user" />
             </label>
           </div>
+        </div>
+      </section>
+
+      <section class="section official-photo-examples-section">
+        <div class="section-heading">
+          <p class="eyebrow">Official photo references</p>
+          <h2>Use the government examples before taking your photo.</h2>
+          <p>
+            The Department of State provides official examples and a composition template showing
+            correct head position, shoulder framing, background, expression, lighting, and common
+            rejection issues.
+          </p>
+        </div>
+        <div class="official-reference-grid">
+          <a
+            class="official-reference-card"
+            href="https://travel.state.gov/content/travel/en/us-visas/visa-information-resources/photos/photo-composition-template.html"
+          >
+            <strong>Photo Composition Template</strong>
+            <span>Head size, eye height, centering, and square image rules.</span>
+          </a>
+          <a
+            class="official-reference-card"
+            href="https://travel.state.gov/content/travel/en/us-visas/visa-information-resources/photos/photo-examples.html"
+          >
+            <strong>Photo Examples</strong>
+            <span>Acceptable and unacceptable examples for pose, expression, lighting, and background.</span>
+          </a>
+          <a
+            class="official-reference-card"
+            href="https://travel.state.gov/content/travel/en/us-visas/visa-information-resources/photos/digital-image-requirements.html"
+          >
+            <strong>Digital Image Requirements</strong>
+            <span>JPEG, file size, square pixels, compression, and image quality rules.</span>
+          </a>
         </div>
       </section>
 

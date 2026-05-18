@@ -63,6 +63,8 @@ Current selfie prototype:
 - Captures a centered square image to `600 x 600` pixels.
 - Exports a JPEG with a target under `200 KB` where possible.
 - Provides upload fallback when camera access is blocked.
+- Pulses the capture button after the camera is ready.
+- Links to official Department of State photo examples and composition guidance.
 - Runs locally in the browser until secure backend upload is added.
 
 ## About Us

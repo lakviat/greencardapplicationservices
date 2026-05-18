@@ -24,6 +24,7 @@ function showCameraPanel() {
 
 function setCameraActive(isActive) {
   document.body.classList.toggle("camera-active", isActive);
+  document.body.classList.toggle("capture-ready", false);
 }
 
 function stopCamera() {
@@ -126,6 +127,7 @@ async function startCamera() {
     await waitForVideoMetadata(video);
     await video.play();
     captureButton.removeAttribute("disabled");
+    document.body.classList.add("capture-ready");
     setStatus("Camera ready. Align your face inside the guide and use a real white or off-white background.");
   } catch (error) {
     setStatus("Camera access was blocked or unavailable. You can upload a photo file instead.", true);
@@ -138,6 +140,7 @@ async function captureSelfie() {
     setStatus("Start the camera first, or upload a photo instead.", true);
     return;
   }
+  document.body.classList.remove("capture-ready");
   await renderImageToDvCanvas(video);
   stopCamera();
 }
