@@ -151,6 +151,7 @@
             <div class="selfie-controls">
               <button class="button selfie-button" id="startSelfie" type="button">Take a selfie</button>
               <button class="button button-light" id="captureSelfie" type="button" disabled>Capture photo</button>
+              <button class="button button-light" id="validateSelfie" type="button" disabled>Validate photo</button>
               <button class="button button-light" id="retakeSelfie" type="button" hidden>Retake</button>
               <a class="button button-light" id="downloadSelfie" hidden>Download test photo</a>
             </div>
@@ -185,6 +186,63 @@
               <input id="photoUpload" type="file" accept="image/*" capture="user" />
             </label>
           </div>
+        </div>
+      </section>
+
+      <section class="section photo-samples-section">
+        <div class="section-heading">
+          <p class="eyebrow">Photo samples</p>
+          <h2>Quick visual checklist before you submit.</h2>
+          <p>
+            These examples are simplified guidance based on the official photo rules. The automated
+            validator can check file size, format, dimensions, and a basic background estimate, but
+            human review is still required for glasses, hats, pose, shadows, facial expression, and
+            background quality.
+          </p>
+        </div>
+        <div class="photo-sample-grid">
+          <article class="photo-sample-card sample-pass">
+            <div class="sample-photo sample-good">
+              <span></span>
+            </div>
+            <strong>Good photo</strong>
+            <p>Face forward, neutral expression, both eyes open, shoulders visible, plain white/off-white background.</p>
+          </article>
+          <article class="photo-sample-card sample-fail">
+            <div class="sample-photo sample-glasses">
+              <span></span>
+            </div>
+            <strong>No glasses</strong>
+            <p>Remove eyeglasses, sunglasses, tinted lenses, and anything that blocks the face.</p>
+          </article>
+          <article class="photo-sample-card sample-fail">
+            <div class="sample-photo sample-tilt">
+              <span></span>
+            </div>
+            <strong>Do not tilt</strong>
+            <p>Do not lean forward, backward, or sideways. Look straight at the camera.</p>
+          </article>
+          <article class="photo-sample-card sample-fail">
+            <div class="sample-photo sample-background">
+              <span></span>
+            </div>
+            <strong>Clean background</strong>
+            <p>No furniture, plants, maps, patterns, shadows, or visible objects behind you.</p>
+          </article>
+          <article class="photo-sample-card sample-fail">
+            <div class="sample-photo sample-lighting">
+              <span></span>
+            </div>
+            <strong>Even lighting</strong>
+            <p>No heavy shadows, overexposure, red tint, or low-quality/blurred photo.</p>
+          </article>
+          <article class="photo-sample-card sample-fail">
+            <div class="sample-photo sample-hat">
+              <span></span>
+            </div>
+            <strong>No hats</strong>
+            <p>No hats or head coverings unless worn daily for religious purposes and the full face remains visible.</p>
+          </article>
         </div>
       </section>
 

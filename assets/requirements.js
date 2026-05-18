@@ -1,5 +1,6 @@
 const startButton = document.querySelector("#startSelfie");
 const captureButton = document.querySelector("#captureSelfie");
+const validateButton = document.querySelector("#validateSelfie");
 const retakeButton = document.querySelector("#retakeSelfie");
 const downloadLink = document.querySelector("#downloadSelfie");
 const uploadInput = document.querySelector("#photoUpload");
@@ -84,6 +85,7 @@ async function renderImageToDvCanvas(source) {
   downloadLink.download = "dv-photo-600x600.jpg";
   downloadLink.removeAttribute("hidden");
   retakeButton.removeAttribute("hidden");
+  validateButton?.removeAttribute("disabled");
   const sizeKb = Math.round(latestBlob.size / 1024);
   if (sizeKb > 200) {
     setStatus(
@@ -93,6 +95,83 @@ async function renderImageToDvCanvas(source) {
     return;
   }
   setStatus(`Photo captured: 600 x 600 JPEG, ${sizeKb} KB.`);
+}
+
+function getAverageColor(context, x, y, width, height) {
+  const data = context.getImageData(x, y, width, height).data;
+  let red = 0;
+  let green = 0;
+  let blue = 0;
+  const pixels = data.length / 4;
+
+  for (let index = 0; index < data.length; index += 4) {
+    red += data[index];
+    green += data[index + 1];
+    blue += data[index + 2];
+  }
+
+  return {
+    red: red / pixels,
+    green: green / pixels,
+    blue: blue / pixels
+  };
+}
+
+function isPlainLightBackground() {
+  const context = canvas.getContext("2d", { alpha: false });
+  const regions = [
+    [10, 10, 90, 90],
+    [500, 10, 90, 90],
+    [10, 250, 60, 120],
+    [530, 250, 60, 120],
+    [10, 500, 70, 70],
+    [520, 500, 70, 70]
+  ];
+
+  const colors = regions.map(([x, y, width, height]) => getAverageColor(context, x, y, width, height));
+  const averageBrightness =
+    colors.reduce((sum, color) => sum + (color.red + color.green + color.blue) / 3, 0) / colors.length;
+  const maxChannelSpread = Math.max(
+    ...colors.map((color) => Math.max(color.red, color.green, color.blue) - Math.min(color.red, color.green, color.blue))
+  );
+
+  return averageBrightness >= 185 && maxChannelSpread <= 48;
+}
+
+function validatePhoto() {
+  if (!latestBlob) {
+    setStatus("FAIL: take or upload a photo first.", true);
+    return;
+  }
+
+  const failures = [];
+  const warnings = [];
+  const sizeKb = Math.round(latestBlob.size / 1024);
+
+  if (canvas.width !== 600 || canvas.height !== 600) {
+    failures.push("image is not 600 x 600 pixels");
+  }
+
+  if (latestBlob.type !== "image/jpeg") {
+    failures.push("file is not JPEG");
+  }
+
+  if (latestBlob.size > 200 * 1024) {
+    failures.push(`file is ${sizeKb} KB; target is 200 KB or less`);
+  }
+
+  if (!isPlainLightBackground()) {
+    failures.push("background may not be plain white/off-white");
+  }
+
+  warnings.push("manual review still required for glasses, hats, expression, shadows, blur, and head position");
+
+  if (failures.length) {
+    setStatus(`FAIL: ${failures.join("; ")}. ${warnings.join("; ")}.`, true);
+    return;
+  }
+
+  setStatus(`PASS: 600 x 600 JPEG, ${sizeKb} KB, background appears light/plain. ${warnings.join("; ")}.`);
 }
 
 async function startCamera() {
@@ -105,6 +184,7 @@ async function startCamera() {
   resultImage.hidden = true;
   downloadLink.hidden = true;
   retakeButton.hidden = true;
+  validateButton?.setAttribute("disabled", "");
   captureButton.setAttribute("disabled", "");
 
   if (!navigator.mediaDevices?.getUserMedia) {
@@ -166,6 +246,7 @@ async function handleUpload(event) {
 
 startButton?.addEventListener("click", startCamera);
 captureButton?.addEventListener("click", captureSelfie);
+validateButton?.addEventListener("click", validatePhoto);
 retakeButton?.addEventListener("click", startCamera);
 uploadInput?.addEventListener("change", handleUpload);
 window.addEventListener("pagehide", stopCamera);

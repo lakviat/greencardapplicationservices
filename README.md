@@ -62,10 +62,16 @@ Current selfie prototype:
 - Shows a square preview with a face alignment guide.
 - Captures a centered square image to `600 x 600` pixels.
 - Exports a JPEG with a target under `200 KB` where possible.
+- Includes a `Validate photo` button that returns a browser-side pass/fail result for dimensions, JPEG output, file size, and a basic plain-background estimate.
 - Provides upload fallback when camera access is blocked.
 - Pulses the capture button after the camera is ready.
+- Shows visual good/bad photo sample cards for glasses, hats, tilt, background, lighting, and framing.
 - Links to official Department of State photo examples and composition guidance.
 - Runs locally in the browser until secure backend upload is added.
+
+Photo validation note:
+
+The browser validator is helpful, but it is not a replacement for staff review. It can check technical output and estimate whether the background is light/plain. It cannot reliably prove that the applicant has no glasses, no hat, correct head size, neutral expression, perfect focus, or an acceptable background in every case.
 
 ## About Us
 
