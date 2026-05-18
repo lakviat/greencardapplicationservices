@@ -375,6 +375,7 @@ Added on 2026-05-17:
 20. Use a real U.S. flag asset for the hero and logo, not an abstract stripe-only flag approximation.
 21. Add subtle motion to the process step indicators, with reduced-motion support for accessibility.
 22. Keep the process heading short, such as "How to start."
+23. The country dropdown in the application form must use a broad eligible-country list based on the current published Department of State DV instructions. For the current first build, the dropdown follows DV-2026 eligibility and excludes the countries officially listed as not eligible for DV-2026. Refresh this list when DV-2027 instructions are published.
 
 First-build implementation files:
 
