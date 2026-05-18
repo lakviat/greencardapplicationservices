@@ -30,7 +30,7 @@ Use official Department of State visual examples and composition templates direc
 Current website implementation uses:
 
 - Official acceptable photo examples from the Department of State Photo Examples page.
-- A red-flag photo examples row using official real photo examples as the base image, with visual overlays that demonstrate common failure risks: glasses, tilted pose, background objects, and harsh shadows.
+- A separate real bad-photo examples block for common failure risks: glasses, tilted/sideways face, wrong background, smile/expression, and bad lighting.
 
 ## Validation Button Scope
 
