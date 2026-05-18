@@ -29,7 +29,7 @@ Use official Department of State visual examples and composition templates direc
 
 Current website implementation uses:
 
-- Official acceptable photo examples from the Department of State Photo Examples page.
+- Official acceptable photo examples from the Department of State Photo Examples page, saved locally as `assets/images/photo-examples/good-photo-examples.jpg` so all four good examples display consistently on mobile.
 - A separate real bad-photo examples block, saved locally as `assets/images/bad-photo-examples.jpg`, cropped to remove in-image labels and focus on glasses, wrong background, smile/expression, and bad lighting.
 
 ## Validation Button Scope

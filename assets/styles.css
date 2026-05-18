@@ -853,6 +853,7 @@ small {
 }
 
 .photo-sample-card img {
+  display: block;
   width: 100%;
   height: auto;
   max-height: 220px;
@@ -866,7 +867,7 @@ small {
 
 .photo-sample-card-wide img {
   height: auto;
-  max-height: 230px;
+  max-height: none;
 }
 
 .sample-pass {
