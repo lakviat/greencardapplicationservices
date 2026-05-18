@@ -30,6 +30,32 @@ A Diversity Visa entry must be accurate, complete, and submitted on time. Even s
 
 We help customers stay organized from the beginning. Our goal is simple: make the application process clearer, calmer, and more carefully handled.
 
+## Photo and Document Requirements
+
+The website includes a dedicated requirements page at `requirements.html`.
+
+Key DV photo requirements from the U.S. Department of State:
+
+- JPEG image
+- Exactly 600 x 600 pixels for DV entry
+- Square aspect ratio
+- 240 KB or less
+- Color photo
+- Taken within the last 6 months
+- Plain white or off-white background
+- Full-face view directly facing the camera
+- Neutral facial expression with both eyes open
+- No copied/scanned driver license or official document photos
+- No digital enhancement or alteration that changes appearance
+
+Future selfie feature direction:
+
+- Let applicants take or upload a photo from the web app.
+- Guide them to use a real white or off-white background.
+- Crop, resize, and compress to the technical DV format.
+- Do not rely on automatic background replacement as the default path.
+- Send questionable photos to staff review before submission.
+
 ## About Us
 
 We are a Miami-based application support service with experience helping customers prepare important immigration-related submissions and records. We are not a law firm, we are not attorneys, and we do not provide legal advice.
