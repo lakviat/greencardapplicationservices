@@ -56,6 +56,15 @@ Future selfie feature direction:
 - Do not rely on automatic background replacement as the default path.
 - Send questionable photos to staff review before submission.
 
+Current selfie prototype:
+
+- Opens the device camera when permission is granted.
+- Shows a square preview with a face alignment guide.
+- Captures a centered square image to `600 x 600` pixels.
+- Exports a JPEG with a target under `200 KB` where possible.
+- Provides upload fallback when camera access is blocked.
+- Runs locally in the browser until secure backend upload is added.
+
 ## About Us
 
 We are a Miami-based application support service with experience helping customers prepare important immigration-related submissions and records. We are not a law firm, we are not attorneys, and we do not provide legal advice.

@@ -155,11 +155,19 @@ Selfie/photo capture feature requirements:
 3. Do not depend on background removal as the default process, because official Department of State guidance says photos must not be digitally enhanced or altered to change appearance.
 4. The app may crop, rotate, resize, and compress the image to meet technical requirements, as long as the person’s appearance is not retouched or changed.
 5. The app should validate JPEG format, 600 x 600 pixel output, square aspect ratio, and file size equal to or less than 240 KB.
-6. The app should aim for output under 200 KB when possible, while never exceeding the official 240 KB maximum.
+6. The app should aim for output at 200 KB or less for our workflow, while the official DV maximum is 240 KB.
 7. The app should show a face alignment outline before capture.
 8. The app should warn about shadows, patterns, dark backgrounds, blur, glasses, face not centered, head too large/small, or non-neutral expression.
 9. Staff should review every captured/uploaded photo before final submission.
 10. If selected for interview, the applicant will generally need printed 2 x 2 inch photos on photo-quality paper.
+11. Initial static implementation on requirements.html:
+   - Request camera access using the browser MediaDevices getUserMedia API.
+   - Use a square live preview with a face alignment guide.
+   - Capture to canvas at 600 x 600 pixels.
+   - Export as JPEG and reduce quality until the target is under 200 KB where possible.
+   - Provide a file upload fallback for browsers/devices that block camera access.
+   - Keep all processing local in the browser until backend upload is implemented.
+12. Production camera access requires HTTPS. It should work on the production GitHub Pages/custom domain once HTTPS is active, and on localhost during development.
 
 Customer form requirements
 --------------------------
