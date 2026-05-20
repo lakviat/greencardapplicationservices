@@ -177,6 +177,145 @@ Selfie/photo capture feature requirements:
    - Link to official Department of State photo examples, composition template, and digital image requirements.
 12. Production camera access requires HTTPS. It should work on the production GitHub Pages/custom domain once HTTPS is active, and on localhost during development.
 
+Customer experience strategy
+----------------------------
+The website must improve the customer's experience compared with doing the DV entry alone. A standalone selfie tool is not enough. The service experience should feel like a guided application intake where the customer completes a few clear steps and staff handle the official submission work.
+
+Customer mindset:
+1. The customer wants to avoid confusing official forms, photo mistakes, family-member mistakes, duplicate-entry mistakes, and missed deadlines.
+2. The customer is willing to pay a service fee because they want the process organized and reviewed.
+3. The customer expects a short first step, clear payment instructions, a simple upload experience, and a confirmation that staff will take over after payment.
+
+Recommended product flow:
+1. Start request:
+   - Name.
+   - Email and confirm email.
+   - Phone/WhatsApp.
+   - Country of birth / chargeability country.
+   - Preferred language.
+   - Package selection.
+   - Consent and disclaimers.
+2. Payment:
+   - Customer pays service fee or receives secure payment instructions.
+   - Direct staff communication starts after payment is matched to the request.
+3. Document and photo intake:
+   - Customer takes a DV photo inside the website or uploads an existing photo.
+   - Customer uploads passport or government ID if required for identity verification and spelling.
+   - Customer uploads any required spouse/child photos when applicable.
+   - Browser validates photo size/format where possible.
+   - Staff reviews every photo and asks for replacement if needed.
+4. Guided DV questionnaire:
+   - Customer completes a simple step-by-step questionnaire that maps to official DV entry fields.
+   - The questionnaire should use plain language, progress steps, save/resume, and conditional fields.
+   - Example conditional logic: if married, show spouse details; if children under 21, show child sections.
+5. Staff review:
+   - Staff checks spelling, dates, countries, family members, photo readiness, education/work requirement, and duplicate-entry risk.
+   - Staff contacts customer through email/WhatsApp if anything is unclear.
+6. Customer confirmation:
+   - Before official submission, customer receives a review summary and confirms the information is accurate and authorized for submission.
+7. Official submission:
+   - Staff submits during the official registration window.
+   - Staff sends the official confirmation number/page to the customer and stores it in the customer folder.
+8. Follow-up:
+   - Staff reminds customer when Entrant Status Check opens.
+   - If selected, customer enters a separate selected-case support flow; this is different from initial lottery entry support.
+
+Recommended implementation approach:
+Build the public form as a short lead/payment form first, then build the full DV questionnaire as a second secure step after payment. Do not overload the homepage form with every official DV field immediately.
+
+Alternative implementation options:
+1. One long public form:
+   - Pros: all information collected at once.
+   - Cons: intimidating, more abandonment, higher privacy risk before payment, harder mobile experience.
+   - Recommendation: avoid for first launch.
+2. Short public form + secure guided questionnaire:
+   - Pros: easiest customer experience, cleaner payment flow, better privacy posture, easier staff review.
+   - Cons: requires more implementation work.
+   - Recommendation: preferred path.
+3. Downloadable questionnaire/template:
+   - Pros: fastest to launch.
+   - Cons: weak user experience, manual back-and-forth, customers may make formatting mistakes.
+   - Recommendation: fallback only if secure web form is not ready.
+4. Staff-led WhatsApp intake:
+   - Pros: familiar for international customers.
+   - Cons: messy records, more privacy risk, harder to validate photos/files.
+   - Recommendation: offer as support channel, not the primary intake system.
+
+Official DV entry information categories to collect
+---------------------------------------------------
+Source baseline:
+Use the official Department of State DV instructions and the DS-5501 Electronic Diversity Visa Entry Form package as the source of truth for each active DV year.
+
+Important product correction:
+Parents and siblings are not part of the initial DV entry as derivative applicants. Do not ask for parents' names or sibling details in the first-launch DV entry questionnaire unless the current official form/instructions for the active year specifically require it or a later selected-case workflow needs it.
+
+Core principal applicant fields:
+1. Full legal name exactly as used for DV entry:
+   - Last/family name.
+   - First/given name.
+   - Middle name, if any.
+2. Gender, as required by the official DV entry.
+3. Birth date.
+4. City/town of birth.
+5. Country of birth.
+6. Country of eligibility / chargeability, including alternate chargeability explanation if used.
+7. Current photo.
+8. Mailing address.
+9. Country where applicant lives today.
+10. Phone number, if provided.
+11. Email address.
+12. Highest level of education achieved.
+13. Marital status.
+14. Number of eligible children.
+
+Spouse fields when applicable:
+1. Full legal name.
+2. Birth date.
+3. Gender, if required by active form.
+4. City/town and country of birth.
+5. Current DV-compliant photo, unless official instructions for that year say otherwise.
+
+Eligible child fields when applicable:
+1. Full legal name.
+2. Birth date.
+3. Gender, if required by active form.
+4. City/town and country of birth.
+5. Relationship type: natural child, adopted child, or stepchild where applicable.
+6. Current DV-compliant photo, unless official instructions for that year say otherwise.
+
+Family-member rule:
+The questionnaire must clearly explain that eligible spouse and children must be included according to official instructions, even if they will not immigrate with the principal applicant. Missing a required spouse or child can create serious eligibility problems if selected.
+
+Customer-facing questionnaire design
+------------------------------------
+The full questionnaire should be split into small steps:
+
+1. Identity:
+   Full name, gender, birth date, birth city, birth country, chargeability country.
+2. Contact:
+   Mailing address, residence country, phone/WhatsApp, email confirmation.
+3. Photo:
+   Take selfie or upload photo, browser validation, staff review status.
+4. Eligibility:
+   Education level and work experience fallback if education requirement may not be met.
+5. Family:
+   Marital status, spouse details if married, number of eligible children, child details.
+6. Documents:
+   Passport/government ID upload for spelling and identity verification when required by the active year or our internal review policy.
+7. Review:
+   Customer sees a summary of all data and confirms accuracy.
+8. Authorization:
+   Customer authorizes staff to prepare and submit the entry on their behalf and acknowledges no guarantee of selection.
+
+User experience requirements:
+1. Show progress step names and completion status.
+2. Save partial progress where possible.
+3. Use plain-language helper text next to confusing fields.
+4. Avoid asking for parents, siblings, or unrelated relatives in the initial entry flow unless officially required.
+5. Keep upload actions inside the same questionnaire so photo, documents, and answers stay together.
+6. Show a clear "what happens next" screen after submission.
+7. Generate an internal intake summary PDF/text record for staff review.
+
 Customer form requirements
 --------------------------
 Initial lead/payment intake should collect enough information to start service, but final DV details may be collected in a secure follow-up process.
@@ -216,7 +355,7 @@ Follow-up collection may include:
 3. Mailing address.
 4. Full spouse details, if married.
 5. Full details for all unmarried children under 21, including adopted children and stepchildren where required.
-6. Parents' names, if required by the active form or follow-up process.
+6. Parents' names only if required by the active official form, later selected-case support, or a separate process outside the initial DV entry.
 7. Prior DV entries and confirmation numbers, if relevant.
 8. Clarification for alternate chargeability, if claimed.
 9. Additional supporting documents based on country, family status, and program year.
