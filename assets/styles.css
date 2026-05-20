@@ -152,7 +152,7 @@ a {
 
 .hero {
   position: relative;
-  min-height: 690px;
+  min-height: 620px;
   display: grid;
   align-items: center;
   overflow: hidden;
@@ -276,7 +276,7 @@ h3 {
 }
 
 .section {
-  padding: clamp(58px, 9vw, 108px) clamp(18px, 5vw, 72px);
+  padding: clamp(48px, 7vw, 82px) clamp(18px, 5vw, 72px);
 }
 
 .section-heading {
@@ -310,7 +310,7 @@ h3 {
 
 .process-grid::before {
   position: absolute;
-  top: 44px;
+  top: 32px;
   right: 9%;
   left: 9%;
   height: 3px;
@@ -333,9 +333,9 @@ h3 {
 
 .process-grid article {
   position: relative;
-  min-height: 210px;
+  min-height: 174px;
   overflow: hidden;
-  padding: 58px 20px 22px;
+  padding: 46px 20px 22px;
   box-shadow: 0 10px 28px rgba(23, 32, 51, 0.06);
 }
 
@@ -352,16 +352,15 @@ h3 {
 
 .process-grid article::after {
   position: absolute;
-  top: 29px;
+  top: 22px;
   left: 20px;
-  width: 34px;
-  height: 34px;
+  width: 22px;
+  height: 22px;
   content: "";
   background: url("us-flag.svg") center / cover no-repeat;
-  border: 2px solid #fff;
+  border: 1px solid #fff;
   border-radius: 50%;
-  box-shadow: 0 0 0 7px #eef5ff;
-  animation: stepPulse 2.8s ease-in-out infinite;
+  box-shadow: 0 0 0 5px #eef5ff;
 }
 
 .process-grid article:nth-child(2)::after {
@@ -447,8 +446,8 @@ h3 {
 .benefit-grid article {
   position: relative;
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr);
-  column-gap: 14px;
+  grid-template-columns: 28px minmax(0, 1fr);
+  column-gap: 12px;
   align-items: start;
   overflow: hidden;
   padding: 22px;
@@ -472,13 +471,12 @@ h3 {
   position: relative;
   z-index: 1;
   grid-row: 1 / span 2;
-  width: 38px;
-  height: 38px;
+  width: 24px;
+  height: 24px;
   background: url("us-flag.svg") center / cover no-repeat;
   border: 1px solid rgba(16, 33, 61, 0.12);
   border-radius: 50%;
-  box-shadow: 0 0 0 7px #eef5ff, 0 10px 22px rgba(23, 32, 51, 0.12);
-  animation: stepPulse 3.2s ease-in-out infinite;
+  box-shadow: 0 0 0 5px #eef5ff, 0 8px 18px rgba(23, 32, 51, 0.1);
 }
 
 .benefit-grid h3,
@@ -637,7 +635,7 @@ small {
 }
 
 .requirements-hero {
-  padding: clamp(74px, 12vw, 130px) clamp(18px, 5vw, 72px);
+  padding: clamp(58px, 9vw, 96px) clamp(18px, 5vw, 72px);
   color: #fff;
   background:
     linear-gradient(90deg, rgba(16, 33, 61, 0.88), rgba(16, 33, 61, 0.58)),
@@ -646,7 +644,7 @@ small {
 
 .requirements-hero h1 {
   max-width: 900px;
-  font-size: clamp(3rem, 7vw, 5.8rem);
+  font-size: clamp(2.8rem, 6vw, 5rem);
 }
 
 .requirements-hero p {
@@ -657,31 +655,6 @@ small {
 
 .requirement-flow {
   background: #fff;
-}
-
-.rejection-warning-section {
-  background: linear-gradient(90deg, #fff8e7, #eef7ff);
-  border-bottom: 1px solid var(--line);
-}
-
-.warning-panel {
-  max-width: 1060px;
-  padding: clamp(24px, 4vw, 38px);
-  background: #fff;
-  border: 1px solid #f1d184;
-  border-left: 8px solid var(--red);
-  border-radius: 8px;
-  box-shadow: var(--shadow);
-}
-
-.warning-panel h2 {
-  max-width: 860px;
-}
-
-.warning-panel p {
-  max-width: 920px;
-  color: var(--muted);
-  font-size: 1.05rem;
 }
 
 .requirement-steps,
@@ -698,7 +671,7 @@ small {
 
 .requirement-steps::before {
   position: absolute;
-  top: 44px;
+  top: 32px;
   right: 13%;
   left: 13%;
   height: 3px;
@@ -729,7 +702,7 @@ small {
 
 .requirement-steps article {
   overflow: hidden;
-  padding: 58px 24px 24px;
+  padding: 46px 22px 22px;
 }
 
 .requirement-steps article::before {
@@ -745,16 +718,15 @@ small {
 
 .requirement-steps article::after {
   position: absolute;
-  top: 29px;
+  top: 22px;
   left: 24px;
-  width: 34px;
-  height: 34px;
+  width: 22px;
+  height: 22px;
   content: "";
   background: url("us-flag.svg") center / cover no-repeat;
-  border: 2px solid #fff;
+  border: 1px solid #fff;
   border-radius: 50%;
-  box-shadow: 0 0 0 7px #eef5ff;
-  animation: stepPulse 2.8s ease-in-out infinite;
+  box-shadow: 0 0 0 5px #eef5ff;
 }
 
 .requirement-steps article:nth-child(2)::after {
@@ -798,6 +770,42 @@ small {
 .selfie-layout p,
 .requirements-list {
   color: var(--muted);
+}
+
+.compact-panel {
+  max-width: 1040px;
+  padding: clamp(20px, 3vw, 28px);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(23, 32, 51, 0.06);
+}
+
+.compact-checklist {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 22px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.compact-checklist li {
+  position: relative;
+  padding-left: 22px;
+  color: var(--muted);
+  font-weight: 720;
+}
+
+.compact-checklist li::before {
+  position: absolute;
+  top: 0.58em;
+  left: 0;
+  width: 8px;
+  height: 8px;
+  content: "";
+  background: var(--red);
+  border-radius: 50%;
 }
 
 .photo-requirements-section,
@@ -1082,38 +1090,6 @@ small {
   padding-top: 0;
 }
 
-.official-photo-examples-section {
-  background: linear-gradient(180deg, #fff, #f8fbff);
-  border-block: 1px solid var(--line);
-}
-
-.official-reference-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.official-reference-card {
-  display: grid;
-  gap: 10px;
-  min-height: 170px;
-  padding: 24px;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-top: 6px solid var(--blue);
-  border-radius: 8px;
-  box-shadow: 0 10px 28px rgba(23, 32, 51, 0.06);
-}
-
-.official-reference-card strong {
-  color: var(--navy);
-  font-size: 1.15rem;
-}
-
-.official-reference-card span {
-  color: var(--muted);
-}
-
 .mobile-cta {
   display: none;
 }
@@ -1179,21 +1155,21 @@ small {
   .document-grid,
   .selfie-layout,
   .photo-sample-grid,
-  .official-reference-grid {
+  .compact-checklist {
     grid-template-columns: 1fr;
   }
 
   .requirement-steps::before {
     top: 0;
     bottom: 0;
-    left: 31px;
+    left: 29px;
     width: 3px;
     height: auto;
     background: linear-gradient(180deg, var(--blue), var(--red));
   }
 
   .requirement-steps article {
-    padding: 24px 20px 22px 72px;
+    padding: 22px 20px 22px 62px;
   }
 
   .requirement-steps article::before {
@@ -1203,8 +1179,8 @@ small {
   }
 
   .requirement-steps article::after {
-    top: 26px;
-    left: 23px;
+    top: 25px;
+    left: 20px;
   }
 
   .photo-sample-card-wide {
@@ -1304,14 +1280,14 @@ small {
   .process-grid::before {
     top: 0;
     bottom: 0;
-    left: 29px;
+    left: 27px;
     width: 3px;
     height: auto;
     background: linear-gradient(180deg, var(--blue), var(--red));
   }
 
   .process-grid article {
-    padding: 24px 20px 22px 68px;
+    padding: 22px 20px 22px 60px;
   }
 
   .process-grid article::before {
@@ -1321,8 +1297,8 @@ small {
   }
 
   .process-grid article::after {
-    top: 26px;
-    left: 21px;
+    top: 25px;
+    left: 18px;
   }
 
   .process-grid article,

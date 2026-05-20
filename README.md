@@ -66,7 +66,7 @@ Current selfie prototype:
 - Provides upload fallback when camera access is blocked.
 - Pulses the capture button after the camera is ready.
 - Shows official Department of State good photo examples plus a separate bad photo examples block for glasses, tilt/sideways pose, wrong background, expression, and bad lighting.
-- Links to official Department of State photo examples and composition guidance.
+- Keeps official Department of State source links available without making the page feel crowded.
 - Runs locally in the browser until secure backend upload is added.
 
 Photo validation note:
