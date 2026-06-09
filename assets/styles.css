@@ -878,11 +878,13 @@ small {
 
 .photo-sample-grid-featured {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  margin-top: 24px;
 }
 
 .photo-sample-card {
   display: grid;
-  gap: 10px;
+  gap: 14px;
   align-content: start;
   min-height: 250px;
   padding: 16px;
@@ -893,7 +895,8 @@ small {
 }
 
 .photo-sample-card-wide {
-  min-height: 310px;
+  min-height: 430px;
+  grid-template-rows: 300px auto 1fr;
 }
 
 .photo-sample-card strong {
@@ -910,8 +913,8 @@ small {
 .photo-sample-card img {
   display: block;
   width: 100%;
-  height: auto;
-  max-height: 220px;
+  height: 100%;
+  max-height: none;
   object-fit: contain;
   object-position: center;
   padding: 0;
@@ -921,8 +924,8 @@ small {
 }
 
 .photo-sample-card-wide img {
-  height: auto;
-  max-height: none;
+  height: 300px;
+  max-height: 300px;
 }
 
 .sample-pass {
@@ -1797,8 +1800,20 @@ small {
 }
 
 .photo-sample-card img {
+  height: 300px;
+  max-height: 300px;
   min-height: 260px;
+  object-fit: contain;
   background: #f7f9fc;
+}
+
+.photo-sample-grid-featured {
+  margin-top: 24px;
+}
+
+.photo-sample-card-wide {
+  grid-template-rows: 300px auto 1fr;
+  min-height: 430px;
 }
 
 @media (max-width: 1100px) {
