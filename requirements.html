@@ -8,64 +8,78 @@
       content="Diversity Visa photo and document requirements for Green Card application support."
     />
     <title>Application Requirements | Green Card Services</title>
-    <link rel="stylesheet" href="assets/styles.css?v=20260520-concept-cleanup" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link
+      rel="stylesheet"
+      href="assets/styles.css?v=20260609-application-flow"
+    />
   </head>
   <body class="requirements-page">
     <header class="site-header">
-      <a class="brand" href="index.html#top" aria-label="Green Card Application Services home">
+      <a
+        class="brand"
+        href="index.html#top"
+        aria-label="Green Card Application Services home"
+      >
         <span class="brand-mark" aria-hidden="true">
           <span></span>
         </span>
         <span>Green Card Services</span>
       </a>
       <nav class="site-nav" aria-label="Primary navigation">
-        <a href="index.html#process">Steps</a>
+        <a href="how-it-works.html">How it works</a>
         <a href="index.html#timeline">Dates</a>
         <a href="index.html#pricing">Pricing</a>
+        <a href="guide.html">Guide</a>
+        <a href="faq.html">FAQ</a>
         <a href="requirements.html">Requirements</a>
-        <a href="index.html#apply">Apply</a>
       </nav>
-      <a class="button button-small" href="index.html#apply">Submit Application</a>
+      <a class="button button-small" href="index.html#apply"
+        >Start Application</a
+      >
     </header>
 
     <main>
       <section class="requirements-hero">
         <p class="eyebrow">Application requirements</p>
-        <h1>Photo and document requirements</h1>
+        <h1>Prepare photos and documents before staff review.</h1>
         <p>
-          A short, practical checklist for the photo, identity documents, and family information we
-          need before preparing a Diversity Visa entry.
+          A practical checklist for DV photos, identity documents, family
+          information, and the upload process we use to reduce avoidable
+          mistakes.
         </p>
       </section>
 
       <section class="section requirement-flow">
         <div class="section-heading">
           <p class="eyebrow">Simple upload flow</p>
-          <h2>What applicants will provide</h2>
+          <h2>What applicants will provide during intake.</h2>
         </div>
         <div class="requirement-steps">
           <article data-step="1">
             <span>1</span>
             <h3>Take or upload your DV photo</h3>
             <p>
-              Use a plain white or off-white background. The photo must show your current
-              appearance, face forward, with neutral expression and both eyes open.
+              Use a plain white or off-white background. The photo must show
+              your current appearance, face forward, with neutral expression and
+              both eyes open.
             </p>
           </article>
           <article data-step="2">
             <span>2</span>
             <h3>Upload passport or ID documents</h3>
             <p>
-              We will request passport or government ID images to verify spelling, identity details,
-              and application information before submission.
+              We will request passport or government ID images to verify
+              spelling, identity details, and application information before
+              submission.
             </p>
           </article>
           <article data-step="3">
             <span>3</span>
             <h3>We review and crop safely</h3>
             <p>
-              We can crop and resize the image to the required format, but we should not retouch
-              your face or digitally alter your appearance.
+              We can crop and resize the image to the required format, but we
+              should not retouch your face or digitally alter your appearance.
             </p>
           </article>
         </div>
@@ -74,19 +88,33 @@
       <section class="section photo-requirements-section">
         <div class="section-heading">
           <p class="eyebrow">Official DV photo rules</p>
-          <h2>Your Diversity Visa photo must meet these requirements.</h2>
+          <h2>
+            Your Diversity Visa photo must be clean, current, and correctly
+            formatted.
+          </h2>
           <p>
-            We review the photo before submission and ask for a replacement when it is not ready.
+            We review the photo before submission and ask for a replacement when
+            it is not ready.
           </p>
         </div>
         <div class="compact-panel">
           <ul class="compact-checklist">
-            <li>JPEG photo, square image, exactly 600 x 600 pixels for DV entry.</li>
-            <li>Plain white or off-white background with no objects, patterns, or shadows.</li>
-            <li>Full-face view, looking directly at the camera, neutral expression, both eyes open.</li>
+            <li>
+              JPEG photo, square image, exactly 600 x 600 pixels for DV entry.
+            </li>
+            <li>
+              Plain white or off-white background with no objects, patterns, or
+              shadows.
+            </li>
+            <li>
+              Full-face view, looking directly at the camera, neutral
+              expression, both eyes open.
+            </li>
             <li>Current photo taken within the last 6 months.</li>
             <li>Head size should follow official DV composition guidance.</li>
-            <li>No copied/scanned ID photos and no digital appearance edits.</li>
+            <li>
+              No copied/scanned ID photos and no digital appearance edits.
+            </li>
           </ul>
         </div>
       </section>
@@ -100,7 +128,11 @@
           <div class="selfie-camera-widget">
             <div class="selfie-preview">
               <video id="selfieVideo" playsinline muted></video>
-              <img id="selfieResult" alt="Captured 600 by 600 DV photo preview" hidden />
+              <img
+                id="selfieResult"
+                alt="Captured 600 by 600 DV photo preview"
+                hidden
+              />
               <canvas id="selfieCanvas" hidden></canvas>
               <div class="face-guide" aria-hidden="true">
                 <span class="guide-label guide-label-top">Top of head</span>
@@ -109,30 +141,72 @@
               </div>
             </div>
             <div class="selfie-controls">
-              <button class="button selfie-button" id="startSelfie" type="button">Take a selfie</button>
-              <button class="button button-light" id="captureSelfie" type="button" disabled>Capture photo</button>
-              <button class="button button-light" id="validateSelfie" type="button" disabled>Validate photo</button>
-              <button class="button button-light" id="retakeSelfie" type="button" hidden>Retake</button>
-              <a class="button button-light" id="downloadSelfie" hidden>Download test photo</a>
+              <button
+                class="button selfie-button"
+                id="startSelfie"
+                type="button"
+              >
+                Take a selfie
+              </button>
+              <button
+                class="button button-light"
+                id="captureSelfie"
+                type="button"
+                disabled
+              >
+                Capture photo
+              </button>
+              <button
+                class="button button-light"
+                id="validateSelfie"
+                type="button"
+                disabled
+              >
+                Validate photo
+              </button>
+              <button
+                class="button button-light"
+                id="retakeSelfie"
+                type="button"
+                hidden
+              >
+                Retake
+              </button>
+              <a class="button button-light" id="downloadSelfie" hidden
+                >Download test photo</a
+              >
             </div>
             <p class="selfie-status" id="selfieStatus" role="status">
-              Camera works on HTTPS production pages and localhost. iPhone, Android, and desktop
-              browsers may ask permission before opening the camera.
+              Camera works on HTTPS production pages and localhost. iPhone,
+              Android, and desktop browsers may ask permission before opening
+              the camera.
             </p>
           </div>
           <div>
             <p>
-              We can add a “Take a selfie” button in the application form, but the app should guide
-              applicants to stand in front of a real plain white or off-white background. Background
-              removal is risky because official guidance does not allow digital alteration that
-              changes appearance, and edited-looking photos may be rejected.
+              We can add a “Take a selfie” button in the application form, but
+              the app should guide applicants to stand in front of a real plain
+              white or off-white background. Background removal is risky because
+              official guidance does not allow digital alteration that changes
+              appearance, and edited-looking photos may be rejected.
             </p>
             <ul class="requirements-list">
-              <li>Guide users to use a real white or off-white wall or sheet.</li>
+              <li>
+                Guide users to use a real white or off-white wall or sheet.
+              </li>
               <li>Show a face-position guide before taking the photo.</li>
-              <li>Validate image dimensions, file type, and file size in the browser.</li>
-              <li>Crop and resize to 600 x 600 pixels without retouching the person.</li>
-              <li>Flag bad background, shadows, blur, or face position for staff review.</li>
+              <li>
+                Validate image dimensions, file type, and file size in the
+                browser.
+              </li>
+              <li>
+                Crop and resize to 600 x 600 pixels without retouching the
+                person.
+              </li>
+              <li>
+                Flag bad background, shadows, blur, or face position for staff
+                review.
+              </li>
             </ul>
             <div class="camera-specs">
               <strong>Planned camera output</strong>
@@ -143,7 +217,12 @@
             </div>
             <label class="upload-fallback">
               <span>Camera not working? Upload a photo instead.</span>
-              <input id="photoUpload" type="file" accept="image/*" capture="user" />
+              <input
+                id="photoUpload"
+                type="file"
+                accept="image/*"
+                capture="user"
+              />
             </label>
           </div>
         </div>
@@ -154,11 +233,33 @@
           <p class="eyebrow">Photo samples</p>
           <h2>Quick visual checklist before you submit.</h2>
           <p>
-            These examples are simplified guidance based on the official photo rules. The automated
-            validator can check file size, format, dimensions, and a basic background estimate, but
-            human review is still required for glasses, hats, pose, shadows, facial expression, and
-            background quality.
+            A browser can check file size, format, and dimensions. Human review
+            is still required for glasses, hats, pose, shadows, facial
+            expression, background quality, and whether the photo looks altered.
           </p>
+        </div>
+        <div class="photo-score-grid">
+          <article class="photo-score-card good">
+            <strong>Looks ready</strong>
+            <p>
+              Plain white/off-white background, face forward, neutral
+              expression, no glasses, good lighting.
+            </p>
+          </article>
+          <article class="photo-score-card warn">
+            <strong>Needs staff review</strong>
+            <p>
+              Photo may be usable after safe crop/resize, but lighting, framing,
+              or background needs checking.
+            </p>
+          </article>
+          <article class="photo-score-card bad">
+            <strong>Replace photo</strong>
+            <p>
+              Old photo, glasses, heavy shadows, busy background, blur, scan of
+              an ID, or digitally altered face.
+            </p>
+          </article>
         </div>
         <div class="photo-sample-grid photo-sample-grid-featured">
           <article class="photo-sample-card photo-sample-card-wide sample-pass">
@@ -167,17 +268,23 @@
               alt="Four official acceptable visa photo examples"
             />
             <strong>Good photo examples</strong>
-            <p>Plain white/off-white background, face forward, neutral expression, both eyes open.</p>
+            <p>
+              Plain white/off-white background, face forward, neutral
+              expression, both eyes open.
+            </p>
           </article>
-          <article class="photo-sample-card photo-sample-card-wide sample-warning">
+          <article
+            class="photo-sample-card photo-sample-card-wide sample-warning"
+          >
             <img
               src="assets/images/bad-photo-examples.jpg"
               alt="Bad passport photo examples showing glasses, uneven lighting, smile, and wrong background"
             />
             <strong>Bad photo examples</strong>
             <p>
-              Do not submit photos with glasses, tilted or sideways face, messy background,
-              harsh shadows, overexposure, blur, hats, or visible objects behind you.
+              Do not submit photos with glasses, tilted or sideways face, messy
+              background, harsh shadows, overexposure, blur, hats, or visible
+              objects behind you.
             </p>
           </article>
         </div>
@@ -187,10 +294,17 @@
         <div class="section-heading">
           <p class="eyebrow">Document checklist</p>
           <h2>Documents we will request during intake or follow-up.</h2>
+          <p>
+            The goal is not to collect unnecessary paperwork. The goal is to
+            verify spelling, identity details, family details, and application
+            readiness before staff submits.
+          </p>
         </div>
         <div class="compact-panel">
           <ul class="compact-checklist">
-            <li>Passport or travel document, when needed for the active DV year.</li>
+            <li>
+              Passport or travel document, when needed for the active DV year.
+            </li>
             <li>Government ID to confirm spelling and identity details.</li>
             <li>Spouse and eligible child details, where required.</li>
             <li>Education or work history to confirm basic DV eligibility.</li>
@@ -201,15 +315,19 @@
       <section class="section official-source-section">
         <div class="notice-box">
           <strong>Official source:</strong>
-          Diversity Visa photo and entry rules should always be checked against the U.S. Department
-          of State before each registration season.
-          <a href="https://travel.state.gov/content/travel/en/us-visas/visa-information-resources/photos.html">
+          Diversity Visa photo and entry rules should always be checked against
+          the U.S. Department of State before each registration season.
+          <a
+            href="https://travel.state.gov/content/travel/en/us-visas/visa-information-resources/photos.html"
+          >
             Photo requirements
           </a>
           and
-          <a href="https://travel.state.gov/content/travel/en/us-visas/immigrate/diversity-visa-program-entry/diversity-visa-instructions.html">
-            DV instructions
-          </a>.
+          <a
+            href="https://travel.state.gov/content/travel/en/us-visas/immigrate/diversity-visa-program-entry/diversity-visa-instructions.html"
+          >
+            DV instructions </a
+          >.
         </div>
       </section>
     </main>
@@ -217,11 +335,15 @@
     <footer class="site-footer">
       <div>
         <strong>Green Card Application Services</strong>
-        <p>Miami-based application support for Diversity Visa applicants around the world.</p>
+        <p>
+          Miami-based application support for Diversity Visa applicants around
+          the world.
+        </p>
       </div>
       <p class="footer-disclaimer">
-        Not a law firm. Not legal advice. Not affiliated with USCIS, the U.S. Department of State,
-        or any U.S. government agency. Official DV information: dvprogram.state.gov.
+        Not a law firm. Not legal advice. Not affiliated with USCIS, the U.S.
+        Department of State, or any U.S. government agency. Official DV
+        information: dvprogram.state.gov.
       </p>
     </footer>
     <script src="assets/requirements.js"></script>

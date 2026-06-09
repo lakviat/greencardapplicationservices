@@ -619,6 +619,226 @@ Future technical requirements
 9. Add analytics for conversion and drop-off.
 10. Add multilingual support for target countries.
 
+Updated product direction and website gap analysis
+--------------------------------------------------
+Added on 2026-06-09:
+
+Business flow clarification:
+1. The website should eventually collect the full DV intake online, not only a lead request.
+2. The customer should be able to submit application details, upload documents/photos, and preserve progress without starting over.
+3. Payment happens after the customer submits the required intake materials, but before staff begins manual review.
+4. Staff manually verifies all paid submissions before official DV entry submission.
+5. The first supported language is English. Multilingual support should come later after the baseline English flow is strong.
+6. Because users may upload sensitive documents before payment, the product likely needs account creation, sign-in, saved drafts, secure storage, and a customer dashboard.
+7. Google services may be used for storage/database/workflow, but the final architecture should be chosen after the user journey is finalized.
+
+Preferred customer-facing flow:
+1. Tell us who you are.
+2. Upload your documents and DV photos.
+3. Pay the service fee.
+4. We check everything after payment is confirmed.
+5. You approve the final application summary.
+6. We submit the official DV entry during the registration window.
+7. You receive the official confirmation number safely.
+
+Important operating rule:
+Staff should not begin manual review until payment is completed and matched to the customer submission. The website can still save the customer's draft or submitted files before payment so the customer does not lose progress.
+
+Current website gaps:
+1. The current "How to start" section is too compressed and does not clearly show the full service journey.
+2. The current process skips an explicit "customer approves final application summary" step.
+3. The current process says staff contact the customer after payment, but the desired flow should feel more self-service before payment: customer fills intake, uploads files, then pays.
+4. The current Apply form is only a short lead form. It does not communicate that the future product will be a guided application portal.
+5. The current form does not collect enough information for real DV preparation: date of birth, city of birth, current residence country, marital status, children, education, spouse details, child details, photo upload, document upload, authorization, or privacy consent.
+6. There is no sign-in, saved draft, account dashboard, or resume-later path.
+7. There is no checkout state, unpaid submission state, paid/pending-review state, staff review state, customer approval state, submitted state, or confirmation-number state.
+8. There is no clear distinction between "submitted to our service" and "officially submitted to the Department of State."
+9. The pricing section does not yet explain when payment is due in the product journey.
+10. The site has photo/document requirements, but the homepage does not yet make those requirements feel like part of one seamless application workflow.
+11. The current UX is still landing-page-first. The desired UX should be application-flow-first, with the homepage acting as a confident entry point into the guided intake.
+12. The current design is serviceable, but the next design pass should be more visual, more step-based, and easier to understand in under 10 seconds.
+
+Recommended redesign direction:
+1. Replace "How to start" with a clearer service timeline:
+   - Create your application.
+   - Add applicant and family details.
+   - Upload DV photos and identity documents.
+   - Review your information.
+   - Pay securely.
+   - Staff verifies your submission.
+   - Approve final application summary.
+   - Receive official confirmation number.
+2. Add a visual status/progress component that previews the future customer dashboard.
+3. Add a strong "Start Application" CTA that implies a guided flow, not a generic contact form.
+4. Add a short trust section explaining what staff checks: names, birth details, eligibility country, spouse/children, education, duplicate-entry risk, and photos.
+5. Add a "Why people use us instead of doing it alone" section focused on preventing avoidable mistakes and organizing the process.
+6. Add a "What happens after payment" section: payment unlocks manual review, staff checks the file, asks for fixes if needed, and prepares the official submission.
+7. Add a "What you receive" section: receipt, saved application record, staff review status, final approval summary, official confirmation number/page, result-check reminder.
+8. Keep the disclaimer visible: private paid service, not government affiliated, no guarantee of selection, official DV entry can be done directly through dvprogram.state.gov.
+
+Recommended future account states:
+1. Draft:
+   Customer started application but has not completed all required sections.
+2. Ready for payment:
+   Required intake fields and uploads are present, but payment is not completed.
+3. Paid / awaiting staff review:
+   Payment is confirmed and staff can begin manual verification.
+4. Needs customer correction:
+   Staff found missing or risky information and asked the customer to fix it.
+5. Ready for customer approval:
+   Staff prepared the final application summary and needs the customer to approve it.
+6. Approved for submission:
+   Customer authorized submission.
+7. Officially submitted:
+   Staff submitted the official DV entry and uploaded/sent the confirmation page.
+8. Confirmation stored:
+   Customer can view/download the official confirmation number and receipt.
+9. Result-check pending:
+   Customer should be reminded when Entrant Status Check opens.
+
+Design principle for the next version:
+The user should never feel like they are filling out a government form alone. The website should feel like a guided assistant: one screen, one decision, one upload, one confirmation at a time.
+
+FAQ, guide, and SEO content strategy
+------------------------------------
+Added on 2026-06-09:
+
+Reference pages reviewed:
+1. Rush In Documentation DV Lottery service page:
+   https://rushindocumentation.com/ru/servisy/dv-lottery_lotereya-green-card/
+2. Kolya Efimov Green Card Lottery guide:
+   https://www.kolyaefimov.com/blog/greencard-lottery-guide
+
+How to use these references:
+1. Use them as structure and SEO inspiration only.
+2. Do not copy text, claims, images, pricing, guarantees, or legal positioning.
+3. Build our English baseline first, then translate/adapt after the English UX and content model are finalized.
+4. Keep all facts aligned with current official Department of State instructions for the active DV year.
+5. Avoid risky claims such as guaranteed selection, increased lottery odds, or unverifiable zero-disqualification history.
+
+Current website status:
+1. The homepage already has a small FAQ section.
+2. The site already has requirements.html for photo and document requirements.
+3. The current FAQ is too short for SEO and does not fully answer the customer's real questions.
+4. The current site does not yet have a dedicated "How It Works" page, "DV Lottery Guide" page, or full FAQ page.
+
+Recommended information architecture:
+1. Keep the homepage focused on conversion and confidence.
+2. Add /how-it-works/ or how-it-works.html:
+   - Explain our exact service process from account creation through confirmation number.
+   - Show what the customer does and what staff does.
+   - Explain payment timing: intake first, payment second, staff review after payment.
+   - Include a visual step timeline and status examples.
+3. Add /faq/ or faq.html:
+   - Answer common customer questions in short, searchable sections.
+   - Include pricing, documents, photos, family members, deadlines, payment, account/save-progress, official submission, confirmation number, and result checking.
+4. Add /dv-lottery-guide/ or guide.html:
+   - Long-form SEO guide explaining what the DV Lottery is, who can apply, required information, photo rules, spouse/child rules, common mistakes, timeline, and what happens if selected.
+   - This page should be educational and source-driven, not a hard sales page.
+5. Keep /requirements/ or requirements.html:
+   - Focus specifically on photo and document preparation.
+   - Include visual examples, upload guidance, and staff review explanation.
+6. Future multilingual URLs:
+   - English baseline first.
+   - Later use clear language paths such as /ru/, /ky/, /uz/, /tr/ only after content is stable.
+   - Avoid translating too early because product flow, forms, legal copy, and disclaimers may change.
+
+Recommended SEO content pillars:
+1. What is the Green Card Lottery / Diversity Visa Program?
+2. Who is eligible to apply?
+3. Country of birth vs citizenship vs residence.
+4. Education or work experience requirement.
+5. What information is needed for the DV entry?
+6. DV photo requirements and common photo mistakes.
+7. Spouse and child rules.
+8. Why duplicate entries are dangerous.
+9. Why confirmation number storage matters.
+10. When and how results are checked.
+11. Why using a preparation service can reduce avoidable mistakes.
+12. What our service does and does not do.
+13. Private service disclaimer and official government website link.
+
+Recommended FAQ topics:
+1. Is this the official government website?
+2. Can I apply for free myself?
+3. What do I pay for if official DV registration is free?
+4. Can you guarantee I will win?
+5. Can you guarantee my application will be submitted without preventable errors?
+6. When do you start reviewing my documents?
+7. Why do I need to pay before staff review?
+8. Can I save my progress and finish later?
+9. What documents do I need?
+10. Do I need a passport?
+11. What photo do I need?
+12. Do I need photos for my spouse and children?
+13. Which children must be included?
+14. What if I am married but separated?
+15. What if my spouse or child is not immigrating with me?
+16. Can both spouses submit separate entries?
+17. Can I submit more than one entry?
+18. What if I already applied somewhere else?
+19. What happens after I pay?
+20. What happens if my photo is wrong?
+21. What happens if information is missing?
+22. Will I approve the final application before official submission?
+23. How will I receive my confirmation number?
+24. How do I check results?
+25. What happens if I am selected?
+26. How do you protect my documents?
+27. Can I delete my data later?
+28. Which languages do you support?
+
+Recommended "How It Works" page outline:
+1. Create an account:
+   Customer starts a secure application and can return later.
+2. Complete guided intake:
+   Customer enters identity, contact, eligibility, education, spouse, and child information.
+3. Upload documents and photos:
+   Customer uploads applicant/family photos and identity documents where required by our review policy.
+4. Review your own summary:
+   Customer checks entered information before checkout.
+5. Pay service fee:
+   Payment is required before staff begins manual review.
+6. Staff quality check:
+   Staff checks spelling, dates, countries, eligibility, family members, duplicate-entry risk, and photo readiness.
+7. Fix anything flagged:
+   Customer receives a clear request if a document, photo, or answer needs correction.
+8. Approve final application summary:
+   Customer gives authorization after seeing what will be submitted.
+9. Official submission:
+   Staff submits during the official DV registration window.
+10. Receive confirmation:
+   Customer receives official confirmation details and can access them later.
+11. Result reminder:
+   Customer is reminded when Entrant Status Check becomes available.
+
+Homepage content changes to support SEO and UX:
+1. Keep only a compact FAQ preview on the homepage.
+2. Add links to "Read the full DV Lottery guide" and "See all FAQs."
+3. Add a compact "What we check before submission" section.
+4. Add a compact "Common mistakes we help prevent" section.
+5. Add an official-source notice near guide/FAQ links.
+6. Use schema-friendly FAQ content later so search engines can understand the page structure.
+
+UI/UX design ideas for the next redesign:
+1. Hero should feel like an application command center, not a generic immigration landing page.
+2. Use a split first screen with:
+   - Left: clear promise, CTA, disclaimer.
+   - Right: realistic application progress preview showing steps like Draft, Uploads, Payment, Staff Review, Approval, Submitted.
+3. Use a horizontal or vertical "journey rail" for the main process. Each step should have one short action label and one reassurance line.
+4. Use cards only for repeated items like process steps, FAQ groups, pricing packages, and dashboard preview states.
+5. Avoid heavy patriotic decoration. Use clean white space, restrained red/blue accents, and real human/document/photo visuals.
+6. The main CTA should be "Start Application" or "Create Application", not "Request payment details" once the full intake direction is implemented.
+7. Use a sticky mobile bottom CTA with one action only.
+8. Show "save and continue later" as a trust feature once accounts exist.
+9. Use a visual checklist for what staff reviews: identity, eligibility, photo, spouse/children, education, duplicate risk, final authorization.
+10. Use status chips in the dashboard preview: Draft, Ready for Payment, Paid, Staff Review, Needs Fix, Ready to Approve, Submitted.
+11. Use a calm document-upload UI with per-file status: Uploaded, Needs replacement, Approved by staff.
+12. Use photo validation UI that separates automatic checks from human review.
+13. Use accordions for long FAQ sections so the page stays clean on mobile.
+14. Use guide pages with a table of contents, anchor links, and short answer boxes for scanability.
+15. Place official-source links inside content, not only in the footer.
+
 Open business decisions
 -----------------------
 1. Final business name.
