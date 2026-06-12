@@ -1343,10 +1343,16 @@ small {
     justify-self: end;
   }
 
+  .intake-form {
+    width: min(100%, 720px);
+    margin-inline: auto;
+  }
+
   .dream-note,
   .timeline-grid,
   .pricing-grid,
   .apply-section,
+  .intake-form,
   .site-footer,
   .requirement-steps,
   .requirement-grid,
