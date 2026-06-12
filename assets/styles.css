@@ -807,8 +807,51 @@ small {
 }
 
 .button-form {
+  position: relative;
+  overflow: hidden;
   width: 100%;
   min-height: 56px;
+}
+
+.button-form::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(
+    110deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.18) 35%,
+    rgba(255, 255, 255, 0.48) 50%,
+    rgba(255, 255, 255, 0.18) 65%,
+    transparent 100%
+  );
+  transform: translateX(-110%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.button-form.is-submitting {
+  cursor: wait;
+}
+
+.button-form.is-submitting::before {
+  opacity: 1;
+  animation: submitSweep 1.05s linear infinite;
+}
+
+.button-form.is-submitted {
+  background: #188038;
+  box-shadow: 0 18px 36px rgba(24, 128, 56, 0.22);
+}
+
+.button-form:disabled {
+  opacity: 1;
+}
+
+@keyframes submitSweep {
+  to {
+    transform: translateX(110%);
+  }
 }
 
 .form-message {

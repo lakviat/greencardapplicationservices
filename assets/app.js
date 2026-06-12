@@ -8,6 +8,9 @@ const applySection = document.querySelector("#apply");
 const heroSection = document.querySelector(".hero-dashboard");
 const oneSubmissionCheckoutUrl =
   "https://buy.stripe.com/test_14AaEZ7PucMefqAbmJ0ZW00";
+const googleScriptIntakeUrl =
+  "https://script.google.com/macros/s/AKfycbyZp6oqQoPsP6o2RwaFlflHgfF9QAfjtlp172XQZCqEUnV3g3YiwmBYoW0HoFIwN9kv/exec";
+const googleScriptSecret = "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET";
 
 mobileMenus.forEach((menu) => {
   menu.querySelectorAll("a").forEach((link) => {
@@ -55,6 +58,89 @@ if (heroSection && "IntersectionObserver" in window) {
 }
 
 if (form && message) {
+  const setSubmitState = (state) => {
+    if (!submitButton) return;
+
+    submitButton.classList.toggle("is-submitting", state === "submitting");
+    submitButton.classList.toggle("is-submitted", state === "submitted");
+    submitButton.disabled = state === "submitting" || state === "submitted";
+
+    if (state === "submitting") {
+      submitButton.textContent = "Submitting...";
+    } else if (state === "submitted") {
+      submitButton.textContent = "Submitted";
+    } else {
+      updateSubmitLabel();
+    }
+  };
+
+  const fileToPayload = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.addEventListener("load", () => {
+        const result = String(reader.result || "");
+        const base64 = result.includes(",") ? result.split(",").pop() : result;
+
+        resolve({
+          name: file.name,
+          mimeType: file.type || "application/octet-stream",
+          base64,
+        });
+      });
+
+      reader.addEventListener("error", () => {
+        reject(new Error("Unable to read the uploaded document."));
+      });
+
+      reader.readAsDataURL(file);
+    });
+
+  const createSubmissionId = () => {
+    const random =
+      window.crypto && "randomUUID" in window.crypto
+        ? window.crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    return `gcas-${random}`;
+  };
+
+  const buildApplicationPayload = async () => {
+    const formData = new FormData(form);
+    const identityDocument = formData.get("identityDocument");
+    const files =
+      identityDocument instanceof File && identityDocument.size > 0
+        ? [await fileToPayload(identityDocument)]
+        : [];
+
+    return {
+      secret: googleScriptSecret,
+      submissionId: createSubmissionId(),
+      submittedAt: new Date().toISOString(),
+      firstName: formData.get("firstName"),
+      middleName: formData.get("middleName"),
+      lastName: formData.get("lastName"),
+      email: formData.get("email"),
+      phone: formData.get("phone"),
+      countryOfBirth: formData.get("countryOfBirth"),
+      paymentStatus: paymentStatus?.value || "pending",
+      files,
+    };
+  };
+
+  const sendApplicationToDrive = async () => {
+    const payload = await buildApplicationPayload();
+
+    await fetch(googleScriptIntakeUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8",
+      },
+      body: JSON.stringify(payload),
+    });
+  };
+
   const updateSubmitLabel = () => {
     if (!submitButton) return;
 
@@ -89,7 +175,7 @@ if (form && message) {
     });
   }
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     if (!form.checkValidity()) {
@@ -97,12 +183,24 @@ if (form && message) {
       return;
     }
 
+    setSubmitState("submitting");
     message.textContent =
-      "Application request prepared. Payment is optional at this step; our team can reach out to confirm documents and next steps.";
-    message.style.color = "#188038";
+      "Submitting your application and uploaded document. Please keep this page open.";
+    message.style.color = "#174ea6";
 
-    if (submitButton) {
-      submitButton.textContent = "Application Prepared";
+    try {
+      await sendApplicationToDrive();
+
+      setSubmitState("submitted");
+      message.textContent =
+        "Submitted. We received your request and will contact you to confirm documents, package, and payment before staff review begins.";
+      message.style.color = "#188038";
+    } catch (error) {
+      setSubmitState("idle");
+      message.textContent =
+        error.message ||
+        "We could not submit the application. Please try again or contact support.";
+      message.style.color = "#b42318";
     }
   });
 }
