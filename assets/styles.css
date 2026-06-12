@@ -671,13 +671,25 @@ label {
 input,
 select {
   width: 100%;
-  min-height: 44px;
+  min-height: 52px;
   padding: 0 12px;
   color: var(--ink);
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 8px;
   font: inherit;
+}
+
+select {
+  padding-right: 42px;
+  appearance: none;
+  background:
+    linear-gradient(45deg, transparent 50%, var(--navy) 50%) right 18px center /
+      7px 7px no-repeat,
+    linear-gradient(135deg, var(--navy) 50%, transparent 50%) right 13px
+      center / 7px 7px no-repeat,
+    #fff;
+  font-weight: 850;
 }
 
 small {
@@ -1488,7 +1500,8 @@ small {
   }
 
   .camera-active .mobile-cta,
-  .requirements-page .mobile-cta {
+  .requirements-page .mobile-cta,
+  .apply-visible .mobile-cta {
     display: none;
   }
 }
@@ -1775,12 +1788,14 @@ small {
 }
 
 .check-grid details {
+  position: relative;
   cursor: pointer;
 }
 
 .check-grid summary {
   display: grid;
   gap: 7px;
+  padding-right: 42px;
   list-style: none;
 }
 
@@ -1789,19 +1804,31 @@ small {
 }
 
 .check-grid summary::after {
-  content: "See more";
-  width: fit-content;
-  margin-top: 7px;
-  padding: 4px 9px;
-  color: var(--blue);
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  content: "+";
+  color: var(--navy);
   background: #eef7ff;
-  border-radius: 999px;
-  font-size: 0.78rem;
+  border: 1px solid #d7e8fb;
+  border-radius: 50%;
+  font-size: 1.05rem;
   font-weight: 900;
+  line-height: 1;
+  transition:
+    transform 160ms ease,
+    background 160ms ease;
 }
 
 .check-grid details[open] summary::after {
-  content: "Show less";
+  content: "-";
+  background: #fff8e7;
+  border-color: #f1d184;
+  transform: rotate(180deg);
 }
 
 .check-grid details p {

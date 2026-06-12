@@ -1,23 +1,38 @@
 const form = document.querySelector("#intakeForm");
 const message = document.querySelector("#formMessage");
+const mobileMenus = document.querySelectorAll(".mobile-menu");
+const applySection = document.querySelector("#apply");
+
+mobileMenus.forEach((menu) => {
+  menu.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => {
+      menu.open = false;
+    });
+  });
+});
+
+document.addEventListener("click", (event) => {
+  mobileMenus.forEach((menu) => {
+    if (!menu.contains(event.target)) {
+      menu.open = false;
+    }
+  });
+});
+
+if (applySection && "IntersectionObserver" in window) {
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      document.body.classList.toggle("apply-visible", entry.isIntersecting);
+    },
+    { threshold: 0.12 },
+  );
+
+  observer.observe(applySection);
+}
 
 if (form && message) {
   form.addEventListener("submit", (event) => {
     event.preventDefault();
-
-    const data = new FormData(form);
-    const email = String(data.get("email") || "")
-      .trim()
-      .toLowerCase();
-    const confirmEmail = String(data.get("confirmEmail") || "")
-      .trim()
-      .toLowerCase();
-
-    if (email !== confirmEmail) {
-      message.textContent = "Please make sure both email fields match.";
-      message.style.color = "#c5221f";
-      return;
-    }
 
     message.textContent =
       "Application request saved in this preview. Next step: connect secure intake, uploads, payment, and staff review.";
