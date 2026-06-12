@@ -85,6 +85,7 @@ if (form && message) {
         resolve({
           name: file.name,
           mimeType: file.type || "application/octet-stream",
+          size: file.size,
           base64,
         });
       });
@@ -107,11 +108,10 @@ if (form && message) {
 
   const buildApplicationPayload = async () => {
     const formData = new FormData(form);
-    const identityDocument = formData.get("identityDocument");
-    const files =
-      identityDocument instanceof File && identityDocument.size > 0
-        ? [await fileToPayload(identityDocument)]
-        : [];
+    const uploadedFiles = formData
+      .getAll("identityDocument")
+      .filter((file) => file instanceof File && file.size > 0);
+    const files = await Promise.all(uploadedFiles.map(fileToPayload));
 
     return {
       secret: googleScriptSecret,

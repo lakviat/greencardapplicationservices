@@ -16,7 +16,7 @@
     />
     <link
       rel="stylesheet"
-      href="assets/styles.css?v=20260612-drive-submit-ui"
+      href="assets/styles.css?v=20260612-drive-multi-file"
     />
   </head>
   <body>
@@ -659,16 +659,11 @@
             </small>
           </label>
           <label class="full file-upload">
-            <span>Passport or ID document</span>
-            <input
-              name="identityDocument"
-              type="file"
-              accept="image/*,.pdf"
-              required
-            />
+            <span>Passport, ID, or supporting document</span>
+            <input name="identityDocument" type="file" multiple required />
             <small>
-              Upload a clear passport or government ID copy so we can verify
-              spelling and identity details.
+              Upload a clear passport, government ID, or supporting document so
+              we can verify spelling and identity details.
             </small>
           </label>
           <label class="consent full">
@@ -796,6 +791,6 @@
       </p>
     </footer>
 
-    <script src="assets/app.js?v=20260612-drive-submit-ui"></script>
+    <script src="assets/app.js?v=20260612-drive-multi-file"></script>
   </body>
 </html>
