@@ -1,5 +1,7 @@
 const form = document.querySelector("#intakeForm");
 const message = document.querySelector("#formMessage");
+const submitButton = document.querySelector("#applicationSubmit");
+const applePayButton = document.querySelector("#applePayButton");
 const mobileMenus = document.querySelectorAll(".mobile-menu");
 const applySection = document.querySelector("#apply");
 
@@ -31,6 +33,26 @@ if (applySection && "IntersectionObserver" in window) {
 }
 
 if (form && message) {
+  const updateSubmitLabel = () => {
+    if (!submitButton) return;
+
+    submitButton.textContent = form.checkValidity()
+      ? "Submit Application"
+      : "Start Application";
+  };
+
+  form.addEventListener("input", updateSubmitLabel);
+  form.addEventListener("change", updateSubmitLabel);
+  updateSubmitLabel();
+
+  if (applePayButton) {
+    applePayButton.addEventListener("click", () => {
+      message.textContent =
+        "Apple Pay checkout is prepared for the design preview. Next step: connect a secure payment provider and backend.";
+      message.style.color = "#174ea6";
+    });
+  }
+
   form.addEventListener("submit", (event) => {
     event.preventDefault();
 

@@ -10,7 +10,10 @@
     <title>Green Card Application Services</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://images.unsplash.com" />
-    <link rel="stylesheet" href="assets/styles.css?v=20260612-tablet-form" />
+    <link
+      rel="stylesheet"
+      href="assets/styles.css?v=20260612-payment-upload-chat"
+    />
   </head>
   <body>
     <header class="site-header">
@@ -644,6 +647,19 @@
               for the active DV year.
             </small>
           </label>
+          <label class="full file-upload">
+            <span>Passport or ID document</span>
+            <input
+              name="identityDocument"
+              type="file"
+              accept="image/*,.pdf"
+              required
+            />
+            <small>
+              Upload a clear passport or government ID copy so we can verify
+              spelling and identity details.
+            </small>
+          </label>
           <label class="consent full">
             <input type="checkbox" required />
             <span>
@@ -651,7 +667,26 @@
               a government service.
             </span>
           </label>
-          <button class="button full button-form" type="submit">
+          <div class="payment-preview full">
+            <button
+              class="apple-pay-button"
+              id="applePayButton"
+              type="button"
+              aria-label="Pay with Apple Pay"
+            >
+              <span>Pay with</span>
+              <strong>Apple Pay</strong>
+            </button>
+            <small>
+              Apple Pay checkout will connect through a secure payment provider
+              before launch.
+            </small>
+          </div>
+          <button
+            class="button full button-form"
+            id="applicationSubmit"
+            type="submit"
+          >
             Start Application
           </button>
           <p class="form-message" id="formMessage" role="status"></p>
@@ -708,6 +743,24 @@
     </main>
 
     <a class="mobile-cta" href="#apply">Start Application</a>
+
+    <details class="support-chat">
+      <summary>
+        <span>Support</span>
+      </summary>
+      <div class="support-panel">
+        <strong>Application support</strong>
+        <p>
+          Ask us about documents, photos, payment, or the next step. AI support
+          can be connected here later.
+        </p>
+        <label>
+          <span>Message</span>
+          <textarea placeholder="Type your question..." rows="3"></textarea>
+        </label>
+        <button class="button button-small" type="button">Send message</button>
+      </div>
+    </details>
 
     <footer class="site-footer">
       <div>
