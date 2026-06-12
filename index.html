@@ -10,7 +10,7 @@
     <title>Green Card Application Services</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://images.unsplash.com" />
-    <link rel="stylesheet" href="assets/styles.css?v=20260609-photo-cards" />
+    <link rel="stylesheet" href="assets/styles.css?v=20260611-ui-polish" />
   </head>
   <body>
     <header class="site-header">
@@ -32,6 +32,17 @@
         <a href="faq.html">FAQ</a>
         <a href="requirements.html">Requirements</a>
       </nav>
+      <details class="mobile-menu">
+        <summary>Menu</summary>
+        <nav aria-label="Mobile navigation">
+          <a href="how-it-works.html">How it works</a>
+          <a href="#timeline">Dates</a>
+          <a href="#pricing">Pricing</a>
+          <a href="guide.html">Guide</a>
+          <a href="faq.html">FAQ</a>
+          <a href="requirements.html">Requirements</a>
+        </nav>
+      </details>
       <a class="button button-small" href="#apply">Start Application</a>
     </header>
 
@@ -60,50 +71,50 @@
         <div class="hero-panel" aria-label="Application progress preview">
           <div class="panel-topline">
             <span>Application preview</span>
-            <strong>DV intake</strong>
+            <a href="how-it-works.html">View workflow</a>
           </div>
           <div class="status-list">
-            <div class="status-row is-done">
+            <a class="status-row is-done" href="#apply">
               <span></span>
               <div>
                 <strong>Tell us who you are</strong>
                 <p>Identity, contact, eligibility country.</p>
               </div>
-            </div>
-            <div class="status-row is-done">
+            </a>
+            <a class="status-row is-done" href="requirements.html">
               <span></span>
               <div>
                 <strong>Upload photos and documents</strong>
                 <p>Applicant and family photos stay organized.</p>
               </div>
-            </div>
-            <div class="status-row is-current">
+            </a>
+            <a class="status-row is-current" href="#pricing">
               <span></span>
               <div>
                 <strong>Pay before manual review</strong>
                 <p>Staff review begins after payment is matched.</p>
               </div>
-            </div>
-            <div class="status-row">
+            </a>
+            <a class="status-row" href="how-it-works.html#confirmation">
               <span></span>
               <div>
                 <strong>Approve final summary</strong>
                 <p>You confirm before we submit officially.</p>
               </div>
-            </div>
-            <div class="status-row">
+            </a>
+            <a class="status-row" href="how-it-works.html#confirmation">
               <span></span>
               <div>
                 <strong>Receive confirmation number</strong>
                 <p>Stored safely for result checking.</p>
               </div>
-            </div>
+            </a>
           </div>
           <div class="panel-proof">
             <span>Staff checks</span>
-            <b>Photo</b>
-            <b>Family</b>
-            <b>Eligibility</b>
+            <a href="requirements.html">Photo</a>
+            <a href="guide.html#family">Family</a>
+            <a href="guide.html#eligibility">Eligibility</a>
           </div>
         </div>
       </section>
@@ -137,11 +148,12 @@
           </h2>
         </div>
         <p>
-          The Diversity Visa program makes up to approximately 55,000 immigrant
-          visas available each year for people from countries with historically
-          low immigration to the United States. Selection is random, but every
-          entry still needs accurate names, dates, family details, country
-          eligibility, and a compliant photo.
+          <span class="fact-highlight"
+            >Up to approximately 55,000 diversity immigrant visas are available
+            each year.</span
+          >
+          Selection is random, but every entry still needs accurate names,
+          dates, family details, country eligibility, and a compliant photo.
         </p>
       </section>
 
@@ -210,47 +222,67 @@
           </p>
         </div>
         <div class="check-grid">
-          <article>
-            <strong>Identity</strong
-            ><span
-              >Name spelling, birth date, birth city, and contact details.</span
-            >
-          </article>
-          <article>
-            <strong>Eligibility</strong
-            ><span
-              >Country of birth, chargeability questions, education or work
-              background.</span
-            >
-          </article>
-          <article>
-            <strong>Photos</strong
-            ><span
-              >File format, dimensions, background, framing, shadows, and
-              replacement requests.</span
-            >
-          </article>
-          <article>
-            <strong>Family</strong
-            ><span
-              >Spouse, children, stepchildren, and required family-member
-              disclosure.</span
-            >
-          </article>
-          <article>
-            <strong>Duplicate risk</strong
-            ><span
-              >Customer confirmation that no other DV entry was already
-              submitted.</span
-            >
-          </article>
-          <article>
-            <strong>Final approval</strong
-            ><span
-              >Customer authorization before staff submits the official DV
-              entry.</span
-            >
-          </article>
+          <details>
+            <summary>
+              <strong>Identity</strong><span>Name, date, city, contact.</span>
+            </summary>
+            <p>
+              We compare names, birth date, birth city, country, email, and
+              phone/WhatsApp details for consistency before submission.
+            </p>
+          </details>
+          <details>
+            <summary>
+              <strong>Eligibility</strong
+              ><span>Country and qualification logic.</span>
+            </summary>
+            <p>
+              We check country of birth, chargeability questions, education
+              level, and whether a work-experience fallback may be needed.
+            </p>
+          </details>
+          <details>
+            <summary>
+              <strong>Photos</strong
+              ><span>Size, format, face, background.</span>
+            </summary>
+            <p>
+              We review file dimensions, background, glasses, shadows,
+              expression, face framing, and whether a replacement photo is
+              needed.
+            </p>
+          </details>
+          <details>
+            <summary>
+              <strong>Family</strong
+              ><span>Spouse and children safeguards.</span>
+            </summary>
+            <p>
+              We check marital status, spouse details, children, adopted
+              children, and stepchildren so required family members are not
+              missed.
+            </p>
+          </details>
+          <details>
+            <summary>
+              <strong>Duplicate risk</strong><span>One entry per person.</span>
+            </summary>
+            <p>
+              We ask whether the customer or another service has already
+              submitted an entry, because duplicate entries can create
+              disqualification risk.
+            </p>
+          </details>
+          <details>
+            <summary>
+              <strong>Final approval</strong
+              ><span>Customer confirms first.</span>
+            </summary>
+            <p>
+              The intended workflow gives the customer a final summary to
+              approve before staff submits the official DV entry.
+            </p>
+          </details>
         </div>
       </section>
 

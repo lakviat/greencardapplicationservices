@@ -9,7 +9,7 @@
     />
     <title>Application Requirements | Green Card Services</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="assets/styles.css?v=20260609-photo-cards" />
+    <link rel="stylesheet" href="assets/styles.css?v=20260611-ui-polish" />
   </head>
   <body class="requirements-page">
     <header class="site-header">
@@ -31,6 +31,17 @@
         <a href="faq.html">FAQ</a>
         <a href="requirements.html">Requirements</a>
       </nav>
+      <details class="mobile-menu">
+        <summary>Menu</summary>
+        <nav aria-label="Mobile navigation">
+          <a href="how-it-works.html">How it works</a>
+          <a href="index.html#timeline">Dates</a>
+          <a href="index.html#pricing">Pricing</a>
+          <a href="guide.html">Guide</a>
+          <a href="faq.html">FAQ</a>
+          <a href="requirements.html">Requirements</a>
+        </nav>
+      </details>
       <a class="button button-small" href="index.html#apply"
         >Start Application</a
       >
@@ -227,64 +238,113 @@
 
       <section class="section photo-samples-section">
         <div class="section-heading">
-          <p class="eyebrow">Photo samples</p>
-          <h2>Quick visual checklist before you submit.</h2>
+          <p class="eyebrow">Photo examples</p>
+          <h2>See what passes &mdash; and what gets rejected.</h2>
           <p>
-            A browser can check file size, format, and dimensions. Human review
-            is still required for glasses, hats, pose, shadows, facial
-            expression, background quality, and whether the photo looks altered.
+            Your photo is auto-checked for size, format, and dimensions. These
+            examples cover what software can&rsquo;t judge on its own: lighting,
+            expression, glasses, and background.
           </p>
         </div>
-        <div class="photo-score-grid">
-          <article class="photo-score-card good">
-            <strong>Looks ready</strong>
-            <p>
-              Plain white/off-white background, face forward, neutral
-              expression, no glasses, good lighting.
-            </p>
+
+        <div class="example-compare">
+          <article class="example-col is-good">
+            <header class="example-head">
+              <span class="example-icon" aria-hidden="true">&check;</span>
+              <div>
+                <strong>Ready to submit</strong>
+                <p>Plain background, face forward, neutral, both eyes open.</p>
+              </div>
+            </header>
+            <div class="example-thumbs">
+              <figure>
+                <img
+                  src="assets/images/photo-examples/good-1.jpg?v=3"
+                  alt="Acceptable DV photo with even, natural lighting"
+                  loading="lazy"
+                />
+                <figcaption>Even lighting</figcaption>
+              </figure>
+              <figure>
+                <img
+                  src="assets/images/photo-examples/good-2.jpg?v=3"
+                  alt="Acceptable DV photo with a neutral expression and both eyes open"
+                  loading="lazy"
+                />
+                <figcaption>Neutral expression</figcaption>
+              </figure>
+              <figure>
+                <img
+                  src="assets/images/photo-examples/good-3.jpg?v=3"
+                  alt="Acceptable DV photo on a plain, even background"
+                  loading="lazy"
+                />
+                <figcaption>Plain background</figcaption>
+              </figure>
+              <figure>
+                <img
+                  src="assets/images/photo-examples/good-4.jpg?v=3"
+                  alt="Acceptable DV photo with a religious head covering and the full face visible"
+                  loading="lazy"
+                />
+                <figcaption>Religious covering OK</figcaption>
+              </figure>
+            </div>
           </article>
-          <article class="photo-score-card warn">
-            <strong>Needs staff review</strong>
-            <p>
-              Photo may be usable after safe crop/resize, but lighting, framing,
-              or background needs checking.
-            </p>
-          </article>
-          <article class="photo-score-card bad">
-            <strong>Replace photo</strong>
-            <p>
-              Old photo, glasses, heavy shadows, busy background, blur, scan of
-              an ID, or digitally altered face.
-            </p>
+
+          <article class="example-col is-bad">
+            <header class="example-head">
+              <span class="example-icon" aria-hidden="true">&times;</span>
+              <div>
+                <strong>Will be rejected</strong>
+                <p>
+                  Anything that hides, shadows, or distracts from your face.
+                </p>
+              </div>
+            </header>
+            <div class="example-thumbs">
+              <figure>
+                <img
+                  src="assets/images/photo-examples/bad-1.jpg?v=3"
+                  alt="Rejected DV photo: person wearing sunglasses"
+                  loading="lazy"
+                />
+                <figcaption>Glasses or tinted lenses</figcaption>
+              </figure>
+              <figure>
+                <img
+                  src="assets/images/photo-examples/bad-2.jpg?v=3"
+                  alt="Rejected DV photo: heavy shadow and uneven lighting across the face"
+                  loading="lazy"
+                />
+                <figcaption>Shadows / uneven light</figcaption>
+              </figure>
+              <figure>
+                <img
+                  src="assets/images/photo-examples/bad-3.jpg?v=3"
+                  alt="Rejected DV photo: smiling with an open mouth"
+                  loading="lazy"
+                />
+                <figcaption>Smiling / open mouth</figcaption>
+              </figure>
+              <figure>
+                <img
+                  src="assets/images/photo-examples/bad-4.jpg?v=3"
+                  alt="Rejected DV photo: busy patterned background behind the applicant"
+                  loading="lazy"
+                />
+                <figcaption>Busy background</figcaption>
+              </figure>
+            </div>
           </article>
         </div>
-        <div class="photo-sample-grid photo-sample-grid-featured">
-          <article class="photo-sample-card photo-sample-card-wide sample-pass">
-            <img
-              src="assets/images/photo-examples/good-photo-examples.jpg"
-              alt="Four official acceptable visa photo examples"
-            />
-            <strong>Good photo examples</strong>
-            <p>
-              Plain white/off-white background, face forward, neutral
-              expression, both eyes open.
-            </p>
-          </article>
-          <article
-            class="photo-sample-card photo-sample-card-wide sample-warning"
-          >
-            <img
-              src="assets/images/bad-photo-examples.jpg"
-              alt="Bad passport photo examples showing glasses, uneven lighting, smile, and wrong background"
-            />
-            <strong>Bad photo examples</strong>
-            <p>
-              Do not submit photos with glasses, tilted or sideways face, messy
-              background, harsh shadows, overexposure, blur, hats, or visible
-              objects behind you.
-            </p>
-          </article>
-        </div>
+
+        <p class="example-note">
+          <strong>Automatic + human review.</strong> Software checks size,
+          format, and dimensions instantly. A staff reviewer then checks
+          glasses, expression, shadows, and background before anything is
+          submitted &mdash; and asks for a retake if needed.
+        </p>
       </section>
 
       <section class="section document-section">
