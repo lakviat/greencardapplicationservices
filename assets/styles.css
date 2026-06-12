@@ -2348,8 +2348,8 @@ small {
 
 @media (max-width: 620px) {
   .hero-dashboard {
-    min-height: 860px;
-    padding-block: clamp(210px, 58vw, 270px) 72px;
+    min-height: auto;
+    padding-block: 46px 72px;
   }
 
   .hero-dashboard h1 {
@@ -2360,24 +2360,23 @@ small {
     background:
       linear-gradient(
         180deg,
-        rgba(6, 20, 43, 0.08) 0%,
-        rgba(6, 20, 43, 0.18) 18%,
-        rgba(6, 20, 43, 0.82) 35%,
-        rgba(6, 20, 43, 0.9) 78%,
+        rgba(6, 20, 43, 0.62) 0%,
+        rgba(6, 20, 43, 0.7) 28%,
+        rgba(6, 20, 43, 0.88) 64%,
         rgba(248, 251, 255, 0.92) 100%
       ),
-      linear-gradient(90deg, rgba(6, 20, 43, 0.78), rgba(6, 20, 43, 0.14) 100%);
+      linear-gradient(90deg, rgba(6, 20, 43, 0.86), rgba(6, 20, 43, 0.2) 100%);
   }
 
   .hero-photo-slide.is-first {
     background-position: center top;
-    background-size: 100% auto;
+    background-size: 112% auto;
     background-repeat: no-repeat;
   }
 
   .hero-photo-slide.is-second {
     background-position: center top;
-    background-size: 100% auto;
+    background-size: 112% auto;
     background-repeat: no-repeat;
   }
 
