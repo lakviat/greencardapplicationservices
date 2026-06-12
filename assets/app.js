@@ -5,6 +5,7 @@ const applePayButton = document.querySelector("#applePayButton");
 const paymentStatus = document.querySelector("#paymentStatus");
 const mobileMenus = document.querySelectorAll(".mobile-menu");
 const applySection = document.querySelector("#apply");
+const heroSection = document.querySelector(".hero-dashboard");
 
 mobileMenus.forEach((menu) => {
   menu.querySelectorAll("a").forEach((link) => {
@@ -22,6 +23,13 @@ document.addEventListener("click", (event) => {
   });
 });
 
+const updateScrollState = () => {
+  document.body.classList.toggle("has-scrolled", window.scrollY > 140);
+};
+
+window.addEventListener("scroll", updateScrollState, { passive: true });
+updateScrollState();
+
 if (applySection && "IntersectionObserver" in window) {
   const observer = new IntersectionObserver(
     ([entry]) => {
@@ -31,6 +39,17 @@ if (applySection && "IntersectionObserver" in window) {
   );
 
   observer.observe(applySection);
+}
+
+if (heroSection && "IntersectionObserver" in window) {
+  const heroObserver = new IntersectionObserver(
+    ([entry]) => {
+      document.body.classList.toggle("hero-visible", entry.isIntersecting);
+    },
+    { rootMargin: "-18% 0px -52% 0px", threshold: 0 },
+  );
+
+  heroObserver.observe(heroSection);
 }
 
 if (form && message) {
