@@ -7,6 +7,11 @@
       name="description"
       content="Diversity Visa application preparation, document organization, photo review, submission support, and follow-up."
     />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://script.google.com; upgrade-insecure-requests"
+    />
     <title>Green Card Application Services</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
     <link
@@ -16,7 +21,7 @@
     />
     <link
       rel="stylesheet"
-      href="assets/styles.css?v=20260612-drive-multi-file"
+      href="assets/styles.css?v=20260612-security-hardening"
     />
   </head>
   <body>
@@ -445,6 +450,16 @@
         </div>
 
         <form class="intake-form" id="intakeForm">
+          <label class="visually-hidden" aria-hidden="true" tabindex="-1">
+            Company website
+            <input
+              id="companyWebsite"
+              name="companyWebsite"
+              type="text"
+              autocomplete="off"
+              tabindex="-1"
+            />
+          </label>
           <label>
             <span>First name</span>
             <input name="firstName" autocomplete="given-name" required />
@@ -791,6 +806,6 @@
       </p>
     </footer>
 
-    <script src="assets/app.js?v=20260612-drive-multi-file"></script>
+    <script src="assets/app.js?v=20260612-security-hardening"></script>
   </body>
 </html>

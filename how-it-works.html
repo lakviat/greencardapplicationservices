@@ -7,11 +7,16 @@
       name="description"
       content="How Green Card Application Services helps prepare, review, and submit Diversity Visa Lottery entries."
     />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://script.google.com; upgrade-insecure-requests"
+    />
     <title>How It Works | Green Card Application Services</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
     <link
       rel="stylesheet"
-      href="assets/styles.css?v=20260612-drive-multi-file"
+      href="assets/styles.css?v=20260612-security-hardening"
     />
   </head>
   <body>
@@ -160,6 +165,6 @@
         information: dvprogram.state.gov.
       </p>
     </footer>
-    <script src="assets/app.js?v=20260612-drive-multi-file"></script>
+    <script src="assets/app.js?v=20260612-security-hardening"></script>
   </body>
 </html>

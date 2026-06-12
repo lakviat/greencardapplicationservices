@@ -6,11 +6,15 @@ const paymentStatus = document.querySelector("#paymentStatus");
 const mobileMenus = document.querySelectorAll(".mobile-menu");
 const applySection = document.querySelector("#apply");
 const heroSection = document.querySelector(".hero-dashboard");
+const honeypotField = document.querySelector("#companyWebsite");
 const oneSubmissionCheckoutUrl =
   "https://buy.stripe.com/test_14AaEZ7PucMefqAbmJ0ZW00";
 const googleScriptIntakeUrl =
   "https://script.google.com/macros/s/AKfycbyZp6oqQoPsP6o2RwaFlflHgfF9QAfjtlp172XQZCqEUnV3g3YiwmBYoW0HoFIwN9kv/exec";
-const googleScriptSecret = "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET";
+const googleScriptPublicToken = "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET";
+const maxFiles = 8;
+const maxFileSize = 15 * 1024 * 1024;
+const maxTotalUploadSize = 35 * 1024 * 1024;
 
 mobileMenus.forEach((menu) => {
   menu.querySelectorAll("a").forEach((link) => {
@@ -58,6 +62,8 @@ if (heroSection && "IntersectionObserver" in window) {
 }
 
 if (form && message) {
+  form.dataset.startedAt = new Date().toISOString();
+
   const setSubmitState = (state) => {
     if (!submitButton) return;
 
@@ -111,12 +117,35 @@ if (form && message) {
     const uploadedFiles = formData
       .getAll("identityDocument")
       .filter((file) => file instanceof File && file.size > 0);
+    const totalUploadSize = uploadedFiles.reduce(
+      (total, file) => total + file.size,
+      0,
+    );
+
+    if (uploadedFiles.length > maxFiles) {
+      throw new Error(`Upload up to ${maxFiles} files at a time.`);
+    }
+
+    if (uploadedFiles.some((file) => file.size > maxFileSize)) {
+      throw new Error(
+        "One of the selected files is too large. Please keep each file under 15 MB.",
+      );
+    }
+
+    if (totalUploadSize > maxTotalUploadSize) {
+      throw new Error(
+        "The selected files are too large together. Please keep the total upload under 35 MB.",
+      );
+    }
+
     const files = await Promise.all(uploadedFiles.map(fileToPayload));
 
     return {
-      secret: googleScriptSecret,
+      secret: googleScriptPublicToken,
       submissionId: createSubmissionId(),
       submittedAt: new Date().toISOString(),
+      formStartedAt: form.dataset.startedAt || "",
+      website: window.location.hostname,
       firstName: formData.get("firstName"),
       middleName: formData.get("middleName"),
       lastName: formData.get("lastName"),
@@ -180,6 +209,12 @@ if (form && message) {
 
     if (!form.checkValidity()) {
       form.reportValidity();
+      return;
+    }
+
+    if (honeypotField?.value) {
+      message.textContent = "Submission could not be completed.";
+      message.style.color = "#b42318";
       return;
     }
 
