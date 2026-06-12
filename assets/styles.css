@@ -1683,19 +1683,13 @@ small {
 
 /* 2026 application-flow redesign overrides */
 .hero-dashboard {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
-  gap: clamp(28px, 5vw, 72px);
+  grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.78fr);
+  gap: clamp(24px, 4vw, 56px);
   min-height: 680px;
   padding: clamp(54px, 8vw, 104px) clamp(18px, 5vw, 72px);
-  background:
-    linear-gradient(
-      120deg,
-      rgba(16, 33, 61, 0.96),
-      rgba(23, 78, 166, 0.92) 48%,
-      rgba(255, 255, 255, 0.92) 48.2%
-    ),
-    #f8fbff;
+  background: #08182d;
 }
 
 .hero-dashboard::before {
@@ -1704,11 +1698,109 @@ small {
   height: 9px;
   content: "";
   background: linear-gradient(90deg, var(--red), #fff, var(--blue), #188038);
+  z-index: 2;
+}
+
+.hero-dashboard::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    linear-gradient(
+      90deg,
+      rgba(6, 20, 43, 0.93) 0%,
+      rgba(6, 20, 43, 0.78) 38%,
+      rgba(6, 20, 43, 0.18) 64%,
+      rgba(248, 251, 255, 0.62) 100%
+    ),
+    linear-gradient(180deg, rgba(6, 20, 43, 0.12), rgba(6, 20, 43, 0.5));
+  z-index: 0;
+}
+
+.hero-photo-carousel {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: #08182d;
+}
+
+.hero-photo-slide {
+  position: absolute;
+  inset: 0;
+  background-position: center right;
+  background-size: cover;
+  opacity: 0;
+  transform: scale(1.025);
+  animation: heroPhotoFade 12s infinite;
+}
+
+.hero-photo-slide.is-second {
+  animation-delay: 6s;
+}
+
+.hero-carousel-dots {
+  position: absolute;
+  left: clamp(18px, 5vw, 72px);
+  bottom: 26px;
+  z-index: 2;
+  display: flex;
+  gap: 9px;
+  align-items: center;
+}
+
+.hero-carousel-dots span {
+  width: 9px;
+  height: 9px;
+  background: rgba(255, 255, 255, 0.42);
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
+  animation: heroDotFade 12s infinite;
+}
+
+.hero-carousel-dots span:nth-child(2) {
+  animation-delay: 6s;
+}
+
+@keyframes heroPhotoFade {
+  0%,
+  45% {
+    opacity: 1;
+  }
+
+  50%,
+  95% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes heroDotFade {
+  0%,
+  45% {
+    width: 28px;
+    background: #fff;
+  }
+
+  50%,
+  95% {
+    width: 9px;
+    background: rgba(255, 255, 255, 0.42);
+  }
+
+  100% {
+    width: 28px;
+    background: #fff;
+  }
 }
 
 .hero-dashboard .hero-content {
   width: auto;
   margin: 0;
+  z-index: 1;
 }
 
 .hero-dashboard h1 {
@@ -1721,12 +1813,16 @@ small {
 
 .hero-panel {
   position: relative;
+  z-index: 1;
   align-self: center;
+  justify-self: end;
+  width: min(100%, 520px);
   padding: clamp(20px, 3vw, 30px);
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(220, 229, 241, 0.9);
   border-radius: 8px;
   box-shadow: 0 28px 70px rgba(16, 33, 61, 0.24);
+  backdrop-filter: blur(8px);
 }
 
 .hero-panel::before {
@@ -2156,14 +2252,20 @@ small {
   }
 
   .hero-dashboard {
-    background:
-      linear-gradient(
-        180deg,
-        rgba(16, 33, 61, 0.96),
-        rgba(23, 78, 166, 0.92) 58%,
-        #f8fbff 58.2%
-      ),
-      #f8fbff;
+    min-height: auto;
+  }
+
+  .hero-dashboard::after {
+    background: linear-gradient(
+      180deg,
+      rgba(6, 20, 43, 0.94),
+      rgba(6, 20, 43, 0.82) 58%,
+      rgba(248, 251, 255, 0.9) 100%
+    );
+  }
+
+  .hero-photo-slide {
+    background-position: 62% center;
   }
 
   .hero-panel {
@@ -2178,6 +2280,10 @@ small {
 @media (max-width: 620px) {
   .hero-dashboard {
     padding-block: 46px 72px;
+  }
+
+  .hero-dashboard h1 {
+    font-size: clamp(2.7rem, 15vw, 4.2rem);
   }
 
   .hero-dashboard .hero-content {
@@ -2198,5 +2304,20 @@ small {
     right: auto;
     width: 96px;
     height: 58px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-photo-slide,
+  .hero-carousel-dots span {
+    animation: none;
+  }
+
+  .hero-photo-slide.is-first {
+    opacity: 1;
+  }
+
+  .hero-photo-slide.is-second {
+    opacity: 0;
   }
 }
