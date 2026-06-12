@@ -92,8 +92,17 @@ if (form && message) {
   form.addEventListener("submit", (event) => {
     event.preventDefault();
 
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      return;
+    }
+
     message.textContent =
-      "Application request saved in this preview. Next step: connect secure intake, uploads, payment, and staff review.";
-    message.style.color = "#174ea6";
+      "Application request prepared. Payment is optional at this step; our team can reach out to confirm documents and next steps.";
+    message.style.color = "#188038";
+
+    if (submitButton) {
+      submitButton.textContent = "Application Prepared";
+    }
   });
 }
