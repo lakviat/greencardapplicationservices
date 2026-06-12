@@ -417,6 +417,7 @@ h3 {
 .timeline-grid article,
 .benefit-grid article,
 .pricing-grid article,
+.pricing-grid a,
 .faq-grid article,
 .notice-box,
 .intake-form {
@@ -604,10 +605,21 @@ h3 {
   gap: 16px;
 }
 
-.pricing-grid article {
+.pricing-grid article,
+.pricing-grid a {
   display: grid;
   gap: 8px;
   padding: 24px;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+
+.pricing-grid a:hover {
+  transform: translateY(-3px);
+  border-color: rgba(23, 78, 166, 0.26);
+  box-shadow: var(--shadow);
 }
 
 .pricing-grid p {
@@ -1299,6 +1311,13 @@ small {
 
 .footer-disclaimer {
   font-size: 0.92rem;
+}
+
+.footer-disclaimer a {
+  color: #fff;
+  font-weight: 900;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 @media (max-width: 1100px) {

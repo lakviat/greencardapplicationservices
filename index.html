@@ -10,7 +10,10 @@
     <title>Green Card Application Services</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://images.unsplash.com" />
-    <link rel="stylesheet" href="assets/styles.css?v=20260611-form-menu-fix" />
+    <link
+      rel="stylesheet"
+      href="assets/styles.css?v=20260611-faq-pricing-form"
+    />
   </head>
   <body>
     <header class="site-header">
@@ -152,8 +155,11 @@
             >Up to approximately 55,000 diversity immigrant visas are available
             each year.</span
           >
-          Selection is random, but every entry still needs accurate names,
-          dates, family details, country eligibility, and a compliant photo.
+          Selection is random, but the entry itself is not casual paperwork. A
+          duplicate entry, missing required spouse or child, missing photo, or
+          invalid photo can create disqualification risk. Our role is to help
+          organize the details before submission: legal names, dates, family
+          members, country eligibility, and DV photo readiness.
         </p>
       </section>
 
@@ -383,21 +389,21 @@
           <h2>Choose the package that fits your family.</h2>
         </div>
         <div class="pricing-grid">
-          <article>
+          <a href="#apply">
             <p>One submission</p>
             <strong>$100</strong>
             <span>Single applicant support</span>
-          </article>
-          <article class="featured-price">
+          </a>
+          <a class="featured-price" href="#apply">
             <p>Two submissions</p>
             <strong>$140</strong>
             <span>Two separate DV entries</span>
-          </article>
-          <article>
+          </a>
+          <a href="#apply">
             <p>Three submissions</p>
             <strong>$155</strong>
             <span>Three separate DV entries</span>
-          </article>
+          </a>
         </div>
         <p class="pricing-note">
           Service fees cover preparation support, document organization, photo
@@ -405,38 +411,6 @@
           staff begins manual review. Government fees, if any are required for
           the active DV year, are separate.
         </p>
-      </section>
-
-      <section class="section resource-section">
-        <div class="section-heading">
-          <p class="eyebrow">Learn before you apply</p>
-          <h2>
-            Clear answers without digging through government instructions alone.
-          </h2>
-        </div>
-        <div class="resource-grid">
-          <a href="guide.html">
-            <span>Guide</span>
-            <strong>DV Lottery guide</strong>
-            <p>
-              Eligibility, required information, family rules, photo rules, and
-              common mistakes.
-            </p>
-          </a>
-          <a href="faq.html">
-            <span>FAQ</span>
-            <strong>Questions before applying</strong>
-            <p>
-              Payment, documents, photos, children, duplicate entries, privacy,
-              and results.
-            </p>
-          </a>
-          <a href="requirements.html">
-            <span>Checklist</span>
-            <strong>Photo and document requirements</strong>
-            <p>See what you need before submitting your application request.</p>
-          </a>
-        </div>
       </section>
 
       <section id="apply" class="section apply-section">
@@ -464,6 +438,13 @@
             <span>First name</span>
             <input name="firstName" autocomplete="given-name" required />
             <small>Match your passport or official ID exactly.</small>
+          </label>
+          <label>
+            <span>Middle name</span>
+            <input name="middleName" autocomplete="additional-name" />
+            <small
+              >Optional. Enter it only if it appears on your document.</small
+            >
           </label>
           <label>
             <span>Last name</span>
@@ -684,6 +665,10 @@
         <div class="section-heading">
           <p class="eyebrow">FAQ</p>
           <h2>Clear answers before you begin.</h2>
+          <p>
+            Start with the common questions below, or use the guide and
+            requirements pages when you want more detail.
+          </p>
         </div>
         <div class="faq-grid">
           <article>
@@ -716,10 +701,11 @@
           </article>
         </div>
         <div class="section-link-row">
-          <a class="button button-light" href="faq.html">See all FAQs</a>
-          <a class="button button-light" href="guide.html"
-            >Read the full guide</a
+          <a class="button button-light" href="guide.html">DV Lottery guide</a>
+          <a class="button button-light" href="requirements.html"
+            >Photo and document requirements</a
           >
+          <a class="button button-light" href="faq.html">See all FAQs</a>
         </div>
       </section>
     </main>
@@ -737,7 +723,8 @@
       <p class="footer-disclaimer">
         Not a law firm. Not legal advice. Not affiliated with USCIS, the U.S.
         Department of State, or any U.S. government agency. Official DV
-        information: dvprogram.state.gov.
+        information:
+        <a href="https://dvprogram.state.gov/">dvprogram.state.gov</a>.
       </p>
     </footer>
 
