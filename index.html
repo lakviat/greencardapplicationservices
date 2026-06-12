@@ -10,10 +10,7 @@
     <title>Green Card Application Services</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://images.unsplash.com" />
-    <link
-      rel="stylesheet"
-      href="assets/styles.css?v=20260612-payment-upload-chat"
-    />
+    <link rel="stylesheet" href="assets/styles.css?v=20260612-apple-pay-test" />
   </head>
   <body>
     <header class="site-header">
@@ -122,32 +119,12 @@
         </div>
       </section>
 
-      <section class="trust-strip" aria-label="Service highlights">
-        <article>
-          <strong>Guided intake</strong>
-          <span>One step at a time, with plain-language questions.</span>
-        </article>
-        <article>
-          <strong>Photo review</strong>
-          <span
-            >Automatic file checks plus human review before submission.</span
-          >
-        </article>
-        <article>
-          <strong>Family safeguards</strong>
-          <span
-            >Spouse and child questions help prevent missing required family
-            members.</span
-          >
-        </article>
-      </section>
-
       <section class="dream-note">
         <div>
           <p class="eyebrow">Why apply?</p>
           <h2>
-            The Green Card Lottery is a real chance to start a future in the
-            United States.
+            The Green Card Lottery is a real chance to begin a legal future in
+            the United States.
           </h2>
         </div>
         <p>
@@ -160,6 +137,11 @@
           invalid photo can create disqualification risk. Our role is to help
           organize the details before submission: legal names, dates, family
           members, country eligibility, and DV photo readiness.
+          <span class="accuracy-note"
+            >Accuracy-review guarantee: before we submit, we review your entry
+            for preventable filing mistakes based on the information and
+            documents you provide.</span
+          >
         </p>
       </section>
 
@@ -668,6 +650,12 @@
             </span>
           </label>
           <div class="payment-preview full">
+            <input
+              id="paymentStatus"
+              name="paymentStatus"
+              type="hidden"
+              value="pending"
+            />
             <button
               class="apple-pay-button"
               id="applePayButton"
@@ -678,8 +666,8 @@
               <strong>Apple Pay</strong>
             </button>
             <small>
-              Apple Pay checkout will connect through a secure payment provider
-              before launch.
+              Test mode: this confirms payment in the preview. Live Apple Pay
+              will connect through a secure payment provider before launch.
             </small>
           </div>
           <button

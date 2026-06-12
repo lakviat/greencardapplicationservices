@@ -2,6 +2,7 @@ const form = document.querySelector("#intakeForm");
 const message = document.querySelector("#formMessage");
 const submitButton = document.querySelector("#applicationSubmit");
 const applePayButton = document.querySelector("#applePayButton");
+const paymentStatus = document.querySelector("#paymentStatus");
 const mobileMenus = document.querySelectorAll(".mobile-menu");
 const applySection = document.querySelector("#apply");
 
@@ -47,8 +48,15 @@ if (form && message) {
 
   if (applePayButton) {
     applePayButton.addEventListener("click", () => {
+      if (paymentStatus) {
+        paymentStatus.value = "apple-pay-test-confirmed";
+      }
+
+      applePayButton.classList.add("is-confirmed");
+      applePayButton.innerHTML =
+        "<span>Payment confirmed</span><strong>Test mode</strong>";
       message.textContent =
-        "Apple Pay checkout is prepared for the design preview. Next step: connect a secure payment provider and backend.";
+        "Apple Pay test payment confirmed for this preview. Live checkout still needs a secure payment provider and backend.";
       message.style.color = "#174ea6";
     });
   }

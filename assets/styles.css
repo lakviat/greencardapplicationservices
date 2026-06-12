@@ -365,6 +365,13 @@ h3 {
   font-weight: 900;
 }
 
+.accuracy-note {
+  display: block;
+  margin-top: 14px;
+  color: var(--navy);
+  font-weight: 850;
+}
+
 .section {
   padding: clamp(48px, 7vw, 82px) clamp(18px, 5vw, 72px);
 }
@@ -780,6 +787,10 @@ small {
 .apple-pay-button strong {
   font-size: 1.12rem;
   letter-spacing: 0;
+}
+
+.apple-pay-button.is-confirmed {
+  background: #188038;
 }
 
 .button-form {
