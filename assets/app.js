@@ -6,6 +6,8 @@ const paymentStatus = document.querySelector("#paymentStatus");
 const mobileMenus = document.querySelectorAll(".mobile-menu");
 const applySection = document.querySelector("#apply");
 const heroSection = document.querySelector(".hero-dashboard");
+const oneSubmissionCheckoutUrl =
+  "https://buy.stripe.com/test_14AaEZ7PucMefqAbmJ0ZW00";
 
 mobileMenus.forEach((menu) => {
   menu.querySelectorAll("a").forEach((link) => {
@@ -67,16 +69,23 @@ if (form && message) {
 
   if (applePayButton) {
     applePayButton.addEventListener("click", () => {
-      if (paymentStatus) {
-        paymentStatus.value = "apple-pay-test-confirmed";
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        message.textContent =
+          "Complete the required application fields before continuing to payment.";
+        message.style.color = "#b42318";
+        return;
       }
 
-      applePayButton.classList.add("is-confirmed");
-      applePayButton.innerHTML =
-        "<span>Payment confirmed</span><strong>Test mode</strong>";
+      if (paymentStatus) {
+        paymentStatus.value = "stripe-checkout-started";
+      }
+
       message.textContent =
-        "Apple Pay test payment confirmed for this preview. Live checkout still needs a secure payment provider and backend.";
+        "Opening secure Stripe checkout for the $100 one-submission package.";
       message.style.color = "#174ea6";
+
+      window.location.href = oneSubmissionCheckoutUrl;
     });
   }
 
