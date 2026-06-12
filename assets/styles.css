@@ -2348,7 +2348,7 @@ small {
 
 @media (max-width: 620px) {
   .hero-dashboard {
-    min-height: auto;
+    min-height: calc(100svh - 96px);
     padding-block: 46px 72px;
   }
 
@@ -2360,24 +2360,24 @@ small {
     background:
       linear-gradient(
         180deg,
-        rgba(6, 20, 43, 0.62) 0%,
-        rgba(6, 20, 43, 0.7) 28%,
-        rgba(6, 20, 43, 0.88) 64%,
-        rgba(248, 251, 255, 0.92) 100%
+        rgba(6, 20, 43, 0.44) 0%,
+        rgba(6, 20, 43, 0.52) 32%,
+        rgba(6, 20, 43, 0.64) 66%,
+        rgba(6, 20, 43, 0.78) 100%
       ),
-      linear-gradient(90deg, rgba(6, 20, 43, 0.86), rgba(6, 20, 43, 0.2) 100%);
+      linear-gradient(90deg, rgba(6, 20, 43, 0.68), rgba(6, 20, 43, 0.12) 100%);
   }
 
   .hero-photo-slide.is-first {
-    background-position: center top;
-    background-size: 112% auto;
-    background-repeat: no-repeat;
+    background-image: url("images/hero/green-card-family-mobile.jpg") !important;
+    background-position: 55% center;
+    background-size: cover;
   }
 
   .hero-photo-slide.is-second {
-    background-position: center top;
-    background-size: 112% auto;
-    background-repeat: no-repeat;
+    background-image: url("images/hero/green-card-couple-mobile.jpg") !important;
+    background-position: 58% center;
+    background-size: cover;
   }
 
   .hero-dashboard .hero-content {
