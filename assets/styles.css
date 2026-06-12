@@ -1785,7 +1785,7 @@ small {
 .hero-photo-slide {
   position: absolute;
   inset: 0;
-  background-position: center right;
+  background-position: 58% center;
   background-size: cover;
   opacity: 0;
   transform: scale(1.025);
@@ -1793,7 +1793,7 @@ small {
 }
 
 .hero-photo-slide.is-second {
-  background-position: 58% center;
+  background-position: 50% center;
   animation-delay: 6s;
 }
 
@@ -2369,14 +2369,14 @@ small {
   }
 
   .hero-photo-slide.is-first {
-    background-image: url("images/hero/green-card-family-mobile.jpg?v=20260612-tightcrop") !important;
-    background-position: 55% center;
+    background-image: url("images/hero/green-card-family-mobile.jpg?v=20260612-raised") !important;
+    background-position: 52% 45%;
     background-size: cover;
   }
 
   .hero-photo-slide.is-second {
-    background-image: url("images/hero/green-card-couple-mobile.jpg?v=20260612-tightcrop") !important;
-    background-position: 58% center;
+    background-image: url("images/hero/green-card-couple-mobile.jpg?v=20260612-raised") !important;
+    background-position: 54% center;
     background-size: cover;
   }
 
