@@ -32,7 +32,7 @@ Important official facts verified on 2026-05-17
 
 3. Up to approximately 55,000 diversity visas are made available annually. Do not claim 130,000 annual green card winners unless a verified official source supports that number for a specific context.
 
-4. The Department of State states there is no cost to register for the DV Program in the currently published DV-2026 materials. A proposed or new $1 registration fee has been discussed publicly, but must be re-verified against the current official DV instructions before publishing pricing for a future cycle.
+4. The Department of State published a final rule effective September 16, 2025 establishing a $1 electronic registration fee for the DV lottery program. The website pricing should state that our package price includes the $1 government DV registration fee for each entry we submit, and that we do not add it as a separate charge. Re-check the active DV instructions before each registration season.
 
 5. For DV-2026, the registration period began on 2024-10-02 at 12:00 noon Eastern Daylight Time and ended on 2024-11-07 at 12:00 noon Eastern Standard Time.
 
@@ -372,9 +372,11 @@ Payment requirements
 --------------------
 Proposed pricing:
 
-1. Service fee: USD 100.
-2. Government DV registration fee: must be verified for the active DV year before collection or publication. Current DV-2026 official source says no cost to register.
-3. Transfer/payment processing allowance: USD 15 if applicable.
+1. One submission package: USD 100, including the $1 government DV registration fee for that entry.
+2. Two submission package: USD 140, including $2 total government DV registration fees for two entries.
+3. Three submission package: USD 155, including $3 total government DV registration fees for three entries.
+4. Any later selected-case government fees, such as Diversity Visa application fees paid by selected applicants, are separate from initial entry support and should not be included in the lottery-entry package copy.
+5. Transfer/payment processing allowance: USD 15 if applicable.
 
 Payment method requirements:
 
