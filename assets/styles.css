@@ -704,6 +704,20 @@ h3 {
   box-shadow: var(--shadow);
 }
 
+.intake-form > label:not(.full):not(.consent) {
+  grid-template-rows: auto minmax(52px, auto) minmax(38px, auto);
+}
+
+.intake-form > label:not(.full):not(.consent)::after {
+  display: block;
+  min-height: 0;
+  content: "";
+}
+
+.intake-form > label:not(.full):not(.consent):has(small)::after {
+  display: none;
+}
+
 fieldset {
   min-width: 0;
   padding: 0;
@@ -1769,6 +1783,14 @@ small {
   .intake-form {
     width: min(100%, 720px);
     margin-inline: auto;
+  }
+
+  .intake-form > label:not(.full):not(.consent) {
+    grid-template-rows: none;
+  }
+
+  .intake-form > label:not(.full):not(.consent)::after {
+    display: none;
   }
 
   .dream-note,
