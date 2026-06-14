@@ -11,6 +11,7 @@ const additionalApplicantSections = document.querySelectorAll(
 );
 const notifyForm = document.querySelector("#notifyForm");
 const notifyMessage = document.querySelector("#notifyMessage");
+const notifySubmitButton = document.querySelector("#notifySubmit");
 const notifyModal = document.querySelector("#notifyModal");
 const notifyOpenButtons = document.querySelectorAll("[data-notify-open]");
 const notifyCloseButtons = document.querySelectorAll("[data-notify-close]");
@@ -20,6 +21,8 @@ const heroSection = document.querySelector(".hero-dashboard");
 const honeypotField = document.querySelector("#companyWebsite");
 const googleScriptIntakeUrl =
   "https://script.google.com/macros/s/AKfycbyZp6oqQoPsP6o2RwaFlflHgfF9QAfjtlp172XQZCqEUnV3g3YiwmBYoW0HoFIwN9kv/exec";
+const googleScriptNotifyUrl =
+  "https://script.google.com/macros/s/AKfycbzfG-PHP8OR4qR6YGP1dcJ9eXQ8Crrg9ag1jG_WonTdGpwRVcsL5TMDfQADyqnyMg60/exec";
 const googleScriptPublicToken = "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET";
 const maxFiles = 8;
 const maxFileSize = 15 * 1024 * 1024;
@@ -357,7 +360,63 @@ if (form && message) {
 }
 
 if (notifyForm && notifyMessage) {
-  notifyForm.addEventListener("submit", (event) => {
+  const setNotifyState = (state) => {
+    if (!notifySubmitButton) return;
+
+    notifySubmitButton.classList.toggle(
+      "is-submitting",
+      state === "submitting",
+    );
+    notifySubmitButton.classList.toggle("is-submitted", state === "submitted");
+    notifySubmitButton.disabled =
+      state === "submitting" || state === "submitted";
+
+    if (state === "submitting") {
+      notifySubmitButton.textContent = "Submitting...";
+    } else if (state === "submitted") {
+      notifySubmitButton.textContent = "Submitted";
+    } else {
+      notifySubmitButton.textContent = "Notify Me";
+    }
+  };
+
+  const createNotificationId = () => {
+    const random =
+      window.crypto && "randomUUID" in window.crypto
+        ? window.crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    return `gcas-notify-${random}`;
+  };
+
+  const sendNotificationToDrive = async ({ email, phone }) => {
+    if (!googleScriptNotifyUrl) {
+      throw new Error(
+        "Notification collection is not connected yet. Please contact support or try again later.",
+      );
+    }
+
+    await fetch(googleScriptNotifyUrl, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8",
+      },
+      body: JSON.stringify({
+        secret: googleScriptPublicToken,
+        notificationId: createNotificationId(),
+        submittedAt: new Date().toISOString(),
+        website: window.location.hostname,
+        sourcePage: window.location.pathname || "/",
+        email,
+        phone,
+        consent:
+          "I agree to be contacted about DV registration updates and application support.",
+      }),
+    });
+  };
+
+  notifyForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const formData = new FormData(notifyForm);
@@ -376,8 +435,24 @@ if (notifyForm && notifyMessage) {
       return;
     }
 
+    setNotifyState("submitting");
     notifyMessage.textContent =
-      "Notification request prepared. We will connect this to the notification list next.";
-    notifyMessage.style.color = "#188038";
+      "Submitting your notification request. Please keep this window open.";
+    notifyMessage.style.color = "#174ea6";
+
+    try {
+      await sendNotificationToDrive({ email, phone });
+
+      setNotifyState("submitted");
+      notifyMessage.textContent =
+        "Thank you for staying up to date with Green Card Application Services. We will contact you when DV registration opens.";
+      notifyMessage.style.color = "#188038";
+    } catch (error) {
+      setNotifyState("idle");
+      notifyMessage.textContent =
+        error.message ||
+        "We could not submit the notification request. Please try again.";
+      notifyMessage.style.color = "#b42318";
+    }
   });
 }
