@@ -3,12 +3,18 @@ const message = document.querySelector("#formMessage");
 const submitButton = document.querySelector("#applicationSubmit");
 const applePayButton = document.querySelector("#applePayButton");
 const paymentStatus = document.querySelector("#paymentStatus");
+const packageOptions = document.querySelectorAll('input[name="package"]');
+const premiumCountField = document.querySelector("#premiumCountField");
+const premiumApplicantCount = document.querySelector("#premiumApplicantCount");
+const additionalApplicantSections = document.querySelectorAll(
+  "[data-applicant-section]",
+);
+const notifyForm = document.querySelector("#notifyForm");
+const notifyMessage = document.querySelector("#notifyMessage");
 const mobileMenus = document.querySelectorAll(".mobile-menu");
 const applySection = document.querySelector("#apply");
 const heroSection = document.querySelector(".hero-dashboard");
 const honeypotField = document.querySelector("#companyWebsite");
-const oneSubmissionCheckoutUrl =
-  "https://buy.stripe.com/test_14AaEZ7PucMefqAbmJ0ZW00";
 const googleScriptIntakeUrl =
   "https://script.google.com/macros/s/AKfycbyZp6oqQoPsP6o2RwaFlflHgfF9QAfjtlp172XQZCqEUnV3g3YiwmBYoW0HoFIwN9kv/exec";
 const googleScriptPublicToken = "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET";
@@ -64,6 +70,41 @@ if (heroSection && "IntersectionObserver" in window) {
 if (form && message) {
   form.dataset.startedAt = new Date().toISOString();
 
+  const getSelectedPackage = () =>
+    document.querySelector('input[name="package"]:checked');
+
+  const getApplicantCount = () => {
+    const selectedPackage = getSelectedPackage();
+
+    if (selectedPackage?.value === "premium") {
+      return Number(premiumApplicantCount?.value || 1);
+    }
+
+    return Number(selectedPackage?.dataset.applicantCount || 1);
+  };
+
+  const updateApplicantSections = () => {
+    const applicantCount = getApplicantCount();
+    const selectedPackage = getSelectedPackage();
+    const isPremium = selectedPackage?.value === "premium";
+
+    if (premiumCountField) {
+      premiumCountField.hidden = !isPremium;
+    }
+
+    additionalApplicantSections.forEach((section) => {
+      const sectionNumber = Number(section.dataset.applicantSection || 0);
+      const isVisible = sectionNumber <= applicantCount;
+
+      section.hidden = !isVisible;
+      section
+        .querySelectorAll("[data-additional-required]")
+        .forEach((field) => {
+          field.required = isVisible;
+        });
+    });
+  };
+
   const setSubmitState = (state) => {
     if (!submitButton) return;
 
@@ -114,6 +155,13 @@ if (form && message) {
 
   const buildApplicationPayload = async () => {
     const formData = new FormData(form);
+    const selectedPackage = getSelectedPackage();
+    const selectedPackageLabel =
+      selectedPackage
+        ?.closest("label")
+        ?.querySelector("strong")
+        ?.textContent?.trim() || "Single";
+    const applicantCount = getApplicantCount();
     const uploadedFiles = formData
       .getAll("identityDocument")
       .filter((file) => file instanceof File && file.size > 0);
@@ -139,6 +187,17 @@ if (form && message) {
     }
 
     const files = await Promise.all(uploadedFiles.map(fileToPayload));
+    const additionalApplicants = [2, 3]
+      .filter((number) => number <= applicantCount)
+      .map((number) => ({
+        applicantNumber: number,
+        firstName: formData.get(`applicant${number}FirstName`) || "",
+        middleName: formData.get(`applicant${number}MiddleName`) || "",
+        lastName: formData.get(`applicant${number}LastName`) || "",
+        relation: formData.get(`applicant${number}Relation`) || "",
+        email: formData.get(`applicant${number}Email`) || "",
+        phone: formData.get(`applicant${number}Phone`) || "",
+      }));
 
     return {
       secret: googleScriptPublicToken,
@@ -146,12 +205,28 @@ if (form && message) {
       submittedAt: new Date().toISOString(),
       formStartedAt: form.dataset.startedAt || "",
       website: window.location.hostname,
+      package: selectedPackage?.value || "single",
+      packageLabel: selectedPackageLabel,
+      applicantCount,
       firstName: formData.get("firstName"),
       middleName: formData.get("middleName"),
       lastName: formData.get("lastName"),
       email: formData.get("email"),
       phone: formData.get("phone"),
-      countryOfBirth: formData.get("countryOfBirth"),
+      countryOfBirth: formData.get("country"),
+      applicants: [
+        {
+          applicantNumber: 1,
+          role: "Primary",
+          firstName: formData.get("firstName") || "",
+          middleName: formData.get("middleName") || "",
+          lastName: formData.get("lastName") || "",
+          email: formData.get("email") || "",
+          phone: formData.get("phone") || "",
+          countryOfBirth: formData.get("country") || "",
+        },
+        ...additionalApplicants,
+      ],
       paymentStatus: paymentStatus?.value || "pending",
       files,
     };
@@ -180,6 +255,17 @@ if (form && message) {
 
   form.addEventListener("input", updateSubmitLabel);
   form.addEventListener("change", updateSubmitLabel);
+  packageOptions.forEach((option) => {
+    option.addEventListener("change", () => {
+      updateApplicantSections();
+      updateSubmitLabel();
+    });
+  });
+  premiumApplicantCount?.addEventListener("change", () => {
+    updateApplicantSections();
+    updateSubmitLabel();
+  });
+  updateApplicantSections();
   updateSubmitLabel();
 
   if (applePayButton) {
@@ -193,14 +279,12 @@ if (form && message) {
       }
 
       if (paymentStatus) {
-        paymentStatus.value = "stripe-checkout-started";
+        paymentStatus.value = "payment-link-pending";
       }
 
       message.textContent =
-        "Opening secure Stripe checkout for the $100 one-submission package.";
+        "Secure checkout links are being updated for the new packages. You can submit the request now and we will confirm payment next.";
       message.style.color = "#174ea6";
-
-      window.location.href = oneSubmissionCheckoutUrl;
     });
   }
 
@@ -237,5 +321,31 @@ if (form && message) {
         "We could not submit the application. Please try again or contact support.";
       message.style.color = "#b42318";
     }
+  });
+}
+
+if (notifyForm && notifyMessage) {
+  notifyForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const formData = new FormData(notifyForm);
+    const email = String(formData.get("notifyEmail") || "").trim();
+    const phone = String(formData.get("notifyPhone") || "").trim();
+
+    if (!email && !phone) {
+      notifyMessage.textContent =
+        "Enter an email or WhatsApp number so we can notify you.";
+      notifyMessage.style.color = "#b42318";
+      return;
+    }
+
+    if (!notifyForm.checkValidity()) {
+      notifyForm.reportValidity();
+      return;
+    }
+
+    notifyMessage.textContent =
+      "Notification request prepared. We will connect this to the notification list next.";
+    notifyMessage.style.color = "#188038";
   });
 }

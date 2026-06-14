@@ -21,7 +21,7 @@
     />
     <link
       rel="stylesheet"
-      href="assets/styles.css?v=20260612-security-hardening"
+      href="assets/styles.css?v=20260614-packages-applicants"
     />
   </head>
   <body>
@@ -345,6 +345,33 @@
           photo, and payment are ready, we keep your case organized and submit
           when the official DV window opens.
         </div>
+        <form class="notify-form" id="notifyForm">
+          <div>
+            <p class="eyebrow">Registration alerts</p>
+            <h3>Get notified when DV registration opens.</h3>
+            <p>
+              Leave an email or WhatsApp number and we will contact you when the
+              official registration window is announced.
+            </p>
+          </div>
+          <label>
+            <span>Email</span>
+            <input name="notifyEmail" type="email" autocomplete="email" />
+          </label>
+          <label>
+            <span>Phone / WhatsApp</span>
+            <input name="notifyPhone" type="tel" autocomplete="tel" />
+          </label>
+          <label class="consent notify-consent">
+            <input type="checkbox" required />
+            <span>
+              I agree to be contacted about DV registration updates and
+              application support.
+            </span>
+          </label>
+          <button class="button" type="submit">Notify Me</button>
+          <p class="form-message" id="notifyMessage" role="status"></p>
+        </form>
       </section>
 
       <section class="section benefits-section">
@@ -402,30 +429,36 @@
         </div>
         <div class="pricing-grid">
           <a href="#apply">
-            <p>One submission</p>
-            <strong>$100</strong>
-            <span>Single applicant support</span>
-            <em>$1 DV registration fee included</em>
+            <p>Single</p>
+            <strong>$39</strong>
+            <span>One applicant with automated checks and manual review.</span>
+            <em>No hidden service fees</em>
           </a>
           <a class="featured-price" href="#apply">
-            <p>Two submissions</p>
-            <strong>$140</strong>
-            <span>Two separate DV entries</span>
-            <em>$2 DV registration fees included</em>
+            <p>Couple</p>
+            <strong>$69</strong>
+            <span>Two applicants for married couples without children.</span>
+            <em>Spouse details reviewed</em>
           </a>
           <a href="#apply">
-            <p>Three submissions</p>
-            <strong>$155</strong>
-            <span>Three separate DV entries</span>
-            <em>$3 DV registration fees included</em>
+            <p>Family</p>
+            <strong>$99</strong>
+            <span>Up to three applicants with family detail review.</span>
+            <em>Up to 3 applicants</em>
+          </a>
+          <a href="#apply">
+            <p>Premium</p>
+            <strong>$149</strong>
+            <span>Priority handling, Zoom review call, and same-day help.</span>
+            <em>Priority queue</em>
           </a>
         </div>
         <p class="pricing-note">
-          Service fees cover preparation support, document organization, photo
-          review, communication, and follow-up. Payment will be required before
-          staff begins manual review. The new $1 government DV registration fee
-          is included for each entry we submit for you; we do not add it as a
-          separate charge.
+          Every package includes automated checks, manual review, document
+          organization, photo review, and official submission when the DV window
+          is open and required information/photos are ready. Premium does not
+          improve lottery odds; it adds priority handling and a Zoom review
+          call.
         </p>
       </section>
 
@@ -460,6 +493,73 @@
               tabindex="-1"
             />
           </label>
+          <fieldset class="package-selector full">
+            <legend>Choose package</legend>
+            <label>
+              <input
+                type="radio"
+                name="package"
+                value="single"
+                data-applicant-count="1"
+                checked
+              />
+              <span>
+                <strong>Single</strong>
+                <small>$39 · 1 applicant</small>
+              </span>
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="package"
+                value="couple"
+                data-applicant-count="2"
+              />
+              <span>
+                <strong>Couple</strong>
+                <small>$69 · 2 applicants</small>
+              </span>
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="package"
+                value="family"
+                data-applicant-count="3"
+              />
+              <span>
+                <strong>Family</strong>
+                <small>$99 · up to 3 applicants</small>
+              </span>
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="package"
+                value="premium"
+                data-applicant-count="1"
+              />
+              <span>
+                <strong>Premium</strong>
+                <small>$149 · priority + Zoom</small>
+              </span>
+            </label>
+          </fieldset>
+          <label class="full premium-count" id="premiumCountField" hidden>
+            <span>Premium applicants</span>
+            <select name="premiumApplicantCount" id="premiumApplicantCount">
+              <option value="1">1 applicant</option>
+              <option value="2">2 applicants</option>
+              <option value="3">3 applicants</option>
+            </select>
+            <small>
+              Premium adds priority handling and a Zoom review call. It does not
+              improve lottery selection odds.
+            </small>
+          </label>
+          <div class="form-divider full">
+            <span>Primary applicant</span>
+          </div>
           <label>
             <span>First name</span>
             <input name="firstName" autocomplete="given-name" required />
@@ -673,12 +773,114 @@
               for the active DV year.
             </small>
           </label>
+          <section
+            class="additional-applicant full"
+            id="applicantTwo"
+            data-applicant-section="2"
+            hidden
+          >
+            <div class="form-divider">
+              <span>Applicant 2</span>
+            </div>
+            <label>
+              <span>First name</span>
+              <input
+                name="applicant2FirstName"
+                autocomplete="off"
+                data-additional-required
+              />
+            </label>
+            <label>
+              <span>Middle name</span>
+              <input name="applicant2MiddleName" autocomplete="off" />
+            </label>
+            <label>
+              <span>Last name</span>
+              <input
+                name="applicant2LastName"
+                autocomplete="off"
+                data-additional-required
+              />
+            </label>
+            <label>
+              <span>Relation</span>
+              <select name="applicant2Relation" data-additional-required>
+                <option value="">Choose relation</option>
+                <option>Spouse</option>
+                <option>Child</option>
+                <option>Mother</option>
+                <option>Father</option>
+                <option>Friend</option>
+                <option>Other family</option>
+                <option>Other</option>
+              </select>
+            </label>
+            <label>
+              <span>Email</span>
+              <input name="applicant2Email" type="email" autocomplete="off" />
+            </label>
+            <label>
+              <span>Phone / WhatsApp</span>
+              <input name="applicant2Phone" type="tel" autocomplete="off" />
+            </label>
+          </section>
+          <section
+            class="additional-applicant full"
+            id="applicantThree"
+            data-applicant-section="3"
+            hidden
+          >
+            <div class="form-divider">
+              <span>Applicant 3</span>
+            </div>
+            <label>
+              <span>First name</span>
+              <input
+                name="applicant3FirstName"
+                autocomplete="off"
+                data-additional-required
+              />
+            </label>
+            <label>
+              <span>Middle name</span>
+              <input name="applicant3MiddleName" autocomplete="off" />
+            </label>
+            <label>
+              <span>Last name</span>
+              <input
+                name="applicant3LastName"
+                autocomplete="off"
+                data-additional-required
+              />
+            </label>
+            <label>
+              <span>Relation</span>
+              <select name="applicant3Relation" data-additional-required>
+                <option value="">Choose relation</option>
+                <option>Spouse</option>
+                <option>Child</option>
+                <option>Mother</option>
+                <option>Father</option>
+                <option>Friend</option>
+                <option>Other family</option>
+                <option>Other</option>
+              </select>
+            </label>
+            <label>
+              <span>Email</span>
+              <input name="applicant3Email" type="email" autocomplete="off" />
+            </label>
+            <label>
+              <span>Phone / WhatsApp</span>
+              <input name="applicant3Phone" type="tel" autocomplete="off" />
+            </label>
+          </section>
           <label class="full file-upload">
             <span>Passport, ID, or supporting document</span>
             <input name="identityDocument" type="file" multiple required />
             <small>
-              Upload a clear passport, government ID, or supporting document so
-              we can verify spelling and identity details.
+              Upload passport, ID, photos, or supporting files for all
+              applicants if they are ready.
             </small>
           </label>
           <label class="consent full">
@@ -706,8 +908,8 @@
             </button>
             <small>
               Optional for now. You may submit the request first, and our team
-              can contact you to confirm the documents, package, and payment
-              before staff review begins.
+              can contact you to confirm documents, package, and payment.
+              Checkout links will be updated for the new package prices.
             </small>
           </div>
           <button
@@ -731,6 +933,21 @@
           </p>
         </div>
         <div class="faq-grid">
+          <article>
+            <h3>Will every package be submitted?</h3>
+            <p>
+              Yes. Every package includes official submission when the DV
+              registration window is open and required information/photos are
+              ready.
+            </p>
+          </article>
+          <article>
+            <h3>What does Premium add?</h3>
+            <p>
+              Premium adds priority handling and a Zoom review call. It does not
+              improve your chance of lottery selection.
+            </p>
+          </article>
           <article>
             <h3>Can you guarantee I will win?</h3>
             <p>
@@ -806,6 +1023,6 @@
       </p>
     </footer>
 
-    <script src="assets/app.js?v=20260612-security-hardening"></script>
+    <script src="assets/app.js?v=20260614-packages-applicants"></script>
   </body>
 </html>
