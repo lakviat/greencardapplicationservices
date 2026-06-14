@@ -11,6 +11,9 @@ const additionalApplicantSections = document.querySelectorAll(
 );
 const notifyForm = document.querySelector("#notifyForm");
 const notifyMessage = document.querySelector("#notifyMessage");
+const notifyModal = document.querySelector("#notifyModal");
+const notifyOpenButtons = document.querySelectorAll("[data-notify-open]");
+const notifyCloseButtons = document.querySelectorAll("[data-notify-close]");
 const mobileMenus = document.querySelectorAll(".mobile-menu");
 const applySection = document.querySelector("#apply");
 const heroSection = document.querySelector(".hero-dashboard");
@@ -44,6 +47,35 @@ const updateScrollState = () => {
 
 window.addEventListener("scroll", updateScrollState, { passive: true });
 updateScrollState();
+
+const openNotifyModal = () => {
+  if (!notifyModal) return;
+
+  notifyModal.hidden = false;
+  document.body.classList.add("modal-open");
+  notifyModal.querySelector("input")?.focus();
+};
+
+const closeNotifyModal = () => {
+  if (!notifyModal) return;
+
+  notifyModal.hidden = true;
+  document.body.classList.remove("modal-open");
+};
+
+notifyOpenButtons.forEach((button) => {
+  button.addEventListener("click", openNotifyModal);
+});
+
+notifyCloseButtons.forEach((button) => {
+  button.addEventListener("click", closeNotifyModal);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && notifyModal && !notifyModal.hidden) {
+    closeNotifyModal();
+  }
+});
 
 if (applySection && "IntersectionObserver" in window) {
   const observer = new IntersectionObserver(

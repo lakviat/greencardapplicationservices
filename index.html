@@ -21,7 +21,7 @@
     />
     <link
       rel="stylesheet"
-      href="assets/styles.css?v=20260614-packages-applicants"
+      href="assets/styles.css?v=20260614-compact-package-alert"
     />
   </head>
   <body>
@@ -88,6 +88,13 @@
             <a class="button button-outline" href="guide.html"
               >Read the DV guide</a
             >
+            <button
+              class="button button-outline"
+              type="button"
+              data-notify-open
+            >
+              Notify me
+            </button>
           </div>
           <p class="micro-disclaimer">
             Not a law firm. Not legal advice. Not affiliated with USCIS or the
@@ -345,33 +352,6 @@
           photo, and payment are ready, we keep your case organized and submit
           when the official DV window opens.
         </div>
-        <form class="notify-form" id="notifyForm">
-          <div>
-            <p class="eyebrow">Registration alerts</p>
-            <h3>Get notified when DV registration opens.</h3>
-            <p>
-              Leave an email or WhatsApp number and we will contact you when the
-              official registration window is announced.
-            </p>
-          </div>
-          <label>
-            <span>Email</span>
-            <input name="notifyEmail" type="email" autocomplete="email" />
-          </label>
-          <label>
-            <span>Phone / WhatsApp</span>
-            <input name="notifyPhone" type="tel" autocomplete="tel" />
-          </label>
-          <label class="consent notify-consent">
-            <input type="checkbox" required />
-            <span>
-              I agree to be contacted about DV registration updates and
-              application support.
-            </span>
-          </label>
-          <button class="button" type="submit">Notify Me</button>
-          <p class="form-message" id="notifyMessage" role="status"></p>
-        </form>
       </section>
 
       <section class="section benefits-section">
@@ -505,7 +485,7 @@
               />
               <span>
                 <strong>Single</strong>
-                <small>$39 · 1 applicant</small>
+                <small>$39</small>
               </span>
             </label>
             <label>
@@ -517,7 +497,7 @@
               />
               <span>
                 <strong>Couple</strong>
-                <small>$69 · 2 applicants</small>
+                <small>$69</small>
               </span>
             </label>
             <label>
@@ -529,7 +509,7 @@
               />
               <span>
                 <strong>Family</strong>
-                <small>$99 · up to 3 applicants</small>
+                <small>$99</small>
               </span>
             </label>
             <label>
@@ -541,7 +521,7 @@
               />
               <span>
                 <strong>Premium</strong>
-                <small>$149 · priority + Zoom</small>
+                <small>$149</small>
               </span>
             </label>
           </fieldset>
@@ -987,6 +967,57 @@
       </section>
     </main>
 
+    <div class="notify-modal" id="notifyModal" hidden>
+      <button
+        class="notify-modal-backdrop"
+        type="button"
+        aria-label="Close notification form"
+        data-notify-close
+      ></button>
+      <section
+        class="notify-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="notifyTitle"
+      >
+        <button
+          class="notify-close"
+          type="button"
+          aria-label="Close"
+          data-notify-close
+        >
+          ×
+        </button>
+        <form class="notify-form" id="notifyForm">
+          <div>
+            <p class="eyebrow">Registration alerts</p>
+            <h3 id="notifyTitle">Get notified when DV registration opens.</h3>
+            <p>
+              Leave an email or WhatsApp number and we will contact you when the
+              official registration window is announced.
+            </p>
+          </div>
+          <label>
+            <span>Email</span>
+            <input name="notifyEmail" type="email" autocomplete="email" />
+          </label>
+          <label>
+            <span>Phone / WhatsApp</span>
+            <input name="notifyPhone" type="tel" autocomplete="tel" />
+          </label>
+          <label class="consent notify-consent">
+            <input type="checkbox" required />
+            <span>
+              I agree to be contacted about DV registration updates and
+              application support.
+            </span>
+          </label>
+          <button class="button" type="submit">Notify Me</button>
+          <p class="form-message" id="notifyMessage" role="status"></p>
+        </form>
+      </section>
+    </div>
+
     <a class="mobile-cta" href="#apply">Start Application</a>
 
     <details class="support-chat">
@@ -1023,6 +1054,6 @@
       </p>
     </footer>
 
-    <script src="assets/app.js?v=20260614-packages-applicants"></script>
+    <script src="assets/app.js?v=20260614-compact-package-alert"></script>
   </body>
 </html>
