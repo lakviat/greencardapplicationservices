@@ -1,9 +1,185 @@
 GREEN CARD APPLICATION SERVICES - REQUIREMENTS
-Last updated: 2026-05-17
+Last updated: 2026-07-01
 
 Purpose
 -------
 This file is the living requirements document for a Diversity Visa (DV) / Green Card application services webpage. It is for internal planning, product decisions, legal/compliance review, form design, automation design, and future implementation.
+
+Current implementation snapshot
+-------------------------------
+Updated on 2026-07-01:
+
+Repository:
+1. Local project path:
+   /Users/nurlanmirovich/integration-automation/greencardapplicationservices
+2. GitHub remote:
+   https://github.com/lakviat/greencardapplicationservices.git
+3. Production domain:
+   https://greencardapplicationservices.com/
+4. Hosting:
+   GitHub Pages static site.
+5. Current local branch:
+   main.
+6. As of 2026-07-01, local branch contains one committed SEO/resource update ahead of origin/main:
+   51f8d63 Add DV resource and SEO content pages
+7. GitHub auth is available through gh for account lakviat, but the pending commit still needs to be pushed if not already pushed after this update.
+8. Known unrelated local worktree items that should not be staged unless intentionally reviewed:
+   - assets/images/bad-photo-examples.jpg
+   - .claude/
+
+Implemented public pages:
+1. Home:
+   index.html
+2. How it works:
+   how-it-works.html
+3. DV Lottery guide:
+   guide.html
+4. FAQ:
+   faq.html
+5. Photo/document requirements:
+   requirements.html
+6. Resource hub:
+   resources.html
+7. Eligible countries resource:
+   eligible-countries.html
+8. Common mistakes resource:
+   common-mistakes.html
+9. Married couples resource:
+   married-couples.html
+10. U.S.-based applicants resource:
+   living-in-usa.html
+11. Language and country support roadmap:
+   language-country-support.html
+
+Implemented frontend features:
+1. Responsive static site with mobile menu and sticky mobile CTA.
+2. Hero image carousel using local generated/edited hero assets.
+3. Open Graph and Twitter social preview metadata with a dedicated preview image:
+   assets/images/social-preview.jpg
+4. Compact package selector:
+   - Single: USD 39
+   - Couple: USD 69
+   - Family: USD 99
+   - Premium: USD 149
+5. Dynamic additional applicant sections:
+   - Couple opens applicant 2.
+   - Family opens applicants 2 and 3.
+   - Premium lets the user choose 1, 2, or 3 applicants.
+6. Public application request form with contact information, eligible-country dropdown, multi-file document upload, consent checkbox, optional payment copy, and submit state animation.
+7. Google Apps Script intake submission endpoint connected from assets/app.js.
+8. Google Apps Script notification signup endpoint connected from assets/app.js.
+9. Notification signup modal launched from the hero "Notify me" button.
+10. Notification submissions write JSON files into the Google Drive notifications folder through Apps Script.
+11. Requirements page includes photo examples, document guidance, and local camera/selfie capture planning code.
+12. Social sharing previews now include title, description, canonical URL, and share image.
+
+Implemented Google Apps Script files tracked in repo:
+1. scripts/notifications-apps-script.gs
+   Purpose: collect notification signups and write JSON files to the notifications folder.
+
+Current production architecture:
+1. The website is static HTML/CSS/JavaScript.
+2. There is no backend API server yet.
+3. There is no account system yet.
+4. There is no database yet.
+5. Google Apps Script and Google Drive are the current lightweight backend for intake/notification collection.
+6. File uploads are sent through client-side JavaScript to Apps Script. This is acceptable for a prototype/first launch but should be replaced with a stronger backend for larger scale, larger files, user accounts, audit logging, and payment reconciliation.
+
+Current known gaps
+------------------
+Product and UX:
+1. No user account, sign-in, saved draft, or customer dashboard.
+2. No full guided DV questionnaire yet.
+3. The public application form is still a request/intake starter, not a full official-entry data collection flow.
+4. The site still needs a stronger post-submit confirmation experience: reference number, next steps, contact options, and package/payment summary.
+5. The Apply form still does not collect date of birth, birth city, current residence, marital status, children, education, or full spouse/child details.
+6. The website still needs Privacy Policy, Terms of Service, Refund Policy, and Legal Disclaimer pages before serious paid traffic.
+7. The site needs a clearer business identity/trust layer: contact method, support hours, business location display policy, and privacy reassurance near uploads.
+
+Payments:
+1. Payment is not fully implemented.
+2. Stripe/Apple Pay copy exists, but package-specific live checkout links are not wired.
+3. Payment status is not reconciled automatically with Google Drive submissions.
+4. Refund policy and chargeback process are not written.
+
+Operations:
+1. There is no staff dashboard or review queue.
+2. There is no automated customer email receipt.
+3. There is no automated internal notification when a new application request is submitted.
+4. There is no structured data export/reporting pipeline from Drive folders yet.
+5. There is no clear manual SOP for staff review, correction requests, final approval, official submission, and confirmation-number delivery.
+
+Security and privacy:
+1. The current public token placeholder should be replaced with a real random shared secret in both frontend and Apps Script.
+2. Apps Script is not a complete security boundary for sensitive identity documents.
+3. Need spam/rate-limit strategy, likely CAPTCHA or backend validation before scaling.
+4. Need data retention policy and deletion process.
+5. Need Google Drive access controls and staff 2FA enforcement.
+
+SEO and localization:
+1. English baseline is expanded, but no translated route exists yet.
+2. No hreflang tags yet because translated pages do not exist.
+3. Country-specific landing pages are not built yet.
+4. Priority countries/languages still need final business input from owner.
+5. Browser auto-translation is not enough for controlled legal/payment/service wording.
+
+Testing strategy and release checklist
+--------------------------------------
+Current testing approach:
+1. Static checks:
+   - Run prettier on changed HTML/CSS/JS files.
+   - Run node --check assets/app.js after JavaScript changes.
+   - Check internal local links across all HTML files.
+   - Check cache-bust keys across all HTML files.
+   - Check required metadata on public pages: title, description, canonical, og:title, og:description, og:image, twitter:card.
+2. Browser checks:
+   - Run a local server with python3 -m http.server 8080.
+   - Test desktop layout at common widths, especially homepage, Apply form, FAQ/resource cards, and requirements page.
+   - Test mobile layout around 390 x 844 for menu, hero, package selector, form, modal, and resource pages.
+   - Verify no major overlap, clipped text, broken grids, or off-screen controls.
+3. Integration checks:
+   - Test Google Apps Script doGet endpoints with curl.
+   - Test Apps Script doPost endpoints with representative JSON payloads.
+   - Verify Drive folder/file creation after each Apps Script change.
+   - Verify notification JSON files appear inside notifications folder.
+   - Verify application request folders/files appear inside the intended Drive parent folder.
+4. Deployment checks:
+   - Confirm git status excludes unrelated local files before staging.
+   - Commit with a scoped message.
+   - Push main.
+   - Poll production HTML/CSS/JS/image URLs until GitHub Pages serves the new version.
+   - Verify live cache key and important changed markup.
+   - For social previews, verify og:image returns HTTP 200 and has 1200 x 630 dimensions.
+
+Manual QA checklist before paid traffic:
+1. Homepage loads on desktop and mobile.
+2. Header menu works on mobile and closes after link click.
+3. Hero CTAs work.
+4. Notify modal opens, validates email/phone, submits to Apps Script, and creates a Drive JSON file.
+5. Application form validates required fields.
+6. Country dropdown still excludes ineligible countries for the active DV year.
+7. Multiple file upload works within current size limits.
+8. Application submit writes customer information and files to Drive.
+9. Submit button state changes from idle to submitting to submitted.
+10. Success message spans full form width on desktop and wraps cleanly on mobile.
+11. Package selector reveals the correct additional applicant sections.
+12. FAQ/resource pages are reachable from homepage and Guide.
+13. Social link preview metadata is present on homepage and resource pages.
+14. Official government links work.
+15. Footer disclaimer is visible.
+
+Recommended next implementation order
+-------------------------------------
+1. Push pending SEO/resource commit if not yet pushed.
+2. Replace placeholder shared secret with a real random value in frontend and Apps Scripts.
+3. Add Privacy Policy, Terms of Service, Refund Policy, and Legal Disclaimer pages.
+4. Add a better post-submit confirmation card with reference ID and next steps.
+5. Add package-specific payment links or checkout flow.
+6. Add staff/internal notification for application request submissions.
+7. Write staff review SOP.
+8. Decide priority countries/languages and build first country-specific SEO pages.
+9. Build controlled translations after English copy stabilizes.
+10. Plan backend migration if accounts, saved drafts, dashboard, or larger upload volume become required.
 
 Official source baseline
 ------------------------
@@ -189,7 +365,7 @@ Customer mindset:
 Recommended product flow:
 1. Start request:
    - Name.
-   - Email and confirm email.
+   - Email.
    - Phone/WhatsApp.
    - Country of birth / chargeability country.
    - Preferred language.
@@ -362,32 +538,47 @@ Follow-up collection may include:
 
 Email confirmation requirement:
 
-1. The form must require email and confirm email fields.
-2. The fields must match before submission.
-3. On submission, send an automatic confirmation email.
-4. Important updates, receipts, and confirmation numbers must be sent to the verified email.
-5. If email bounces, staff must follow up by WhatsApp/phone.
+Status update on 2026-07-01:
+The first public form intentionally removed confirm email because the form also collects Phone / WhatsApp. Confirm email can return later when automated receipts, customer accounts, or payment receipts are implemented.
+
+Current requirement:
+1. Require email on the public application request form.
+2. Require Phone / WhatsApp on the public application request form.
+3. Do not require confirm email in the first public form.
+4. On submission, store email and phone in the Google Drive/customer record.
+5. Important updates, receipts, and confirmation numbers should eventually be sent to email and/or WhatsApp.
+6. If email bounces, staff should follow up by WhatsApp/phone.
+7. Add automatic confirmation email later when a proper transactional email provider or backend exists.
 
 Payment requirements
 --------------------
-Proposed pricing:
+Current public package model, updated on 2026-07-01:
 
-1. One submission package: USD 100, including the $1 government DV registration fee for that entry.
-2. Two submission package: USD 140, including $2 total government DV registration fees for two entries.
-3. Three submission package: USD 155, including $3 total government DV registration fees for three entries.
-4. Any later selected-case government fees, such as Diversity Visa application fees paid by selected applicants, are separate from initial entry support and should not be included in the lottery-entry package copy.
-5. Transfer/payment processing allowance: USD 15 if applicable.
+1. Single: USD 39.
+   One applicant with automated checks, manual review, photo/document organization, and official submission when ready.
+2. Couple: USD 69.
+   Two applicants, commonly married spouses without children.
+3. Family: USD 99.
+   Up to three applicants, intended for cases where spouse or child details need to be reviewed together.
+4. Premium: USD 149.
+   Priority handling plus Zoom review call. Same-day support when the DV window is open and all required information/photos are ready.
+5. All packages should include automated checks, manual review, document organization, photo review, and official submission when the DV window is open and required information/photos are ready.
+6. Premium must not be described as improving lottery odds.
+7. Any later selected-case government fees, such as Diversity Visa application fees paid by selected applicants after selection, are separate from initial entry support and should not be included in lottery-entry package copy.
+8. Government DV registration fee language must be re-verified against active official instructions before each registration season.
 
 Payment method requirements:
 
 1. Support international clients.
 2. Prefer secure payment processors over publishing raw bank or wire credentials on the website.
-3. Evaluate Stripe, PayPal, Wise Business, Payoneer, and bank transfer by invoice.
-4. If wire transfer is offered, show it only after the customer starts checkout or receives an invoice, not as public static credentials.
-5. Payment page must clearly separate our service fee from any government fee.
-6. Receipt must identify the business, fee, date, customer name, and what service was purchased.
-7. Refund policy must be written before launch.
-8. Chargeback and duplicate payment handling must be defined.
+3. Evaluate Stripe Payment Links / Checkout first for card and Apple Pay support.
+4. Also evaluate PayPal, Wise Business, Payoneer, and bank transfer by invoice for international clients.
+5. If wire transfer is offered, show it only after the customer starts checkout or receives an invoice, not as public static credentials.
+6. Payment page must clearly separate our service fee from any government fee.
+7. Receipt must identify the business, fee, date, customer name, and what service was purchased.
+8. Refund policy must be written before launch.
+9. Chargeback and duplicate payment handling must be defined.
+10. Current site allows users to submit the request without immediate payment so staff can contact them and continue the conversation. Payment integration remains incomplete.
 
 Google Drive and Apps Script automation
 ---------------------------------------
@@ -421,7 +612,7 @@ Folder contents:
 Apps Script requirements:
 1. Receive form submission securely.
 2. Validate required fields server-side.
-3. Verify email and confirm email match.
+3. Store email and Phone / WhatsApp for follow-up. Confirm-email matching is not part of the current public form.
 4. Create or locate customer folder in the configured parent Google Drive folder.
 5. Upload files to the folder.
 6. Save a submission record to Google Sheets or a database.
@@ -457,6 +648,40 @@ Operational privacy requirements:
 
 Website pages
 -------------
+Current page status, updated on 2026-07-01:
+
+Already implemented:
+1. Home:
+   index.html
+2. How It Works:
+   how-it-works.html
+3. DV Lottery Guide:
+   guide.html
+4. FAQ:
+   faq.html
+5. Requirements / photo and document guidance:
+   requirements.html
+6. Resource hub:
+   resources.html
+7. Eligible countries resource:
+   eligible-countries.html
+8. Common mistakes resource:
+   common-mistakes.html
+9. Married couples resource:
+   married-couples.html
+10. Living in the U.S. resource:
+   living-in-usa.html
+11. Language and country support roadmap:
+   language-country-support.html
+
+Still missing before serious paid traffic:
+1. Privacy Policy.
+2. Terms of Service.
+3. Refund Policy.
+4. Legal Disclaimer page.
+5. Contact page or contact block with final business contact details.
+6. About / trust page if business identity details can be verified.
+
 Required pages:
 
 1. Home
@@ -528,6 +753,9 @@ Current first-build website direction
 -------------------------------------
 Added on 2026-05-17:
 
+Status update on 2026-07-01:
+This section is historical. Preserve it as a record of the original direction, but use the "Current implementation snapshot" and "Payment requirements" sections above for current decisions. In particular, the original $100 / $140 / $155 pricing model is superseded by Single $39, Couple $69, Family $99, and Premium $149.
+
 1. Start with a small, bright, static landing page hosted on GitHub Pages.
 2. Keep the first page focused and not overwhelming.
 3. Use a large first-screen headline such as "Become a U.S. green card holder," while keeping nearby legal disclaimers visible.
@@ -543,7 +771,7 @@ Added on 2026-05-17:
 13. Redesign the page around a very clear mobile experience with a large "Submit Application" call to action in the hero and a sticky mobile CTA.
 14. Add a "What does a Green Card give you?" section explaining permanent residence, consular interview steps, legal entry, and possible future citizenship eligibility without promising approval.
 15. Add three visual date/status blocks. For the current DV-2027 situation, show that official registration dates and result-check dates are pending, rather than reusing outdated DV-2026 dates.
-16. Add transparent pricing blocks: one submission $100, two submissions $140, three submissions $155.
+16. Historical note only: original pricing blocks were one submission $100, two submissions $140, three submissions $155. This is superseded by the current package model.
 17. Replace the initial process copy with applicant-focused steps: submit form/documents/payment, receive follow-up, review/prepare entry, receive confirmation.
 18. Keep the intake form short. Combine country guidance into the country dropdown helper text: if a country is not listed, it may not be eligible for the active DV year.
 19. Improve the small logo mark so it carries American flag styling.
@@ -721,26 +949,30 @@ How to use these references:
 Current website status:
 1. The homepage already has a small FAQ section.
 2. The site already has requirements.html for photo and document requirements.
-3. The current FAQ is too short for SEO and does not fully answer the customer's real questions.
-4. The current site does not yet have a dedicated "How It Works" page, "DV Lottery Guide" page, or full FAQ page.
+3. The FAQ page has been expanded, but it should continue growing as customers ask real questions.
+4. The site now has dedicated How It Works, DV Lottery Guide, full FAQ, Requirements, Resource Hub, Eligible Countries, Common Mistakes, Married Couples, Living in the U.S., and Language/Country Support pages.
+5. The next SEO step is country-specific pages after priority countries are finalized.
 
 Recommended information architecture:
 1. Keep the homepage focused on conversion and confidence.
-2. Add /how-it-works/ or how-it-works.html:
+2. Maintain /how-it-works/ or how-it-works.html:
    - Explain our exact service process from account creation through confirmation number.
    - Show what the customer does and what staff does.
    - Explain payment timing: intake first, payment second, staff review after payment.
    - Include a visual step timeline and status examples.
-3. Add /faq/ or faq.html:
+3. Maintain /faq/ or faq.html:
    - Answer common customer questions in short, searchable sections.
    - Include pricing, documents, photos, family members, deadlines, payment, account/save-progress, official submission, confirmation number, and result checking.
-4. Add /dv-lottery-guide/ or guide.html:
+4. Maintain /dv-lottery-guide/ or guide.html:
    - Long-form SEO guide explaining what the DV Lottery is, who can apply, required information, photo rules, spouse/child rules, common mistakes, timeline, and what happens if selected.
    - This page should be educational and source-driven, not a hard sales page.
 5. Keep /requirements/ or requirements.html:
    - Focus specifically on photo and document preparation.
    - Include visual examples, upload guidance, and staff review explanation.
-6. Future multilingual URLs:
+6. Maintain /resources/ or resources.html:
+   - Act as the English resource hub for educational SEO pages.
+   - Link to eligible countries, common mistakes, married couples, U.S.-based applicants, language/country roadmap, and photo requirements.
+7. Future multilingual URLs:
    - English baseline first.
    - Later use clear language paths such as /ru/, /ky/, /uz/, /tr/ only after content is stable.
    - Avoid translating too early because product flow, forms, legal copy, and disclaimers may change.
