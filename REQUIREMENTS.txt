@@ -77,6 +77,10 @@ Implemented frontend features:
 10. Notification submissions write JSON files into the Google Drive notifications folder through Apps Script.
 11. Requirements page includes photo examples, document guidance, and local camera/selfie capture planning code.
 12. Social sharing previews now include title, description, canonical URL, and share image.
+13. Header language navigation exists on every public page:
+   - Desktop: compact EN dropdown near the Start Application button.
+   - Mobile: language links appear inside the Menu panel.
+   - Current links point to English/source country pages until real translated routes are created.
 
 Implemented Google Apps Script files tracked in repo:
 1. scripts/notifications-apps-script.gs
@@ -127,6 +131,7 @@ SEO and localization:
 3. First country-specific English landing pages are built for Uzbekistan, Kazakhstan, Kyrgyzstan, and Tajikistan.
 4. Remaining priority countries/languages still need final business input from owner.
 5. Browser auto-translation is not enough for controlled legal/payment/service wording.
+6. The language switcher should later point to real language routes such as /ru/, /uz/, /ky/, /kk/, and /tg/ after those translations are built.
 
 Testing strategy and release checklist
 --------------------------------------
