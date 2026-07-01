@@ -20,9 +20,9 @@ Repository:
    GitHub Pages static site.
 5. Current local branch:
    main.
-6. As of 2026-07-01, local branch contains one committed SEO/resource update ahead of origin/main:
-   51f8d63 Add DV resource and SEO content pages
-7. GitHub auth is available through gh for account lakviat, but the pending commit still needs to be pushed if not already pushed after this update.
+6. As of 2026-07-01, the first SEO/resource update has been pushed to origin/main:
+   d8050b9 Update project requirements and testing strategy
+7. GitHub auth is available through gh for account lakviat.
 8. Known unrelated local worktree items that should not be staged unless intentionally reviewed:
    - assets/images/bad-photo-examples.jpg
    - .claude/
@@ -50,6 +50,11 @@ Implemented public pages:
    living-in-usa.html
 11. Language and country support roadmap:
    language-country-support.html
+12. First country-specific English SEO pages:
+   green-card-lottery-uzbekistan.html
+   green-card-lottery-kazakhstan.html
+   green-card-lottery-kyrgyzstan.html
+   green-card-lottery-tajikistan.html
 
 Implemented frontend features:
 1. Responsive static site with mobile menu and sticky mobile CTA.
@@ -119,8 +124,8 @@ Security and privacy:
 SEO and localization:
 1. English baseline is expanded, but no translated route exists yet.
 2. No hreflang tags yet because translated pages do not exist.
-3. Country-specific landing pages are not built yet.
-4. Priority countries/languages still need final business input from owner.
+3. First country-specific English landing pages are built for Uzbekistan, Kazakhstan, Kyrgyzstan, and Tajikistan.
+4. Remaining priority countries/languages still need final business input from owner.
 5. Browser auto-translation is not enough for controlled legal/payment/service wording.
 
 Testing strategy and release checklist
@@ -177,7 +182,7 @@ Recommended next implementation order
 5. Add package-specific payment links or checkout flow.
 6. Add staff/internal notification for application request submissions.
 7. Write staff review SOP.
-8. Decide priority countries/languages and build first country-specific SEO pages.
+8. Decide the remaining six priority countries/languages and build the next country-specific SEO batch.
 9. Build controlled translations after English copy stabilizes.
 10. Plan backend migration if accounts, saved drafts, dashboard, or larger upload volume become required.
 
@@ -673,6 +678,11 @@ Already implemented:
    living-in-usa.html
 11. Language and country support roadmap:
    language-country-support.html
+12. First country-specific English SEO pages:
+   green-card-lottery-uzbekistan.html
+   green-card-lottery-kazakhstan.html
+   green-card-lottery-kyrgyzstan.html
+   green-card-lottery-tajikistan.html
 
 Still missing before serious paid traffic:
 1. Privacy Policy.
@@ -951,7 +961,7 @@ Current website status:
 2. The site already has requirements.html for photo and document requirements.
 3. The FAQ page has been expanded, but it should continue growing as customers ask real questions.
 4. The site now has dedicated How It Works, DV Lottery Guide, full FAQ, Requirements, Resource Hub, Eligible Countries, Common Mistakes, Married Couples, Living in the U.S., and Language/Country Support pages.
-5. The next SEO step is country-specific pages after priority countries are finalized.
+5. First country-specific English SEO pages are live for Uzbekistan, Kazakhstan, Kyrgyzstan, and Tajikistan. The next SEO step is either the remaining six priority country pages or the first controlled translation route.
 
 Recommended information architecture:
 1. Keep the homepage focused on conversion and confidence.
@@ -971,11 +981,16 @@ Recommended information architecture:
    - Include visual examples, upload guidance, and staff review explanation.
 6. Maintain /resources/ or resources.html:
    - Act as the English resource hub for educational SEO pages.
-   - Link to eligible countries, common mistakes, married couples, U.S.-based applicants, language/country roadmap, and photo requirements.
+   - Link to eligible countries, common mistakes, married couples, U.S.-based applicants, language/country roadmap, photo requirements, and first country SEO pages.
 7. Future multilingual URLs:
    - English baseline first.
    - Later use clear language paths such as /ru/, /ky/, /uz/, /tr/ only after content is stable.
    - Avoid translating too early because product flow, forms, legal copy, and disclaimers may change.
+8. First country SEO URL pattern:
+   - green-card-lottery-uzbekistan.html
+   - green-card-lottery-kazakhstan.html
+   - green-card-lottery-kyrgyzstan.html
+   - green-card-lottery-tajikistan.html
 
 Recommended SEO content pillars:
 1. What is the Green Card Lottery / Diversity Visa Program?
