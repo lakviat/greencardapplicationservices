@@ -86,6 +86,7 @@ Implemented frontend features:
    - The header and browser icon now use a restrained original Statue of Liberty head mark instead of the U.S. flag-only square.
    - The homepage hero application-preview/status card has been removed.
    - The homepage hero now uses a cleaner white wave, people photo carousel, and subtle map-line texture without the oversized Liberty overlay.
+   - The homepage hero now has three rotating photo slides with visible carousel indicators.
    - The application section includes a small document-review visual to make the left side feel less empty.
 
 Implemented Google Apps Script files tracked in repo:

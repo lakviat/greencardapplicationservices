@@ -85,9 +85,10 @@ a {
   height: 42px;
   overflow: hidden;
   background: url("liberty-mark.svg") center / contain no-repeat;
-  border: 1px solid rgba(16, 33, 61, 0.14);
-  border-radius: 8px;
-  box-shadow: 0 6px 14px rgba(23, 32, 51, 0.1);
+  background-color: #fff;
+  border: 1px solid rgba(16, 33, 61, 0.1);
+  border-radius: 10px;
+  box-shadow: 0 8px 18px rgba(16, 33, 61, 0.09);
 }
 
 .brand-mark::before {
@@ -2209,7 +2210,7 @@ small {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: clamp(18px, 3vw, 44px);
-  min-height: clamp(560px, 72vh, 660px);
+  min-height: clamp(590px, 76vh, 700px);
   align-items: center;
   padding: clamp(44px, 6vw, 74px) clamp(18px, 5vw, 72px) clamp(50px, 6vw, 76px);
   overflow: hidden;
@@ -2275,45 +2276,57 @@ small {
   opacity: 0;
   filter: saturate(0.92);
   transform: scale(1.04);
-  animation: heroPhotoFade 12s infinite;
+  animation: heroPhotoFade 15s infinite;
 }
 
 .hero-photo-slide.is-second {
   background-position: 100% center;
-  animation-delay: 6s;
+  animation-delay: 5s;
+}
+
+.hero-photo-slide.is-third {
+  background-position: center;
+  animation-delay: 10s;
 }
 
 .hero-carousel-dots {
-  position: absolute;
-  left: clamp(18px, 5vw, 72px);
-  bottom: 26px;
-  z-index: 2;
   display: flex;
+  width: fit-content;
   gap: 9px;
   align-items: center;
+  margin-top: 18px;
+  padding: 7px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(16, 33, 61, 0.08);
+  border-radius: 999px;
+  box-shadow: 0 10px 24px rgba(16, 33, 61, 0.08);
+  backdrop-filter: blur(10px);
 }
 
 .hero-carousel-dots span {
-  width: 9px;
-  height: 9px;
-  background: rgba(255, 255, 255, 0.42);
+  width: 8px;
+  height: 8px;
+  background: rgba(16, 33, 61, 0.22);
   border-radius: 999px;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
-  animation: heroDotFade 12s infinite;
+  animation: heroDotFade 15s infinite;
 }
 
 .hero-carousel-dots span:nth-child(2) {
-  animation-delay: 6s;
+  animation-delay: 5s;
+}
+
+.hero-carousel-dots span:nth-child(3) {
+  animation-delay: 10s;
 }
 
 @keyframes heroPhotoFade {
   0%,
-  45% {
+  28% {
     opacity: 1;
   }
 
-  50%,
-  95% {
+  33%,
+  94% {
     opacity: 0;
   }
 
@@ -2324,20 +2337,20 @@ small {
 
 @keyframes heroDotFade {
   0%,
-  45% {
-    width: 28px;
-    background: #fff;
+  28% {
+    width: 26px;
+    background: var(--blue);
   }
 
-  50%,
-  95% {
-    width: 9px;
-    background: rgba(255, 255, 255, 0.42);
+  33%,
+  94% {
+    width: 8px;
+    background: rgba(16, 33, 61, 0.22);
   }
 
   100% {
-    width: 28px;
-    background: #fff;
+    width: 26px;
+    background: var(--blue);
   }
 }
 
@@ -2693,6 +2706,10 @@ small {
     background-position: 61% top;
   }
 
+  .hero-photo-slide.is-third {
+    background-position: 74% center;
+  }
+
   .toc {
     position: static;
   }
@@ -2721,15 +2738,21 @@ small {
   }
 
   .hero-photo-slide.is-first {
-    background-image: url("images/hero/green-card-family-mobile.jpg?v=20260612-higher") !important;
+    background-image: url("images/hero/green-card-family-mobile.jpg?v=20260707-card") !important;
     background-position: 52% 45%;
     background-size: cover;
     transform: scale(1.02);
   }
 
   .hero-photo-slide.is-second {
-    background-image: url("images/hero/green-card-couple-mobile.jpg?v=20260612-higher") !important;
+    background-image: url("images/hero/green-card-couple-mobile.jpg?v=20260707-card") !important;
     background-position: 54% center;
+    background-size: cover;
+    transform: scale(1.02);
+  }
+
+  .hero-photo-slide.is-third {
+    background-position: 72% center;
     background-size: cover;
     transform: scale(1.02);
   }
@@ -2754,6 +2777,10 @@ small {
   }
 
   .hero-photo-slide.is-second {
+    opacity: 0;
+  }
+
+  .hero-photo-slide.is-third {
     opacity: 0;
   }
 }
