@@ -82,9 +82,9 @@ Implemented frontend features:
    - Mobile: language links appear inside the Menu panel.
    - Current links point to English/source country pages until real translated routes are created.
 14. Brand/hero refresh:
-   - The header and browser icon now use an original Statue of Liberty head mark instead of the U.S. flag-only square.
+   - The header and browser icon now use a restrained original Statue of Liberty head mark instead of the U.S. flag-only square.
    - The homepage hero application-preview/status card has been removed.
-   - The homepage hero now uses a cleaner white wave, people photo carousel, subtle map-line texture, and Liberty visual direction.
+   - The homepage hero now uses a cleaner white wave, people photo carousel, and subtle map-line texture without the oversized Liberty overlay.
    - The application section includes a small document-review visual to make the left side feel less empty.
 
 Implemented Google Apps Script files tracked in repo:
