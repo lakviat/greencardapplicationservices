@@ -81,7 +81,8 @@ Implemented frontend features:
    - Desktop: compact EN dropdown near the Start Application button.
    - Mobile: language links appear inside the Menu panel.
    - Current links point to English/source country pages until real translated routes are created.
-14. Brand/hero refresh:
+14. Google Analytics tag is installed on every public page using measurement ID G-9P726CYPGF.
+15. Brand/hero refresh:
    - The header and browser icon now use a restrained original Statue of Liberty head mark instead of the U.S. flag-only square.
    - The homepage hero application-preview/status card has been removed.
    - The homepage hero now uses a cleaner white wave, people photo carousel, and subtle map-line texture without the oversized Liberty overlay.

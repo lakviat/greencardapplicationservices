@@ -47,8 +47,15 @@
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://script.google.com https://script.googleusercontent.com; object-src 'none'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://script.google.com; upgrade-insecure-requests"
+      content="default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://www.google-analytics.com https://analytics.google.com https://*.google-analytics.com; object-src 'none'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://script.google.com; upgrade-insecure-requests"
     />
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-9P726CYPGF"
+    ></script>
+    <script src="assets/site-metrics.js?v=20260707-ga"></script>
+
     <title>DV Lottery While Living in the U.S. | Green Card Services</title>
     <link rel="icon" href="assets/liberty-mark.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="assets/styles.css?v=20260707-hero-tight" />
