@@ -70,7 +70,7 @@ a {
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   max-width: min(38vw, 430px);
   font-weight: 900;
   white-space: nowrap;
@@ -81,11 +81,15 @@ a {
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  width: 74px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   overflow: hidden;
-  background: url("liberty-mark.svg") center / contain no-repeat;
-  border-radius: 0;
+  background:
+    url("liberty-mark.svg") center / 33px 33px no-repeat,
+    #fff;
+  border: 1px solid rgba(16, 33, 61, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 22px rgba(16, 33, 61, 0.08);
 }
 
 .brand-mark::before {
@@ -329,8 +333,7 @@ a {
 .hero-media {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(
+  background: linear-gradient(
       90deg,
       rgba(6, 22, 51, 0.8) 0%,
       rgba(6, 22, 51, 0.58) 48%,
@@ -669,8 +672,7 @@ h3 {
   align-items: start;
   overflow: hidden;
   padding: 22px;
-  background:
-    linear-gradient(
+  background: linear-gradient(
       180deg,
       rgba(234, 244, 255, 0.9),
       rgba(255, 255, 255, 0) 52%
@@ -807,8 +809,7 @@ h3 {
   align-items: center;
   margin-top: 28px;
   padding: 18px;
-  background:
-    linear-gradient(
+  background: linear-gradient(
       135deg,
       rgba(234, 244, 255, 0.82),
       rgba(255, 248, 231, 0.72)
@@ -1034,8 +1035,8 @@ select {
   background:
     linear-gradient(45deg, transparent 50%, var(--navy) 50%) right 18px center /
       7px 7px no-repeat,
-    linear-gradient(135deg, var(--navy) 50%, transparent 50%) right 13px
-      center / 7px 7px no-repeat,
+    linear-gradient(135deg, var(--navy) 50%, transparent 50%) right 13px center /
+      7px 7px no-repeat,
     #fff;
   font-weight: 850;
 }
@@ -1301,8 +1302,7 @@ small {
 }
 
 .requirement-grid article {
-  background:
-    linear-gradient(
+  background: linear-gradient(
       180deg,
       rgba(234, 244, 255, 0.88),
       rgba(255, 255, 255, 0) 50%
@@ -2017,9 +2017,19 @@ small {
     font-size: 0.98rem;
   }
 
+  .brand > span:last-child {
+    font-size: 0;
+  }
+
+  .brand > span:last-child::after {
+    content: "Green Card Services";
+    font-size: 1rem;
+  }
+
   .brand-mark {
-    width: 56px;
-    height: 36px;
+    width: 42px;
+    height: 42px;
+    background-size: 31px 31px;
   }
 
   .site-header > .button {
@@ -2216,8 +2226,13 @@ small {
   align-items: center;
   padding: clamp(44px, 6vw, 74px) clamp(18px, 5vw, 72px) clamp(50px, 6vw, 76px);
   overflow: hidden;
-  background:
-    linear-gradient(90deg, #f8fbff 0%, #f8fbff 50%, #e4eef8 50%, #e4eef8 100%),
+  background: linear-gradient(
+      90deg,
+      #f8fbff 0%,
+      #f8fbff 50%,
+      #e4eef8 50%,
+      #e4eef8 100%
+    ),
     #f8fbff;
   border-bottom: 1px solid var(--line);
 }
@@ -2235,13 +2250,13 @@ small {
   position: absolute;
   inset: 0;
   content: "";
-  clip-path: ellipse(62% 78% at -10% 74%);
+  clip-path: ellipse(66% 82% at -8% 73%);
   background:
     linear-gradient(
       132deg,
       rgba(255, 255, 255, 0.99) 0%,
       rgba(255, 255, 255, 0.98) 52%,
-      rgba(248, 251, 255, 0.9) 74%,
+      rgba(248, 251, 255, 0.93) 73%,
       rgba(248, 251, 255, 0.08) 100%
     ),
     url("map-lines.svg") left 52% bottom 8% / min(620px, 52vw) auto no-repeat;
@@ -2253,19 +2268,22 @@ small {
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(70vw, 1160px);
+  width: min(68vw, 1100px);
   z-index: 0;
   overflow: hidden;
   background: #d9eaf8;
-  clip-path: polygon(22% 0, 100% 0, 100% 100%, 0 100%, 30% 46%);
+  clip-path: polygon(20% 0, 100% 0, 100% 100%, 0 100%, 31% 48%);
 }
 
 .hero-photo-carousel::after {
   position: absolute;
   inset: 0;
   content: "";
-  background:
-    linear-gradient(90deg, rgba(8, 24, 45, 0.34), rgba(8, 24, 45, 0.03) 44%),
+  background: linear-gradient(
+      90deg,
+      rgba(8, 24, 45, 0.34),
+      rgba(8, 24, 45, 0.03) 44%
+    ),
     linear-gradient(180deg, rgba(23, 78, 166, 0.06), rgba(8, 24, 45, 0.12));
   z-index: 1;
 }
@@ -2273,7 +2291,7 @@ small {
 .hero-photo-slide {
   position: absolute;
   inset: 0;
-  background-position: 86% center;
+  background-position: 72% center;
   background-size: cover;
   opacity: 0;
   filter: saturate(0.95);
@@ -2282,12 +2300,12 @@ small {
 }
 
 .hero-photo-slide.is-second {
-  background-position: 84% center;
+  background-position: 70% center;
   animation-delay: 5s;
 }
 
 .hero-photo-slide.is-third {
-  background-position: 78% center;
+  background-position: 72% center;
   animation-delay: 10s;
 }
 
@@ -2682,8 +2700,8 @@ small {
     background:
       linear-gradient(
         180deg,
-        rgba(255, 255, 255, 0.76) 0%,
-        rgba(255, 255, 255, 0.9) 52%,
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(255, 255, 255, 0.96) 52%,
         rgba(255, 255, 255, 0.98) 100%
       ),
       url("map-lines.svg") left 50% bottom 6% / 780px auto no-repeat;
@@ -2691,7 +2709,7 @@ small {
 
   .hero-photo-carousel {
     width: 100%;
-    clip-path: polygon(0 0, 100% 0, 100% 58%, 0 82%);
+    clip-path: polygon(0 0, 100% 0, 100% 52%, 0 76%);
   }
 
   .hero-photo-slide {
@@ -2719,43 +2737,50 @@ small {
 
 @media (max-width: 620px) {
   .hero-dashboard {
-    min-height: calc(100svh - 96px);
-    padding-block: 42px 82px;
+    min-height: auto;
+    padding: 230px 20px 56px;
   }
 
   .hero-dashboard h1 {
-    font-size: clamp(2.45rem, 13vw, 3.7rem);
+    font-size: clamp(2.25rem, 11.6vw, 3.25rem);
   }
 
   .hero-dashboard::after {
-    clip-path: ellipse(126% 72% at 35% 88%);
+    clip-path: none;
     background:
       linear-gradient(
         180deg,
-        rgba(255, 255, 255, 0.7) 0%,
-        rgba(255, 255, 255, 0.86) 48%,
+        rgba(255, 255, 255, 0.16) 0%,
+        rgba(255, 255, 255, 0.78) 26%,
+        rgba(255, 255, 255, 0.98) 42%,
         rgba(255, 255, 255, 0.99) 100%
       ),
       url("map-lines.svg") center bottom / 620px auto no-repeat;
   }
 
+  .hero-photo-carousel {
+    bottom: auto;
+    height: 275px;
+    clip-path: polygon(0 0, 100% 0, 100% 78%, 0 100%);
+  }
+
   .hero-photo-slide.is-first {
-    background-image: url("images/hero/green-card-family-mobile.jpg?v=20260714-card") !important;
-    background-position: 52% 38%;
+    background-image: url("images/hero/green-card-family-mobile.jpg?v=20260714-clean") !important;
+    background-position: 58% 8%;
     background-size: cover;
     transform: scale(1.02);
   }
 
   .hero-photo-slide.is-second {
-    background-image: url("images/hero/green-card-couple-mobile.jpg?v=20260714-card") !important;
-    background-position: 50% 34%;
+    background-image: url("images/hero/green-card-couple-mobile.jpg?v=20260714-clean") !important;
+    background-position: 58% 8%;
     background-size: cover;
     transform: scale(1.02);
   }
 
   .hero-photo-slide.is-third {
-    background-image: url("images/hero/green-card-couple-mobile.jpg?v=20260714-card") !important;
-    background-position: 50% 34%;
+    background-image: url("images/hero/green-card-couple-mobile.jpg?v=20260714-clean") !important;
+    background-position: 58% 8%;
     background-size: cover;
     transform: scale(1.02);
   }
