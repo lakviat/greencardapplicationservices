@@ -2765,22 +2765,22 @@ small {
   }
 
   .hero-photo-slide.is-first {
-    background-image: url("images/hero/green-card-family-mobile.jpg?v=20260714-clean") !important;
-    background-position: 58% 8%;
+    background-image: url("images/hero/green-card-family.jpg?v=20260714-safe") !important;
+    background-position: 58% 18%;
     background-size: cover;
     transform: scale(1.02);
   }
 
   .hero-photo-slide.is-second {
-    background-image: url("images/hero/green-card-couple-mobile.jpg?v=20260714-clean") !important;
-    background-position: 58% 8%;
+    background-image: url("images/hero/green-card-couple.jpg?v=20260714-safe") !important;
+    background-position: 54% 18%;
     background-size: cover;
     transform: scale(1.02);
   }
 
   .hero-photo-slide.is-third {
-    background-image: url("images/hero/green-card-couple-mobile.jpg?v=20260714-clean") !important;
-    background-position: 58% 8%;
+    background-image: url("images/hero/green-card-collage.jpg?v=20260714-safe") !important;
+    background-position: 58% 18%;
     background-size: cover;
     transform: scale(1.02);
   }
