@@ -70,8 +70,8 @@ a {
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  max-width: min(34vw, 360px);
+  gap: 12px;
+  max-width: min(38vw, 430px);
   font-weight: 900;
   white-space: nowrap;
 }
@@ -81,14 +81,11 @@ a {
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  width: 42px;
+  width: 74px;
   height: 42px;
   overflow: hidden;
   background: url("liberty-mark.svg") center / contain no-repeat;
-  background-color: #fff;
-  border: 1px solid rgba(16, 33, 61, 0.1);
-  border-radius: 10px;
-  box-shadow: 0 8px 18px rgba(16, 33, 61, 0.09);
+  border-radius: 0;
 }
 
 .brand-mark::before {
@@ -826,7 +823,7 @@ h3 {
   width: 70px;
   aspect-ratio: 1;
   background:
-    url("liberty-mark.svg") center / 86% no-repeat,
+    url("favicon.svg") center / 82% no-repeat,
     #fff;
   border: 1px solid rgba(16, 33, 61, 0.1);
   border-radius: 8px;
@@ -2020,6 +2017,11 @@ small {
     font-size: 0.98rem;
   }
 
+  .brand-mark {
+    width: 56px;
+    height: 36px;
+  }
+
   .site-header > .button {
     display: none;
   }
@@ -2271,21 +2273,21 @@ small {
 .hero-photo-slide {
   position: absolute;
   inset: 0;
-  background-position: 100% center;
+  background-position: 86% center;
   background-size: cover;
   opacity: 0;
-  filter: saturate(0.92);
-  transform: scale(1.04);
+  filter: saturate(0.95);
+  transform: scale(1.02);
   animation: heroPhotoFade 15s infinite;
 }
 
 .hero-photo-slide.is-second {
-  background-position: 100% center;
+  background-position: 84% center;
   animation-delay: 5s;
 }
 
 .hero-photo-slide.is-third {
-  background-position: center;
+  background-position: 78% center;
   animation-delay: 10s;
 }
 
@@ -2680,8 +2682,8 @@ small {
     background:
       linear-gradient(
         180deg,
-        rgba(255, 255, 255, 0.88) 0%,
-        rgba(255, 255, 255, 0.94) 52%,
+        rgba(255, 255, 255, 0.76) 0%,
+        rgba(255, 255, 255, 0.9) 52%,
         rgba(255, 255, 255, 0.98) 100%
       ),
       url("map-lines.svg") left 50% bottom 6% / 780px auto no-repeat;
@@ -2699,15 +2701,15 @@ small {
   }
 
   .hero-photo-slide.is-first {
-    background-position: 67% top;
+    background-position: 62% top;
   }
 
   .hero-photo-slide.is-second {
-    background-position: 61% top;
+    background-position: 58% top;
   }
 
   .hero-photo-slide.is-third {
-    background-position: 74% center;
+    background-position: 66% center;
   }
 
   .toc {
@@ -2726,33 +2728,34 @@ small {
   }
 
   .hero-dashboard::after {
-    clip-path: ellipse(132% 76% at 38% 86%);
+    clip-path: ellipse(126% 72% at 35% 88%);
     background:
       linear-gradient(
         180deg,
-        rgba(255, 255, 255, 0.84) 0%,
-        rgba(255, 255, 255, 0.93) 48%,
+        rgba(255, 255, 255, 0.7) 0%,
+        rgba(255, 255, 255, 0.86) 48%,
         rgba(255, 255, 255, 0.99) 100%
       ),
       url("map-lines.svg") center bottom / 620px auto no-repeat;
   }
 
   .hero-photo-slide.is-first {
-    background-image: url("images/hero/green-card-family-mobile.jpg?v=20260707-card") !important;
-    background-position: 52% 45%;
+    background-image: url("images/hero/green-card-family-mobile.jpg?v=20260714-card") !important;
+    background-position: 52% 38%;
     background-size: cover;
     transform: scale(1.02);
   }
 
   .hero-photo-slide.is-second {
-    background-image: url("images/hero/green-card-couple-mobile.jpg?v=20260707-card") !important;
-    background-position: 54% center;
+    background-image: url("images/hero/green-card-couple-mobile.jpg?v=20260714-card") !important;
+    background-position: 50% 34%;
     background-size: cover;
     transform: scale(1.02);
   }
 
   .hero-photo-slide.is-third {
-    background-position: 72% center;
+    background-image: url("images/hero/green-card-couple-mobile.jpg?v=20260714-card") !important;
+    background-position: 50% 34%;
     background-size: cover;
     transform: scale(1.02);
   }
