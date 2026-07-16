@@ -2268,44 +2268,44 @@ small {
   top: 0;
   right: 0;
   bottom: 0;
-  width: min(68vw, 1100px);
+  width: min(58vw, 1040px);
   z-index: 0;
   overflow: hidden;
-  background: #d9eaf8;
-  clip-path: polygon(20% 0, 100% 0, 100% 100%, 0 100%, 31% 48%);
+  background: #dce8f2;
+  clip-path: polygon(13% 0, 100% 0, 100% 100%, 0 100%);
 }
 
 .hero-photo-carousel::after {
   position: absolute;
   inset: 0;
   content: "";
-  background: linear-gradient(
+  background:
+    linear-gradient(
       90deg,
-      rgba(8, 24, 45, 0.34),
-      rgba(8, 24, 45, 0.03) 44%
+      rgba(8, 24, 45, 0.18),
+      rgba(8, 24, 45, 0.02) 34%
     ),
-    linear-gradient(180deg, rgba(23, 78, 166, 0.06), rgba(8, 24, 45, 0.12));
+    linear-gradient(180deg, rgba(23, 78, 166, 0.02), rgba(8, 24, 45, 0.08));
   z-index: 1;
 }
 
 .hero-photo-slide {
   position: absolute;
   inset: 0;
-  background-position: 72% center;
-  background-size: cover;
+  background-position: right center;
+  background-repeat: no-repeat;
+  background-size: auto 100%;
   opacity: 0;
   filter: saturate(0.95);
-  transform: scale(1.02);
+  transform: none;
   animation: heroPhotoFade 15s infinite;
 }
 
 .hero-photo-slide.is-second {
-  background-position: 70% center;
   animation-delay: 5s;
 }
 
 .hero-photo-slide.is-third {
-  background-position: 72% center;
   animation-delay: 10s;
 }
 
@@ -2675,6 +2675,16 @@ small {
   }
 }
 
+@media (min-width: 861px) and (max-width: 1100px) {
+  .hero-dashboard::after {
+    clip-path: ellipse(58% 82% at -7% 72%);
+  }
+
+  .hero-photo-carousel {
+    width: 60vw;
+  }
+}
+
 @media (max-width: 860px) {
   .hero-dashboard,
   .process-grid,
@@ -2691,43 +2701,41 @@ small {
 
   .hero-dashboard {
     min-height: auto;
-    padding-block: 54px 96px;
+    padding: min(66vw, 540px) 40px 72px;
     background: #f8fbff;
   }
 
   .hero-dashboard::after {
-    clip-path: ellipse(110% 72% at 42% 85%);
+    clip-path: none;
     background:
       linear-gradient(
         180deg,
-        rgba(255, 255, 255, 0.9) 0%,
-        rgba(255, 255, 255, 0.96) 52%,
-        rgba(255, 255, 255, 0.98) 100%
+        rgba(255, 255, 255, 0.04) 0%,
+        rgba(255, 255, 255, 0.12) 36%,
+        rgba(255, 255, 255, 0.96) 48%,
+        #fff 100%
       ),
       url("map-lines.svg") left 50% bottom 6% / 780px auto no-repeat;
   }
 
   .hero-photo-carousel {
+    bottom: auto;
+    height: min(66vw, 540px);
     width: 100%;
-    clip-path: polygon(0 0, 100% 0, 100% 52%, 0 76%);
+    clip-path: polygon(0 0, 100% 0, 100% 94%, 0 100%);
   }
 
   .hero-photo-slide {
     inset: 0;
-    background-size: cover;
-    transform: scale(1.02);
+    background-position: center top;
+    background-size: 100% auto;
+    transform: none;
   }
 
-  .hero-photo-slide.is-first {
-    background-position: 62% top;
-  }
-
-  .hero-photo-slide.is-second {
-    background-position: 58% top;
-  }
-
+  .hero-photo-slide.is-first,
+  .hero-photo-slide.is-second,
   .hero-photo-slide.is-third {
-    background-position: 66% center;
+    background-position: center top;
   }
 
   .toc {
@@ -2738,7 +2746,7 @@ small {
 @media (max-width: 620px) {
   .hero-dashboard {
     min-height: auto;
-    padding: 230px 20px 56px;
+    padding: min(82vw, 380px) 20px 56px;
   }
 
   .hero-dashboard h1 {
@@ -2760,29 +2768,16 @@ small {
 
   .hero-photo-carousel {
     bottom: auto;
-    height: 275px;
-    clip-path: polygon(0 0, 100% 0, 100% 78%, 0 100%);
+    height: min(82vw, 380px);
+    clip-path: polygon(0 0, 100% 0, 100% 94%, 0 100%);
   }
 
-  .hero-photo-slide.is-first {
-    background-image: url("images/hero/green-card-family.jpg?v=20260714-safe") !important;
-    background-position: 58% 18%;
-    background-size: cover;
-    transform: scale(1.02);
-  }
-
-  .hero-photo-slide.is-second {
-    background-image: url("images/hero/green-card-couple.jpg?v=20260714-safe") !important;
-    background-position: 54% 18%;
-    background-size: cover;
-    transform: scale(1.02);
-  }
-
+  .hero-photo-slide.is-first,
+  .hero-photo-slide.is-second,
   .hero-photo-slide.is-third {
-    background-image: url("images/hero/green-card-collage.jpg?v=20260714-safe") !important;
-    background-position: 58% 18%;
-    background-size: cover;
-    transform: scale(1.02);
+    background-position: center top;
+    background-size: 100% auto;
+    transform: none;
   }
 
   .hero-dashboard .hero-content {
