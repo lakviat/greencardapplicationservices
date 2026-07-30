@@ -28,6 +28,57 @@ const maxFiles = 8;
 const maxFileSize = 15 * 1024 * 1024;
 const maxTotalUploadSize = 35 * 1024 * 1024;
 const faqGroups = document.querySelectorAll("[data-faq-accordion]");
+const countdownPanel = document.querySelector("[data-dv-countdown]");
+
+if (countdownPanel) {
+  const targetValue = countdownPanel.dataset.countdownDate?.trim();
+  const targetDate = targetValue ? new Date(targetValue) : null;
+  const heading = countdownPanel.querySelector("[data-countdown-heading]");
+  const description = countdownPanel.querySelector(
+    "[data-countdown-description]",
+  );
+  const chip = countdownPanel.querySelector("[data-countdown-chip]");
+  const values = {
+    days: countdownPanel.querySelector('[data-countdown-value="days"]'),
+    hours: countdownPanel.querySelector('[data-countdown-value="hours"]'),
+    minutes: countdownPanel.querySelector('[data-countdown-value="minutes"]'),
+    seconds: countdownPanel.querySelector('[data-countdown-value="seconds"]'),
+  };
+
+  if (targetDate && !Number.isNaN(targetDate.getTime())) {
+    countdownPanel.classList.add("is-active");
+    chip.textContent = "Official opening date confirmed";
+    heading.textContent = "Registration opens in:";
+    description.textContent =
+      "The countdown uses the official Department of State opening time.";
+    let countdownTimer;
+
+    const updateCountdown = () => {
+      const remaining = Math.max(0, targetDate.getTime() - Date.now());
+      const totalSeconds = Math.floor(remaining / 1000);
+
+      values.days.textContent = String(
+        Math.floor(totalSeconds / 86400),
+      ).padStart(2, "0");
+      values.hours.textContent = String(
+        Math.floor((totalSeconds % 86400) / 3600),
+      ).padStart(2, "0");
+      values.minutes.textContent = String(
+        Math.floor((totalSeconds % 3600) / 60),
+      ).padStart(2, "0");
+      values.seconds.textContent = String(totalSeconds % 60).padStart(2, "0");
+
+      if (remaining === 0) {
+        chip.textContent = "Registration period status";
+        heading.textContent = "The official opening time has arrived.";
+        window.clearInterval(countdownTimer);
+      }
+    };
+
+    countdownTimer = window.setInterval(updateCountdown, 1000);
+    updateCountdown();
+  }
+}
 
 faqGroups.forEach((group, groupIndex) => {
   group.classList.add("is-interactive");

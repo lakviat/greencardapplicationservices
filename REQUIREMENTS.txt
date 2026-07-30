@@ -1140,3 +1140,16 @@ Implemented decisions:
    - Collapse responsively to two and then one column.
    - Preserve keyboard access and ARIA expanded/collapsed state.
 9. Keep FAQ answers readable without JavaScript; JavaScript progressively enhances them into accordions.
+
+Sketches PDF implementation - July 30, 2026
+--------------------------------------------
+Source:
+Sketches.pdf
+
+Implemented decisions:
+1. Replace the plain DV status panel with a prominent countdown-style panel using an American flag background.
+2. Include days, hours, minutes, and seconds with a real one-second update interval.
+3. Do not invent an opening date. Keep countdown values in a pending state until the Department of State publishes an official timestamp.
+4. Activate the countdown by setting the official ISO timestamp in the homepage data-countdown-date attribute.
+5. Replace the former line-art Liberty icon with an original red, white, and navy Liberty portrait mark.
+6. Use the same mark in the site header and browser favicon across every page.

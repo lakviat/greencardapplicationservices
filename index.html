@@ -56,13 +56,13 @@
     <script src="assets/site-metrics.js?v=20260707-ga"></script>
 
     <title>Green Card Application Services</title>
-    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="assets/favicon.svg?v=20260730-brand-countdown" type="image/svg+xml" />
     <link
       rel="preload"
       href="assets/images/hero/hero-family-v3.jpg"
       as="image"
     />
-    <link rel="stylesheet" href="assets/styles.css?v=20260730-form-layout" />
+    <link rel="stylesheet" href="assets/styles.css?v=20260730-brand-countdown" />
   </head>
   <body>
     <header class="site-header">
@@ -346,32 +346,54 @@
       </section>
 
       <section id="timeline" class="section timeline-section">
-        <div class="timeline-status">
-          <div>
-            <p class="eyebrow">Current DV-2027 status</p>
-            <span class="status-chip">Awaiting official dates</span>
-            <h2>Registration has not been announced.</h2>
-            <p>
-              The U.S. Department of State says it will publish the DV-2027
-              registration start date when the updated entry process is ready.
-              We do not publish estimated or unofficial deadlines.
+        <div class="dv-countdown" data-dv-countdown data-countdown-date="">
+          <div class="countdown-copy">
+            <p class="eyebrow">DV-2027 registration</p>
+            <span class="status-chip" data-countdown-chip
+              >Awaiting official dates</span
+            >
+            <h2 data-countdown-heading>Countdown begins when dates are official.</h2>
+            <p data-countdown-description>
+              The Department of State has not announced the registration start
+              date. Live days, hours, minutes, and seconds will begin here as
+              soon as the official opening time is published.
             </p>
           </div>
-          <div class="timeline-actions">
-            <a
-              class="button"
-              href="https://travel.state.gov/content/travel/en/News/visas-news/changes-to-2027-dv-program-entry-period.html"
-              rel="noopener noreferrer"
-              target="_blank"
-              >Read the official update</a
-            >
-            <a
-              class="button button-light"
-              href="https://dvprogram.state.gov/"
-              rel="noopener noreferrer"
-              target="_blank"
-              >Open the official DV website</a
-            >
+          <div class="countdown-side">
+            <div class="countdown-grid" aria-label="DV registration countdown">
+              <div class="countdown-unit">
+                <strong data-countdown-value="days">--</strong>
+                <span>Days</span>
+              </div>
+              <div class="countdown-unit">
+                <strong data-countdown-value="hours">--</strong>
+                <span>Hours</span>
+              </div>
+              <div class="countdown-unit">
+                <strong data-countdown-value="minutes">--</strong>
+                <span>Minutes</span>
+              </div>
+              <div class="countdown-unit">
+                <strong data-countdown-value="seconds">--</strong>
+                <span>Seconds</span>
+              </div>
+            </div>
+            <div class="timeline-actions">
+              <a
+                class="button button-light"
+                href="https://travel.state.gov/content/travel/en/News/visas-news/changes-to-2027-dv-program-entry-period.html"
+                rel="noopener noreferrer"
+                target="_blank"
+                >Official DV-2027 update</a
+              >
+              <a
+                class="button button-outline"
+                href="https://dvprogram.state.gov/"
+                rel="noopener noreferrer"
+                target="_blank"
+                >Official DV website</a
+              >
+            </div>
           </div>
         </div>
       </section>
@@ -1024,6 +1046,6 @@
       </p>
     </footer>
 
-    <script src="assets/app.js?v=20260730-form-layout"></script>
+    <script src="assets/app.js?v=20260730-brand-countdown"></script>
   </body>
 </html>

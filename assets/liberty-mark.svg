@@ -1,11 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Green Card Application Services Liberty mark">
-  <g fill="none" stroke="#10213d" stroke-linecap="round" stroke-linejoin="round">
-    <path stroke-width="4.2" d="M32 8v13"/>
-    <path stroke-width="3.8" d="m21.5 12.5 6.3 11.3M42.5 12.5l-6.3 11.3M13.8 22l11.7 5M50.2 22l-11.7 5M12.2 35.6l12.8-2.1M51.8 35.6 39 33.5"/>
-    <path stroke-width="4.5" d="M20 31.5c1.8-8.3 6.2-12.4 12-12.4s10.2 4.1 12 12.4"/>
-    <path stroke-width="4.5" d="M18.4 32.2h27.2"/>
-    <path stroke-width="4.2" d="M21.4 36.2v7.2c0 7.1 4.2 11.9 10.6 11.9s10.6-4.8 10.6-11.9v-7.2"/>
-    <path stroke-width="3.4" d="M26.6 44.5c1.9 1.4 3.7 2.1 5.4 2.1s3.5-.7 5.4-2.1"/>
-    <path stroke-width="3.4" d="M24.6 39.4h14.8"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Green Card Application Services Liberty mark">
+  <g fill="#c5221f">
+    <path d="M46 4h4l2 21h-8z"/>
+    <path d="m23 10 4-2 11 19-7 3z"/>
+    <path d="m7 28 2-4 21 9-3 7z"/>
+    <path d="m73 8 4 2-8 20-7-3z"/>
+    <path d="m87 24 2 4-20 12-3-7z"/>
+    <path d="m5 51 1-5 22 1-1 8z"/>
+    <path d="m90 46 1 5-22 4-1-8z"/>
   </g>
+  <path fill="#10213d" d="M25 38c3-12 11-19 23-19s20 7 23 19l-6 5H31z"/>
+  <path fill="#fff" d="M34 34h7v-8c-3 1-5 4-7 8Zm11 0h7v-9a20 20 0 0 0-7 0Zm11 0h7c-2-4-4-7-7-8Z"/>
+  <path fill="#174ea6" d="M24 37h48v10H24z"/>
+  <path fill="#10213d" d="M28 45h40v17c0 19-8 29-20 29S28 81 28 62z"/>
+  <path fill="#fff" d="M40 48c12-3 21 3 21 14 0 6-3 11-7 13-2 2-3 5-3 9-8-1-14-8-14-17 0-7 1-13 3-19Z"/>
+  <path fill="#10213d" d="M40 48c7 0 12 2 16 7-6-2-11-2-17 0l-3-3z"/>
+  <path fill="none" stroke="#10213d" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M44 61c2-1 4-1 6 0m4 0c2-1 3-1 5 0m-7 2-1 6 3 1m-8 6c4 3 8 3 12 0"/>
+  <path fill="#10213d" d="M28 61c-6 5-9 13-9 24h20c-7-6-9-14-9-24Zm40 0c6 5 9 13 9 24H57c7-6 9-14 9-24Z"/>
 </svg>

@@ -85,7 +85,8 @@ a {
   height: 44px;
   overflow: hidden;
   background:
-    url("liberty-mark.svg") center / 33px 33px no-repeat,
+    url("liberty-mark.svg?v=20260730-brand-countdown") center / 35px 35px
+      no-repeat,
     #fff;
   border: 1px solid rgba(16, 33, 61, 0.1);
   border-radius: 12px;
@@ -629,30 +630,62 @@ h3 {
   border-block: 1px solid var(--line);
 }
 
-.timeline-status {
+.dv-countdown {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: clamp(24px, 5vw, 64px);
+  grid-template-columns: minmax(0, 0.82fr) minmax(520px, 1.18fr);
+  gap: clamp(28px, 5vw, 70px);
   align-items: center;
-  max-width: 1180px;
-  padding: clamp(24px, 4vw, 38px);
-  background: #fff;
-  border: 1px solid var(--line);
-  border-left: 5px solid var(--gold);
+  min-height: 360px;
+  overflow: hidden;
+  padding: clamp(28px, 4vw, 52px);
+  color: #fff;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(9, 27, 56, 0.98) 0%,
+      rgba(16, 42, 82, 0.92) 48%,
+      rgba(16, 42, 82, 0.72) 100%
+    ),
+    url("us-flag.svg") right 4% center / min(520px, 46vw) auto no-repeat,
+    #10213d;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-top: 5px solid var(--red);
   border-radius: 8px;
-  box-shadow: 0 16px 40px rgba(23, 32, 51, 0.08);
+  box-shadow: 0 22px 58px rgba(9, 27, 56, 0.2);
 }
 
-.timeline-status h2 {
-  max-width: 760px;
+.dv-countdown::after {
+  position: absolute;
+  inset: auto -70px -100px auto;
+  width: 300px;
+  aspect-ratio: 1;
+  content: "";
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+}
+
+.countdown-copy,
+.countdown-side {
+  position: relative;
+  z-index: 1;
+}
+
+.countdown-copy .eyebrow {
+  color: #fff;
+}
+
+.countdown-copy h2 {
+  max-width: 660px;
   margin-top: 12px;
-  font-size: clamp(2rem, 4vw, 3.4rem);
+  color: #fff;
+  font-size: clamp(2rem, 4vw, 3.25rem);
 }
 
-.timeline-status p:not(.eyebrow) {
-  max-width: 760px;
+.countdown-copy p:not(.eyebrow) {
+  max-width: 620px;
   margin-bottom: 0;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.82);
   font-size: 1.04rem;
 }
 
@@ -679,10 +712,74 @@ h3 {
   box-shadow: 0 0 0 4px rgba(247, 183, 49, 0.18);
 }
 
+.countdown-side {
+  display: grid;
+  gap: 24px;
+}
+
+.countdown-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(96px, 1fr));
+  gap: clamp(10px, 1.5vw, 18px);
+}
+
+.countdown-unit {
+  display: grid;
+  place-content: center;
+  aspect-ratio: 1;
+  min-width: 0;
+  text-align: center;
+  background: rgba(12, 32, 68, 0.72);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 8px rgba(255, 255, 255, 0.06),
+    0 14px 30px rgba(4, 16, 38, 0.24);
+}
+
+.countdown-unit strong {
+  display: block;
+  color: #fff;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  font-variant-numeric: tabular-nums;
+  line-height: 0.95;
+}
+
+.countdown-unit span {
+  display: block;
+  margin-top: 8px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.dv-countdown:not(.is-active) .countdown-unit {
+  border-color: rgba(255, 255, 255, 0.34);
+}
+
+.dv-countdown.is-active .status-chip {
+  color: #17472a;
+  background: #e9f7ef;
+  border-color: #c7ead4;
+}
+
+.dv-countdown.is-active .status-chip::before {
+  background: #188038;
+  box-shadow: 0 0 0 4px rgba(24, 128, 56, 0.18);
+}
+
 .timeline-actions {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
-  min-width: min(100%, 260px);
+}
+
+.timeline-actions .button {
+  min-width: 0;
+  padding-inline: 14px;
+  text-align: center;
 }
 
 .faq-grid {
@@ -2810,12 +2907,13 @@ small {
     position: static;
   }
 
-  .timeline-status {
+  .dv-countdown {
     grid-template-columns: 1fr;
   }
 
-  .timeline-actions {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .countdown-grid {
+    width: min(100%, 680px);
+    margin-inline: auto;
   }
 }
 
@@ -2884,6 +2982,28 @@ small {
 
   .timeline-actions {
     grid-template-columns: 1fr;
+  }
+
+  .dv-countdown {
+    min-height: 0;
+    padding: 26px 20px;
+    background:
+      linear-gradient(
+        180deg,
+        rgba(9, 27, 56, 0.96),
+        rgba(16, 42, 82, 0.84)
+      ),
+      url("us-flag.svg") right -65px center / 320px auto no-repeat,
+      #10213d;
+  }
+
+  .countdown-grid {
+    grid-template-columns: repeat(2, minmax(100px, 1fr));
+    width: min(100%, 300px);
+  }
+
+  .countdown-unit strong {
+    font-size: 2.5rem;
   }
 
   .faq-toggle {
