@@ -1112,3 +1112,29 @@ Open business decisions
 8. Whether to offer photo editing/correction as included or paid add-on.
 9. Whether staff will submit directly while customer is present by video/phone, or after written authorization.
 10. Whether to collect all DV fields upfront or use staged intake.
+
+PDF design review implementation - July 30, 2026
+-------------------------------------------------
+Source:
+greencardapplicationsRequirements .pdf
+
+Implemented decisions:
+1. Secondary white buttons must not fill red on hover. Use a subtle upward movement, border emphasis, and restrained shadow instead.
+2. Keep the application form compact:
+   - Remove artificial empty rows beneath fields.
+   - Keep primary applicant fields in a two-column desktop grid and one column on smaller screens.
+   - Reduce field height, helper-text size, form padding, and vertical gaps without changing validation.
+   - Preserve the existing country list and package behavior.
+3. Replace the three Important Dates cards with one current-status panel.
+4. Link the status panel directly to:
+   - The official Department of State DV-2027 update.
+   - dvprogram.state.gov.
+5. Do not show an estimated countdown. Add a countdown only after the Department of State publishes a confirmed opening date.
+6. Remove the homepage "What does a Green Card give you?" section.
+7. Keep four compact FAQ previews on the homepage.
+8. Make homepage FAQ previews and the full FAQ page interactive accordions:
+   - One answer opens at a time within each FAQ group.
+   - Use balanced four-column homepage and three-column desktop FAQ layouts.
+   - Collapse responsively to two and then one column.
+   - Preserve keyboard access and ARIA expanded/collapsed state.
+9. Keep FAQ answers readable without JavaScript; JavaScript progressively enhances them into accordions.

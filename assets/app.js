@@ -27,6 +27,48 @@ const googleScriptPublicToken = "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET";
 const maxFiles = 8;
 const maxFileSize = 15 * 1024 * 1024;
 const maxTotalUploadSize = 35 * 1024 * 1024;
+const faqGroups = document.querySelectorAll("[data-faq-accordion]");
+
+faqGroups.forEach((group, groupIndex) => {
+  group.classList.add("is-interactive");
+
+  group.querySelectorAll(":scope > article").forEach((item, itemIndex) => {
+    const heading = item.querySelector(":scope > h3");
+    const answer = item.querySelector(":scope > p");
+
+    if (!heading || !answer) return;
+
+    const answerId = `faq-answer-${groupIndex + 1}-${itemIndex + 1}`;
+    const button = document.createElement("button");
+
+    button.className = "faq-toggle";
+    button.type = "button";
+    button.textContent = heading.textContent.trim();
+    button.setAttribute("aria-expanded", "false");
+    button.setAttribute("aria-controls", answerId);
+    answer.id = answerId;
+    answer.hidden = true;
+    heading.textContent = "";
+    heading.append(button);
+
+    button.addEventListener("click", () => {
+      const willOpen = !item.classList.contains("is-open");
+
+      group.querySelectorAll(":scope > article.is-open").forEach((openItem) => {
+        const openButton = openItem.querySelector(".faq-toggle");
+        const openAnswer = openItem.querySelector(":scope > p");
+
+        openItem.classList.remove("is-open");
+        openButton?.setAttribute("aria-expanded", "false");
+        if (openAnswer) openAnswer.hidden = true;
+      });
+
+      item.classList.toggle("is-open", willOpen);
+      button.setAttribute("aria-expanded", String(willOpen));
+      answer.hidden = !willOpen;
+    });
+  });
+});
 
 mobileMenus.forEach((menu) => {
   menu.querySelectorAll("a").forEach((link) => {

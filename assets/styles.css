@@ -280,10 +280,17 @@ a {
   font-weight: 900;
   cursor: pointer;
   box-shadow: 0 14px 30px rgba(197, 34, 31, 0.2);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
 }
 
 .button:hover {
   background: #a81d1a;
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px rgba(197, 34, 31, 0.24);
 }
 
 .button:disabled {
@@ -296,6 +303,13 @@ a {
   background: #fff;
   border: 1px solid var(--line);
   box-shadow: none;
+}
+
+.button-light:hover {
+  color: var(--blue);
+  background: #fff;
+  border-color: rgba(23, 78, 166, 0.34);
+  box-shadow: 0 10px 24px rgba(23, 78, 166, 0.11);
 }
 
 .button-outline {
@@ -615,108 +629,72 @@ h3 {
   border-block: 1px solid var(--line);
 }
 
-.timeline-grid {
+.timeline-status {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: clamp(24px, 5vw, 64px);
+  align-items: center;
+  max-width: 1180px;
+  padding: clamp(24px, 4vw, 38px);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--gold);
+  border-radius: 8px;
+  box-shadow: 0 16px 40px rgba(23, 32, 51, 0.08);
 }
 
-.timeline-grid article {
-  min-height: 200px;
-  padding: 24px;
-  border-top: 6px solid var(--gold);
+.timeline-status h2 {
+  max-width: 760px;
+  margin-top: 12px;
+  font-size: clamp(2rem, 4vw, 3.4rem);
 }
 
-.timeline-grid strong {
-  display: block;
-  margin-bottom: 14px;
-  color: var(--red);
-  text-transform: uppercase;
-  font-size: 0.78rem;
-  letter-spacing: 0.1em;
+.timeline-status p:not(.eyebrow) {
+  max-width: 760px;
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 1.04rem;
 }
 
-.timeline-note {
-  max-width: 980px;
-  margin-top: 18px;
-  padding: 20px 22px;
-  color: var(--navy);
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 7px 11px;
+  color: #6c4b00;
   background: #fff8e7;
   border: 1px solid #f1d184;
-  border-radius: 8px;
-  font-weight: 800;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 900;
 }
 
-.benefits-section {
-  background: #fff;
+.status-chip::before {
+  width: 8px;
+  height: 8px;
+  content: "";
+  background: var(--gold);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(247, 183, 49, 0.18);
 }
 
-.benefit-grid,
+.timeline-actions {
+  display: grid;
+  gap: 10px;
+  min-width: min(100%, 260px);
+}
+
 .faq-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
+  align-items: start;
 }
 
-.benefit-grid article,
 .faq-grid article {
   padding: 22px;
-  min-height: 190px;
-}
-
-.benefit-grid article {
-  position: relative;
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
-  column-gap: 12px;
-  align-items: start;
-  overflow: hidden;
-  padding: 22px;
-  background: linear-gradient(
-      180deg,
-      rgba(234, 244, 255, 0.9),
-      rgba(255, 255, 255, 0) 52%
-    ),
-    #fff;
-}
-
-.benefit-grid article::after {
-  position: absolute;
-  right: 18px;
-  top: 18px;
-  content: attr(data-label);
-  color: rgba(23, 78, 166, 0.13);
-  font-size: 1.05rem;
-  font-weight: 950;
-  letter-spacing: 0.02em;
-}
-
-.benefit-icon {
-  position: relative;
-  z-index: 1;
-  grid-row: 1 / span 2;
-  width: 24px;
-  height: 24px;
-  background: url("us-flag.svg") center / cover no-repeat;
-  border: 1px solid rgba(16, 33, 61, 0.12);
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 5px #eef5ff,
-    0 8px 18px rgba(23, 32, 51, 0.1);
-}
-
-.benefit-grid h3,
-.benefit-grid p {
-  position: relative;
-  z-index: 1;
-}
-
-.benefit-grid h3 {
-  color: var(--navy);
-}
-
-.benefit-grid p {
-  grid-column: 2;
+  min-height: 0;
 }
 
 .pricing-section {
@@ -854,23 +832,13 @@ h3 {
 .intake-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  padding: clamp(20px, 4vw, 34px);
+  gap: 12px 14px;
+  padding: clamp(18px, 3vw, 26px);
   box-shadow: var(--shadow);
 }
 
 .intake-form > label:not(.full):not(.consent) {
-  grid-template-rows: auto minmax(52px, auto) minmax(38px, auto);
-}
-
-.intake-form > label:not(.full):not(.consent)::after {
-  display: block;
-  min-height: 0;
-  content: "";
-}
-
-.intake-form > label:not(.full):not(.consent):has(small)::after {
-  display: none;
+  align-content: start;
 }
 
 fieldset {
@@ -897,8 +865,8 @@ legend {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 52px;
-  padding: 9px 6px;
+  min-height: 48px;
+  padding: 7px 6px;
   text-align: center;
   background: #fff;
   border: 1px solid var(--line);
@@ -971,6 +939,7 @@ legend {
   font-weight: 950;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  margin-top: 2px;
 }
 
 .form-divider::after {
@@ -983,8 +952,8 @@ legend {
 .additional-applicant {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  padding: 16px;
+  gap: 12px 14px;
+  padding: 14px;
   background: #f8fbff;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -997,7 +966,7 @@ legend {
 
 label {
   display: grid;
-  gap: 7px;
+  gap: 5px;
   color: var(--ink);
   font-size: 0.92rem;
   font-weight: 850;
@@ -1007,7 +976,7 @@ input,
 select,
 textarea {
   width: 100%;
-  min-height: 52px;
+  min-height: 48px;
   padding: 0 12px;
   color: var(--ink);
   background: #fff;
@@ -1024,7 +993,7 @@ textarea {
 
 input[type="file"] {
   min-height: auto;
-  padding: 14px;
+  padding: 12px;
   border-style: dashed;
   background: #f8fbff;
 }
@@ -1043,8 +1012,9 @@ select {
 
 small {
   color: var(--muted);
+  font-size: 0.76rem;
   font-weight: 650;
-  line-height: 1.35;
+  line-height: 1.25;
 }
 
 .full {
@@ -1065,7 +1035,7 @@ small {
 }
 
 .file-upload {
-  padding: 16px;
+  padding: 14px;
   background: #f8fbff;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -1074,7 +1044,7 @@ small {
 .payment-preview {
   display: grid;
   gap: 9px;
-  padding: 16px;
+  padding: 14px;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -1082,7 +1052,7 @@ small {
 
 .apple-pay-button {
   display: inline-flex;
-  min-height: 56px;
+  min-height: 52px;
   align-items: center;
   justify-content: center;
   gap: 7px;
@@ -1167,6 +1137,72 @@ small {
 .faq-section {
   background: #fbfcff;
   border-top: 1px solid var(--line);
+}
+
+[data-faq-accordion].is-interactive article {
+  overflow: hidden;
+  padding: 0;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+[data-faq-accordion].is-interactive article:hover {
+  border-color: rgba(23, 78, 166, 0.26);
+  box-shadow: 0 12px 28px rgba(23, 32, 51, 0.09);
+  transform: translateY(-2px);
+}
+
+[data-faq-accordion].is-interactive h3 {
+  margin: 0;
+}
+
+.faq-toggle {
+  position: relative;
+  width: 100%;
+  min-height: 82px;
+  padding: 20px 58px 20px 20px;
+  color: var(--navy);
+  background: transparent;
+  border: 0;
+  font: inherit;
+  font-weight: 900;
+  text-align: left;
+  cursor: pointer;
+}
+
+.faq-toggle::after {
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  content: "+";
+  color: var(--blue);
+  background: #eef7ff;
+  border: 1px solid #d7e8fb;
+  border-radius: 50%;
+  font-size: 1.05rem;
+  line-height: 1;
+  transform: translateY(-50%);
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease;
+}
+
+[data-faq-accordion].is-interactive article.is-open .faq-toggle::after {
+  content: "-";
+  background: #fff8e7;
+  border-color: #f1d184;
+  transform: translateY(-50%) rotate(180deg);
+}
+
+[data-faq-accordion].is-interactive article > p {
+  margin: 0;
+  padding: 0 20px 20px;
 }
 
 .requirements-link {
@@ -2648,11 +2684,12 @@ small {
 }
 
 .faq-page-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
 }
 
 .faq-page-grid article {
-  min-height: 164px;
+  min-height: 0;
 }
 
 .requirements-page .requirements-hero {
@@ -2672,6 +2709,10 @@ small {
 
   .process-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .faq-page-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -2741,6 +2782,14 @@ small {
   .toc {
     position: static;
   }
+
+  .timeline-status {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 620px) {
@@ -2786,6 +2835,15 @@ small {
 
   .hero-dashboard .hero-actions {
     justify-content: stretch;
+  }
+
+  .timeline-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .faq-toggle {
+    min-height: 70px;
+    padding-block: 16px;
   }
 }
 
