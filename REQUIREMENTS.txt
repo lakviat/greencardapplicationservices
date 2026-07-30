@@ -1121,9 +1121,11 @@ greencardapplicationsRequirements .pdf
 Implemented decisions:
 1. Secondary white buttons must not fill red on hover. Use a subtle upward movement, border emphasis, and restrained shadow instead.
 2. Keep the application form compact:
+   - Move First, Middle, Last, and Country guidance from separate rows beneath the inputs into the field-heading row.
+   - Use three primary-applicant columns on wide screens, two columns on tablets, and one column on phones.
+   - Remove the decorative document-review card above the form so the application fields appear sooner on tablets and phones.
    - Remove artificial empty rows beneath fields.
-   - Keep primary applicant fields in a two-column desktop grid and one column on smaller screens.
-   - Reduce field height, helper-text size, form padding, and vertical gaps without changing validation.
+   - Reduce field height, form padding, upload/payment padding, and vertical gaps without changing validation.
    - Preserve the existing country list and package behavior.
 3. Replace the three Important Dates cards with one current-status panel.
 4. Link the status panel directly to:

@@ -62,7 +62,7 @@
       href="assets/images/hero/hero-family-v3.jpg"
       as="image"
     />
-    <link rel="stylesheet" href="assets/styles.css?v=20260730-pdf-review" />
+    <link rel="stylesheet" href="assets/styles.css?v=20260730-form-layout" />
   </head>
   <body>
     <header class="site-header">
@@ -421,9 +421,8 @@
           <p class="eyebrow">Start here</p>
           <h2>Submit your application request</h2>
           <p>
-            Start with the current request form. The next version will expand
-            this into a secure guided intake with saved progress, uploads,
-            payment, staff review, and final approval.
+            Choose a package, enter your contact details, and upload your
+            identity document. We will contact you before review and payment.
           </p>
           <div class="notice-box">
             <strong>Important:</strong>
@@ -434,16 +433,6 @@
             Before submitting, review the
             <a href="requirements.html">photo and document requirements</a>.
           </p>
-          <div class="apply-visual-card" aria-hidden="true">
-            <div class="apply-visual-seal"></div>
-            <div>
-              <strong>Document review desk</strong>
-              <span
-                >Passport or ID, photo, family details, package,
-                follow-up.</span
-              >
-            </div>
-          </div>
         </div>
 
         <form class="intake-form" id="intakeForm">
@@ -524,35 +513,44 @@
           <div class="form-divider full">
             <span>Primary applicant</span>
           </div>
-          <label>
-            <span>First name</span>
+          <label class="form-field">
+            <span class="field-heading">
+              <span>First name</span>
+              <small>As shown on your ID</small>
+            </span>
             <input name="firstName" autocomplete="given-name" required />
-            <small>Match your passport or official ID exactly.</small>
           </label>
-          <label>
-            <span>Middle name</span>
+          <label class="form-field">
+            <span class="field-heading">
+              <span>Middle name</span>
+              <small>Only if shown on your ID</small>
+            </span>
             <input name="middleName" autocomplete="additional-name" />
-            <small
-              >Optional. Enter it only if it appears on your document.</small
-            >
           </label>
-          <label>
-            <span>Last name</span>
+          <label class="form-field">
+            <span class="field-heading">
+              <span>Last name</span>
+              <small>As shown on your ID</small>
+            </span>
             <input name="lastName" autocomplete="family-name" required />
-            <small
-              >Use your legal family name as written on your document.</small
-            >
           </label>
-          <label>
-            <span>Email</span>
+          <label class="form-field">
+            <span class="field-heading">
+              <span>Email</span>
+            </span>
             <input name="email" type="email" autocomplete="email" required />
           </label>
-          <label>
-            <span>Phone / WhatsApp</span>
+          <label class="form-field">
+            <span class="field-heading">
+              <span>Phone / WhatsApp</span>
+            </span>
             <input name="phone" type="tel" autocomplete="tel" required />
           </label>
-          <label>
-            <span>Country of birth</span>
+          <label class="form-field">
+            <span class="field-heading">
+              <span>Country of birth</span>
+              <small>Eligible countries only</small>
+            </span>
             <select name="country" required>
               <option value="">Choose your country</option>
               <option>Afghanistan</option>
@@ -731,11 +729,6 @@
               <option>Zambia</option>
               <option>Zimbabwe</option>
             </select>
-            <small>
-              List follows current published DV-2026 Department of State
-              eligibility. If your country is not listed, it may not be eligible
-              for the active DV year.
-            </small>
           </label>
           <section
             class="additional-applicant full"
@@ -840,12 +833,13 @@
             </label>
           </section>
           <label class="full file-upload">
-            <span>Passport, ID, or supporting document</span>
+            <span class="field-heading">
+              <span>Passport, ID, or supporting document</span>
+              <small
+                >Upload files for all applicants if they are ready.</small
+              >
+            </span>
             <input name="identityDocument" type="file" multiple required />
-            <small>
-              Upload passport, ID, photos, or supporting files for all
-              applicants if they are ready.
-            </small>
           </label>
           <label class="consent full">
             <input type="checkbox" required />
@@ -1030,6 +1024,6 @@
       </p>
     </footer>
 
-    <script src="assets/app.js?v=20260730-pdf-review"></script>
+    <script src="assets/app.js?v=20260730-form-layout"></script>
   </body>
 </html>
