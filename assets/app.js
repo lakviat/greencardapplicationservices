@@ -20,6 +20,7 @@ const notifyCloseButtons = document.querySelectorAll("[data-notify-close]");
 const mobileMenus = document.querySelectorAll(".mobile-menu");
 const applySection = document.querySelector("#apply");
 const heroSection = document.querySelector(".hero-dashboard");
+const siteFooter = document.querySelector(".site-footer");
 const honeypotField = document.querySelector("#companyWebsite");
 const notifyHoneypotField = document.querySelector("#notifyCompanyWebsite");
 const googleScriptIntakeUrl =
@@ -271,6 +272,17 @@ if (heroSection && "IntersectionObserver" in window) {
   );
 
   heroObserver.observe(heroSection);
+}
+
+if (siteFooter && "IntersectionObserver" in window) {
+  const footerObserver = new IntersectionObserver(
+    ([entry]) => {
+      document.body.classList.toggle("footer-visible", entry.isIntersecting);
+    },
+    { threshold: 0.02 },
+  );
+
+  footerObserver.observe(siteFooter);
 }
 
 if (form && message) {

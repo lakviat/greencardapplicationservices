@@ -2187,9 +2187,9 @@ body.is-embedded::before {
 .site-footer {
   display: grid;
   grid-template-columns: minmax(310px, 0.75fr) minmax(0, 1.7fr);
-  gap: clamp(30px, 5vw, 72px);
+  gap: clamp(28px, 4vw, 58px);
   align-items: start;
-  padding: 40px clamp(18px, 5vw, 72px);
+  padding: 28px clamp(18px, 5vw, 72px);
   color: rgba(255, 255, 255, 0.84);
   background: var(--navy);
 }
@@ -2200,13 +2200,13 @@ body.is-embedded::before {
 
 .footer-brand > strong {
   display: block;
-  margin-bottom: 8px;
-  font-size: 1.02rem;
+  margin-bottom: 6px;
+  font-size: 0.96rem;
 }
 
 .site-footer p {
   margin-bottom: 0;
-  line-height: 1.6;
+  line-height: 1.45;
 }
 
 .footer-brand {
@@ -2215,23 +2215,23 @@ body.is-embedded::before {
 
 .footer-email {
   display: inline-block;
-  margin-top: 14px;
-  font-size: 0.9rem;
+  margin-top: 10px;
+  font-size: 0.84rem;
   overflow-wrap: anywhere;
 }
 
 .footer-notices {
   display: grid;
-  gap: 12px;
+  gap: 8px;
   max-width: 1180px;
 }
 
 .footer-notices p {
-  font-size: 0.88rem;
+  font-size: 0.82rem;
 }
 
 .footer-government {
-  padding-left: 14px;
+  padding-left: 12px;
   border-left: 3px solid var(--red);
 }
 
@@ -2318,6 +2318,12 @@ body.is-embedded::before {
     grid-template-columns: 1fr;
   }
 
+  .site-footer {
+    grid-template-columns: minmax(220px, 0.7fr) minmax(0, 1.3fr);
+    gap: 24px;
+    padding-inline: 24px;
+  }
+
   .comparison-intro {
     grid-template-columns: 1fr;
     gap: 8px;
@@ -2354,16 +2360,37 @@ body.is-embedded::before {
   }
 
   .site-footer {
-    gap: 24px;
-    padding: 30px 20px 96px;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 22px 18px 24px;
+  }
+
+  .footer-brand > strong {
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+  }
+
+  .footer-brand p {
+    font-size: 0.8rem;
+  }
+
+  .footer-email {
+    margin-top: 8px;
+    font-size: 0.78rem;
   }
 
   .footer-notices {
-    gap: 14px;
+    gap: 8px;
   }
 
   .footer-notices p {
-    font-size: 0.86rem;
+    font-size: 0.76rem;
+    line-height: 1.42;
+  }
+
+  .footer-government {
+    padding-left: 10px;
+    border-left-width: 2px;
   }
 
   .site-header {
@@ -2586,7 +2613,8 @@ body.is-embedded::before {
   .camera-active .mobile-cta,
   .requirements-page .mobile-cta,
   .hero-visible .mobile-cta,
-  .apply-visible .mobile-cta {
+  .apply-visible .mobile-cta,
+  .footer-visible .mobile-cta {
     opacity: 0;
     transform: translateY(18px);
     pointer-events: none;
