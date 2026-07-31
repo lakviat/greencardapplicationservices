@@ -1301,51 +1301,34 @@ small {
   border-radius: 8px;
 }
 
-.payment-preview {
-  display: grid;
-  grid-template-columns: minmax(230px, 0.82fr) minmax(0, 1.18fr);
-  gap: 10px 14px;
-  align-items: center;
-  padding: 12px;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-}
-
-.apple-pay-button {
-  display: inline-flex;
-  min-height: 48px;
-  align-items: center;
-  justify-content: center;
+.checkout-note {
+  display: flex;
   gap: 10px;
-  width: 100%;
-  color: #fff;
-  background: #050505;
-  border: 0;
-  border-radius: 8px;
-  font: inherit;
-  font-weight: 850;
-  cursor: pointer;
-}
-
-.apple-pay-button span {
-  font-weight: 850;
-}
-
-.apple-pay-button strong {
-  padding-left: 10px;
-  font-size: 1rem;
-  letter-spacing: 0;
-  border-left: 1px solid rgba(255, 255, 255, 0.35);
-}
-
-.payment-help {
-  display: block;
+  align-items: center;
   color: var(--muted);
+}
+
+.checkout-note-icon {
+  display: inline-grid;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  color: #fff;
+  background: var(--green);
+  border-radius: 50%;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.checkout-note small {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 4px;
   line-height: 1.45;
 }
 
-.payment-help strong {
+.checkout-note strong {
   color: var(--ink);
 }
 
@@ -2288,9 +2271,6 @@ body.is-embedded::before {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .payment-preview {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 860px) {
@@ -3295,10 +3275,6 @@ body.is-embedded::before {
 
   .field-heading small {
     max-width: 100%;
-  }
-
-  .payment-preview {
-    grid-template-columns: 1fr;
   }
 
   .timeline-actions {

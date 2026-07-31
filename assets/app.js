@@ -1,9 +1,6 @@
 const form = document.querySelector("#intakeForm");
 const message = document.querySelector("#formMessage");
 const submitButton = document.querySelector("#applicationSubmit");
-const applePayButton = document.querySelector("#applePayButton");
-const paymentButtonLabel = document.querySelector("#paymentButtonLabel");
-const paymentButtonAmount = document.querySelector("#paymentButtonAmount");
 const paymentStatus = document.querySelector("#paymentStatus");
 const packageOptions = document.querySelectorAll('input[name="package"]');
 const premiumCountField = document.querySelector("#premiumCountField");
@@ -329,19 +326,6 @@ if (form && message) {
     return form.dataset.submissionId;
   };
 
-  const updatePaymentButton = () => {
-    if (!applePayButton) return;
-
-    const stripePackage = getSelectedStripePackage();
-    paymentButtonLabel.textContent = "Apple Pay / Card";
-    paymentButtonAmount.textContent = `$${stripePackage.amount}`;
-    applePayButton.setAttribute(
-      "aria-label",
-      `Pay securely for the ${stripePackage.label} package, ${stripePackage.amount} dollars`,
-    );
-
-  };
-
   const updateApplicantSections = () => {
     const applicantCount = getApplicantCount();
     const selectedPackage = getSelectedPackage();
@@ -368,13 +352,13 @@ if (form && message) {
     if (!submitButton) return;
 
     submitButton.classList.toggle("is-submitting", state === "submitting");
-    submitButton.classList.toggle("is-submitted", state === "submitted");
-    submitButton.disabled = state === "submitting" || state === "submitted";
+    submitButton.classList.remove("is-submitted");
+    submitButton.disabled = state === "submitting" || state === "redirecting";
 
     if (state === "submitting") {
-      submitButton.textContent = "Submitting...";
-    } else if (state === "submitted") {
-      submitButton.textContent = "Submitted";
+      submitButton.textContent = "Submitting application...";
+    } else if (state === "redirecting") {
+      submitButton.textContent = "Opening secure checkout...";
     } else {
       updateSubmitLabel();
     }
@@ -506,9 +490,32 @@ if (form && message) {
   const updateSubmitLabel = () => {
     if (!submitButton) return;
 
-    submitButton.textContent = form.checkValidity()
-      ? "Submit Application"
-      : "Start Application";
+    submitButton.textContent = "Submit & Continue to Payment";
+  };
+
+  const buildStripeCheckoutUrl = () => {
+    const stripePackage = getSelectedStripePackage();
+
+    if (!stripePackage.paymentLink) {
+      throw new Error(
+        `Secure checkout is not available for the ${stripePackage.label} package yet.`,
+      );
+    }
+
+    const checkoutUrl = new URL(stripePackage.paymentLink);
+
+    if (
+      checkoutUrl.protocol !== "https:" ||
+      checkoutUrl.hostname !== "buy.stripe.com"
+    ) {
+      throw new Error("Secure checkout is temporarily unavailable.");
+    }
+
+    const email = String(new FormData(form).get("email") || "").trim();
+    checkoutUrl.searchParams.set("prefilled_email", email);
+    checkoutUrl.searchParams.set("client_reference_id", getSubmissionId());
+
+    return { checkoutUrl, stripePackage };
   };
 
   form.addEventListener("input", updateSubmitLabel);
@@ -517,7 +524,6 @@ if (form && message) {
     option.addEventListener("change", () => {
       updateApplicantSections();
       updateSubmitLabel();
-      updatePaymentButton();
     });
   });
   premiumApplicantCount?.addEventListener("change", () => {
@@ -526,63 +532,6 @@ if (form && message) {
   });
   updateApplicantSections();
   updateSubmitLabel();
-  updatePaymentButton();
-
-  if (applePayButton) {
-    applePayButton.addEventListener("click", () => {
-      if (!form.checkValidity()) {
-        form.reportValidity();
-        setFormMessage(
-          "Complete the required applicant and contact fields, then accept the service notice before continuing to payment.",
-          "error",
-        );
-        return;
-      }
-
-      const stripePackage = getSelectedStripePackage();
-
-      if (!stripePackage.paymentLink) {
-        setFormMessage(
-          `${stripePackage.label} sandbox checkout is waiting for its new $${stripePackage.amount} Stripe Payment Link. You can still submit the application request now.`,
-          "info",
-        );
-        return;
-      }
-
-      let checkoutUrl;
-
-      try {
-        checkoutUrl = new URL(stripePackage.paymentLink);
-
-        if (
-          checkoutUrl.protocol !== "https:" ||
-          checkoutUrl.hostname !== "buy.stripe.com"
-        ) {
-          throw new Error("Unexpected checkout host.");
-        }
-      } catch (error) {
-        setFormMessage(
-          "Secure checkout is temporarily unavailable for this package. Please submit the application request and we will contact you.",
-          "error",
-        );
-        return;
-      }
-
-      const email = String(new FormData(form).get("email") || "").trim();
-      checkoutUrl.searchParams.set("prefilled_email", email);
-      checkoutUrl.searchParams.set("client_reference_id", getSubmissionId());
-
-      if (paymentStatus) {
-        paymentStatus.value = "checkout-opened";
-      }
-
-      setFormMessage(
-        `Opening secure Stripe checkout for the ${stripePackage.label} package ($${stripePackage.amount}).`,
-        "info",
-      );
-      window.location.assign(checkoutUrl.toString());
-    });
-  }
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -597,25 +546,45 @@ if (form && message) {
       return;
     }
 
+    let checkout;
+
+    try {
+      checkout = buildStripeCheckoutUrl();
+    } catch (error) {
+      setFormMessage(
+        error.message || "Secure checkout is temporarily unavailable.",
+        "error",
+      );
+      return;
+    }
+
+    if (paymentStatus) {
+      paymentStatus.value = "checkout-pending";
+    }
+
     setSubmitState("submitting");
     setFormMessage(
-      "Submitting your application. Please keep this page open.",
+      "Submitting your application before secure checkout. Please keep this page open.",
       "info",
     );
 
     try {
       await sendApplicationToDrive();
 
-      setSubmitState("submitted");
+      setSubmitState("redirecting");
       setFormMessage(
-        "Application received. We will contact you to confirm documents, package, and payment before staff review begins.",
-        "success",
+        `Application sent. Opening secure Stripe checkout for the ${checkout.stripePackage.label} package.`,
+        "info",
       );
+      window.location.assign(checkout.checkoutUrl.toString());
     } catch (error) {
+      if (paymentStatus) {
+        paymentStatus.value = "pending";
+      }
       setSubmitState("idle");
       setFormMessage(
         error.message ||
-          "We could not submit the application. Please try again or contact support.",
+          "We could not submit the application, so payment was not opened. Please try again or contact support.",
         "error",
       );
     }

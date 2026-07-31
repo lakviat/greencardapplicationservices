@@ -53,20 +53,20 @@
       async
       src="https://www.googletagmanager.com/gtag/js?id=G-9P726CYPGF"
     ></script>
-    <script src="assets/site-metrics.js?v=20260731-dv-alert-v1"></script>
+    <script src="assets/site-metrics.js?v=20260731-submit-pay-v1"></script>
 
     <title>Green Card Application Services</title>
-    <link rel="icon" href="assets/favicon.png?v=20260731-dv-alert-v1" type="image/png" />
-    <link rel="apple-touch-icon" href="assets/favicon.png?v=20260731-dv-alert-v1" />
+    <link rel="icon" href="assets/favicon.png?v=20260731-submit-pay-v1" type="image/png" />
+    <link rel="apple-touch-icon" href="assets/favicon.png?v=20260731-submit-pay-v1" />
     <link
       rel="preload"
-      href="assets/images/hero/hero-family-v3.jpg?v=20260731-dv-alert-v1"
+      href="assets/images/hero/hero-family-v3.jpg?v=20260731-submit-pay-v1"
       as="image"
       fetchpriority="high"
     />
     <link
       rel="stylesheet"
-      href="assets/styles.css?v=20260731-dv-alert-v1"
+      href="assets/styles.css?v=20260731-submit-pay-v1"
     />
   </head>
   <body>
@@ -1077,26 +1077,18 @@
               a government service.
             </span>
           </label>
-          <div class="payment-preview full">
+          <div class="checkout-note full">
             <input
               id="paymentStatus"
               name="paymentStatus"
               type="hidden"
               value="pending"
             />
-            <button
-              class="apple-pay-button"
-              id="applePayButton"
-              type="button"
-              aria-label="Pay securely for the Single package, 39 dollars"
-            >
-              <span id="paymentButtonLabel">Apple Pay / Card</span>
-              <strong id="paymentButtonAmount">$39</strong>
-            </button>
-            <small id="paymentHelp" class="payment-help">
-              <strong>Secure Stripe checkout.</strong>
-              Apple Pay appears when it is available on your device. You can
-              also submit the request first and pay after we contact you.
+            <span class="checkout-note-icon" aria-hidden="true">&#10003;</span>
+            <small id="paymentHelp">
+              <strong>Your application is submitted first.</strong>
+              Secure Stripe checkout opens next, with Apple Pay or card when
+              available on your device.
             </small>
           </div>
           <button
@@ -1104,7 +1096,7 @@
             id="applicationSubmit"
             type="submit"
           >
-            Start Application
+            Submit &amp; Continue to Payment
           </button>
           <p class="form-message full" id="formMessage" role="status"></p>
         </form>
@@ -1282,6 +1274,6 @@
       </div>
     </footer>
 
-    <script src="assets/app.js?v=20260731-dv-alert-v1"></script>
+    <script src="assets/app.js?v=20260731-submit-pay-v1"></script>
   </body>
 </html>

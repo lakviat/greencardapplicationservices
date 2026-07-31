@@ -70,7 +70,7 @@ Implemented frontend features:
    - Couple opens applicant 2.
    - Family opens applicants 2 and 3.
    - Premium lets the user choose 1, 2, or 3 applicants.
-6. Public application request form with contact information, eligible-country dropdown, multi-file document upload, consent checkbox, optional payment copy, and submit state animation.
+6. Public application request form with contact information, eligible-country dropdown, optional multi-file document upload, consent checkbox, and one "Submit & Continue to Payment" action. The action saves the intake to Google Drive before redirecting to the selected Stripe checkout.
 7. Google Apps Script intake submission endpoint connected from assets/app.js.
 8. Google Apps Script notification signup endpoint connected from assets/app.js.
 9. Notification signup modal launched from the hero "Notify me when DV opens" button.
@@ -110,7 +110,7 @@ Product and UX:
 1. No user account, sign-in, saved draft, or customer dashboard.
 2. No full guided DV questionnaire yet.
 3. The public application form is still a request/intake starter, not a full official-entry data collection flow.
-4. The site still needs a stronger post-submit confirmation experience: reference number, next steps, contact options, and package/payment summary.
+4. The site still needs a verified post-payment return experience: reference number, payment result, next steps, and contact options.
 5. The Apply form still does not collect date of birth, birth city, current residence, marital status, children, education, or full spouse/child details.
 6. The website still needs Privacy Policy, Terms of Service, Refund Policy, and Legal Disclaimer pages before serious paid traffic.
 7. The site needs a clearer business identity/trust layer: contact method, support hours, business location display policy, and privacy reassurance near uploads.
@@ -138,7 +138,7 @@ Security and privacy:
 7. Apps Script is still not a complete security boundary for sensitive identity documents. Add server-verified CAPTCHA and move uploads to a managed backend before high-volume paid traffic.
 8. Need data retention policy and deletion process.
 9. Need Google Drive least-privilege access controls and staff 2FA enforcement.
-10. Production payment confirmation must use a verified Stripe webhook; browser paymentStatus is never proof of payment.
+10. Production payment confirmation must use a verified Stripe webhook; the browser's checkout-pending status is never proof of payment.
 11. Current no-cors form submissions confirm only that the browser dispatched the request; they do not provide authoritative proof that Google Apps Script stored it.
 
 SEO and localization:
@@ -185,9 +185,9 @@ Manual QA checklist before paid traffic:
 5. Application form validates required fields.
 6. Country dropdown still excludes ineligible countries for the active DV year.
 7. Multiple file upload works within current size limits.
-8. Application submit writes customer information and files to Drive.
-9. Submit button state changes from idle to submitting to submitted.
-10. Success message spans full form width on desktop and wraps cleanly on mobile.
+8. The single application action dispatches customer information and optional files to Drive before Stripe checkout opens.
+9. Submit button state changes from idle to submitting to opening secure checkout.
+10. Save/checkout status messages span the full form width on desktop and wrap cleanly on mobile.
 11. Package selector reveals the correct additional applicant sections.
 12. FAQ/resource pages are reachable from homepage and Guide.
 13. Social link preview metadata is present on homepage and resource pages.
@@ -604,7 +604,7 @@ Payment method requirements:
 7. Receipt must identify the business, fee, date, customer name, and what service was purchased.
 8. Refund policy must be written before launch.
 9. Chargeback and duplicate payment handling must be defined.
-10. Current site allows users to submit the request without immediate payment so staff can contact them and continue the conversation. Payment integration remains incomplete.
+10. Current site saves the completed intake first and then redirects to the selected Stripe-hosted checkout through one button. Payment integration remains in Stripe sandbox mode until live Payment Links and verified webhook reconciliation are configured.
 
 Google Drive and Apps Script automation
 ---------------------------------------
@@ -912,7 +912,7 @@ Current website gaps:
 4. The current Apply form is only a short lead form. It does not communicate that the future product will be a guided application portal.
 5. The current form does not collect enough information for real DV preparation: date of birth, city of birth, current residence country, marital status, children, education, spouse details, child details, photo upload, document upload, authorization, or privacy consent.
 6. There is no sign-in, saved draft, account dashboard, or resume-later path.
-7. There is no checkout state, unpaid submission state, paid/pending-review state, staff review state, customer approval state, submitted state, or confirmation-number state.
+7. There is no server-persisted checkout, unpaid submission, paid/pending-review, staff review, customer approval, officially submitted, or confirmation-number state.
 8. There is no clear distinction between "submitted to our service" and "officially submitted to the Department of State."
 9. The pricing section does not yet explain when payment is due in the product journey.
 10. The site has photo/document requirements, but the homepage does not yet make those requirements feel like part of one seamless application workflow.
@@ -1205,11 +1205,11 @@ Stripe sandbox checkout - July 31, 2026
 1. Use Stripe-hosted Payment Links so this static website never receives or stores card numbers.
 2. Create one fixed-price sandbox Payment Link for each package: Single $39, Couple $69, Family $99, and Premium $149.
 3. Keep all four public Payment Link URLs in one package configuration object in assets/app.js; never place Stripe secret keys in the website.
-4. Validate the required applicant/contact fields and service notice before opening checkout.
+4. Validate the required applicant/contact fields and service notice, dispatch the intake to Apps Script, and only then open checkout.
 5. Make passport, ID, photo, and supporting-document uploads optional for both payment and application submission.
 6. Pass the customer's encoded email and a non-sensitive application reference to Stripe for payment reconciliation.
-7. Redirect directly to Stripe Checkout from the payment button so mobile browsers do not block the payment page as a pop-up.
+7. Use one "Submit & Continue to Payment" button and redirect in the same tab only after the intake request completes, so mobile browsers do not block checkout as a pop-up.
 8. Do not mark an application paid based only on client-side state. Production payment confirmation requires a server-side Stripe webhook.
-9. Show the selected package amount directly on the Apple Pay / Card button.
-10. Use a restrained navy submitted button and compact confirmation panel instead of a large green success state.
+9. Show package pricing only in the package selector; do not duplicate the amount in the checkout action.
+10. Keep the primary action red while it progresses from saving to opening secure checkout; do not show an in-place paid or submitted success state before server verification.
 11. Sandbox checkout is configured for all four packages: Single $39, Couple $69, Family $99, and Premium $149.
