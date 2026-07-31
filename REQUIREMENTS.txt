@@ -1183,8 +1183,10 @@ Service comparison - July 31, 2026
 -----------------------------------
 1. Add a compact comparison between self-preparation and preparation with Green Card Application Services.
 2. Keep the comparison in its own full-width section between Why Apply and How It Works; do not nest it inside either section.
-3. Emphasize guided intake, photo review, family-detail checks, duplicate/data safeguards, and final customer approval.
-4. Present two distinct panels: a neutral self-service panel and a highlighted guided-service panel with a small badge and restrained check icons instead of emoji.
+3. Include all eight direct comparisons: instructions, photo requirements, spouse/child details, duplicate-entry risk, personal-detail checks, registration reminders, confirmation-record storage, and final review.
+4. Present a neutral self-service column and a highlighted guided-service column with restrained check icons instead of emoji; do not add a badge above either column.
 5. State clearly that the service cannot influence lottery selection and that eligibility and visa issuance remain government decisions.
 6. Preserve a direct two-column comparison on desktop and mobile without horizontal overflow.
-7. Stack the panels only on exceptionally narrow screens where a two-column comparison cannot remain readable.
+7. Keep the paired columns side by side on narrow screens, reducing type and spacing without clipping or horizontal scrolling.
+8. Keep both column headers and every paired comparison row exactly aligned at the same height.
+9. Let the comparison use the available page width on large screens instead of capping it to a narrow centered block.
