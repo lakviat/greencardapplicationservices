@@ -1199,7 +1199,8 @@ Stripe sandbox checkout - July 31, 2026
 4. Validate the required applicant/contact fields and service notice before opening checkout.
 5. Make passport, ID, photo, and supporting-document uploads optional for both payment and application submission.
 6. Pass the customer's encoded email and a non-sensitive application reference to Stripe for payment reconciliation.
-7. Open Stripe Checkout in a new tab so the in-progress application remains available.
+7. Redirect directly to Stripe Checkout from the payment button so mobile browsers do not block the payment page as a pop-up.
 8. Do not mark an application paid based only on client-side state. Production payment confirmation requires a server-side Stripe webhook.
 9. Show the selected package amount directly on the Apple Pay / Card button.
 10. Use a restrained navy submitted button and compact confirmation panel instead of a large green success state.
+11. Single package sandbox checkout is configured at $39. Couple, Family, and Premium remain pending their individual sandbox Payment Links.

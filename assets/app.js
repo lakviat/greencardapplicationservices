@@ -35,7 +35,7 @@ const stripePackages = {
   single: {
     label: "Single",
     amount: 39,
-    paymentLink: "",
+    paymentLink: "https://buy.stripe.com/test_6oUdRbd9OaE6disfCZ0ZW01",
   },
   couple: {
     label: "Couple",
@@ -503,10 +503,10 @@ if (form && message) {
       }
 
       setFormMessage(
-        `Opening secure Stripe checkout for the ${stripePackage.label} package ($${stripePackage.amount}). This application will remain open in the current tab.`,
+        `Opening secure Stripe checkout for the ${stripePackage.label} package ($${stripePackage.amount}).`,
         "info",
       );
-      window.open(checkoutUrl.toString(), "_blank", "noopener,noreferrer");
+      window.location.assign(checkoutUrl.toString());
     });
   }
 
