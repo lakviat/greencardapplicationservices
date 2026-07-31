@@ -47,5 +47,16 @@ if [[ "$html_count" != "$app_count" ]]; then
   exit 1
 fi
 
+metrics_count="$(grep -l "assets/site-metrics\.js?v=${cache_version}" -- *.html | wc -l | tr -d ' ')"
+if [[ "$html_count" != "$metrics_count" ]]; then
+  echo "Every HTML page must use the current analytics cache version." >&2
+  exit 1
+fi
+
+if ! grep -q "assets/requirements\.js?v=${cache_version}" requirements.html; then
+  echo "The requirements page must use the current requirements-script cache version." >&2
+  exit 1
+fi
+
 git diff --check
 echo "Static security checks passed."
