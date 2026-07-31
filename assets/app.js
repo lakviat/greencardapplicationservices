@@ -38,19 +38,13 @@ if (countdownPanel) {
   const description = countdownPanel.querySelector(
     "[data-countdown-description]",
   );
-  const chip = countdownPanel.querySelector("[data-countdown-chip]");
   const values = {
     days: countdownPanel.querySelector('[data-countdown-value="days"]'),
     hours: countdownPanel.querySelector('[data-countdown-value="hours"]'),
-    minutes: countdownPanel.querySelector('[data-countdown-value="minutes"]'),
-    seconds: countdownPanel.querySelector('[data-countdown-value="seconds"]'),
   };
 
   if (targetDate && !Number.isNaN(targetDate.getTime())) {
     countdownPanel.classList.add("is-active");
-    chip.textContent = isEstimated
-      ? "Estimated opening date"
-      : "Official opening date confirmed";
     heading.textContent = isEstimated
       ? "Estimated registration opening in:"
       : "Registration opens in:";
@@ -69,13 +63,8 @@ if (countdownPanel) {
       values.hours.textContent = String(
         Math.floor((totalSeconds % 86400) / 3600),
       ).padStart(2, "0");
-      values.minutes.textContent = String(
-        Math.floor((totalSeconds % 3600) / 60),
-      ).padStart(2, "0");
-      values.seconds.textContent = String(totalSeconds % 60).padStart(2, "0");
 
       if (remaining === 0) {
-        chip.textContent = "Registration period status";
         heading.textContent = isEstimated
           ? "The estimated opening time has arrived."
           : "The official opening time has arrived.";
@@ -86,7 +75,7 @@ if (countdownPanel) {
       }
     };
 
-    countdownTimer = window.setInterval(updateCountdown, 1000);
+    countdownTimer = window.setInterval(updateCountdown, 60000);
     updateCountdown();
   }
 }

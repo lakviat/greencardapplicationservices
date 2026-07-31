@@ -1169,3 +1169,12 @@ Implemented decisions:
 3. Keep the complete company name visible on desktop and mobile instead of shortening it on phones.
 4. Use the isolated Liberty symbol for the browser favicon and Apple touch icon so it remains legible at small sizes.
 5. Remove the baked checkerboard background and use transparent production PNG assets.
+
+Countdown and applicant-form refinement - July 31, 2026
+--------------------------------------------------------
+1. Remove the green estimated-date chip and status dot from the countdown.
+2. Show only days and hours in the countdown; do not display minutes or seconds.
+3. Keep the estimated-date disclaimer and official-source links visible.
+4. Keep Applicant 2 and Applicant 3 headings aligned above their fields.
+5. Use three additional-applicant columns on wide screens, two on tablets, and one on narrow screens.
+6. Stack the payment action and supporting note before either becomes cramped.

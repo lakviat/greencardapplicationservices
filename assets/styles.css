@@ -689,29 +689,6 @@ h3 {
   font-size: 1.04rem;
 }
 
-.status-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  width: fit-content;
-  padding: 7px 11px;
-  color: #6c4b00;
-  background: #fff8e7;
-  border: 1px solid #f1d184;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 900;
-}
-
-.status-chip::before {
-  width: 8px;
-  height: 8px;
-  content: "";
-  background: var(--gold);
-  border-radius: 50%;
-  box-shadow: 0 0 0 4px rgba(247, 183, 49, 0.18);
-}
-
 .countdown-side {
   display: grid;
   gap: 24px;
@@ -719,8 +696,10 @@ h3 {
 
 .countdown-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(96px, 1fr));
+  grid-template-columns: repeat(2, minmax(150px, 1fr));
   gap: clamp(10px, 1.5vw, 18px);
+  width: min(100%, 440px);
+  margin-inline: auto;
 }
 
 .countdown-unit {
@@ -757,17 +736,6 @@ h3 {
 
 .dv-countdown:not(.is-active) .countdown-unit {
   border-color: rgba(255, 255, 255, 0.34);
-}
-
-.dv-countdown.is-active .status-chip {
-  color: #17472a;
-  background: #e9f7ef;
-  border-color: #c7ead4;
-}
-
-.dv-countdown.is-active .status-chip::before {
-  background: #188038;
-  box-shadow: 0 0 0 4px rgba(24, 128, 56, 0.18);
 }
 
 .timeline-actions {
@@ -1048,12 +1016,16 @@ legend {
 
 .additional-applicant {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px 14px;
   padding: 14px;
   background: #f8fbff;
   border: 1px solid var(--line);
   border-radius: 8px;
+}
+
+.additional-applicant > .form-divider {
+  grid-column: 1 / -1;
 }
 
 .additional-applicant[hidden],
@@ -2086,6 +2058,14 @@ small {
 
   .intake-form {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .additional-applicant {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .payment-preview {
+    grid-template-columns: 1fr;
   }
 }
 
