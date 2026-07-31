@@ -1178,3 +1178,12 @@ Countdown and applicant-form refinement - July 31, 2026
 4. Keep Applicant 2 and Applicant 3 headings aligned above their fields.
 5. Use three additional-applicant columns on wide screens, two on tablets, and one on narrow screens.
 6. Stack the payment action and supporting note before either becomes cramped.
+
+Service comparison - July 31, 2026
+-----------------------------------
+1. Add a compact comparison between self-preparation and preparation with Green Card Application Services.
+2. Keep the comparison in the space between the Why Apply and How It Works sections.
+3. Emphasize guided intake, photo review, family-detail checks, duplicate/data safeguards, and final customer approval.
+4. Use restrained check icons in the service column instead of emoji.
+5. State clearly that the service cannot influence lottery selection and that eligibility and visa issuance remain government decisions.
+6. Preserve a direct two-column comparison on desktop and mobile without horizontal overflow.
