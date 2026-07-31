@@ -40,17 +40,17 @@ const stripePackages = {
   couple: {
     label: "Couple",
     amount: 69,
-    paymentLink: "",
+    paymentLink: "https://buy.stripe.com/test_bJe9AVd9O7rUemwgH30ZW02",
   },
   family: {
     label: "Family",
     amount: 99,
-    paymentLink: "",
+    paymentLink: "https://buy.stripe.com/test_6oUdRbedS27A3HSeyV0ZW03",
   },
   premium: {
     label: "Premium",
     amount: 149,
-    paymentLink: "",
+    paymentLink: "https://buy.stripe.com/test_dRm4gBb1GcMeguEcqN0ZW04",
   },
 };
 

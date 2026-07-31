@@ -1203,4 +1203,4 @@ Stripe sandbox checkout - July 31, 2026
 8. Do not mark an application paid based only on client-side state. Production payment confirmation requires a server-side Stripe webhook.
 9. Show the selected package amount directly on the Apple Pay / Card button.
 10. Use a restrained navy submitted button and compact confirmation panel instead of a large green success state.
-11. Single package sandbox checkout is configured at $39. Couple, Family, and Premium remain pending their individual sandbox Payment Links.
+11. Sandbox checkout is configured for all four packages: Single $39, Couple $69, Family $99, and Premium $149.
