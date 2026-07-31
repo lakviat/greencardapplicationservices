@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cache_version="20260731-form-v1"
+cache_version="20260731-fields-v1"
 
 node --check assets/app.js
 node --check assets/requirements.js

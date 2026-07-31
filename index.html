@@ -53,20 +53,20 @@
       async
       src="https://www.googletagmanager.com/gtag/js?id=G-9P726CYPGF"
     ></script>
-    <script src="assets/site-metrics.js?v=20260731-form-v1"></script>
+    <script src="assets/site-metrics.js?v=20260731-fields-v1"></script>
 
     <title>Green Card Application Services</title>
-    <link rel="icon" href="assets/favicon.png?v=20260731-form-v1" type="image/png" />
-    <link rel="apple-touch-icon" href="assets/favicon.png?v=20260731-form-v1" />
+    <link rel="icon" href="assets/favicon.png?v=20260731-fields-v1" type="image/png" />
+    <link rel="apple-touch-icon" href="assets/favicon.png?v=20260731-fields-v1" />
     <link
       rel="preload"
-      href="assets/images/hero/hero-family-v3.jpg?v=20260731-form-v1"
+      href="assets/images/hero/hero-family-v3.jpg?v=20260731-fields-v1"
       as="image"
       fetchpriority="high"
     />
     <link
       rel="stylesheet"
-      href="assets/styles.css?v=20260731-form-v1"
+      href="assets/styles.css?v=20260731-fields-v1"
     />
   </head>
   <body>
@@ -679,73 +679,71 @@
             <span>Primary applicant</span>
           </div>
           <section class="applicant-fields primary-applicant full">
-            <label class="form-field">
-              <span class="field-heading">
-                <span>First name</span>
-                <small>As shown on your ID</small>
-              </span>
+            <label class="compact-field">
               <input
                 name="firstName"
                 autocomplete="given-name"
                 maxlength="100"
+                placeholder=" "
                 required
               />
-            </label>
-            <label class="form-field">
-              <span class="field-heading">
-                <span>Middle name</span>
-                <small>Only if shown on your ID</small>
+              <span class="compact-field-label">
+                First name <small>(As shown on your ID)</small>
               </span>
+            </label>
+            <label class="compact-field">
               <input
                 name="middleName"
                 autocomplete="additional-name"
                 maxlength="100"
+                placeholder=" "
               />
-            </label>
-            <label class="form-field">
-              <span class="field-heading">
-                <span>Last name</span>
-                <small>As shown on your ID</small>
+              <span class="compact-field-label">
+                Middle name <small>(Only if shown on your ID)</small>
               </span>
+            </label>
+            <label class="compact-field">
               <input
                 name="lastName"
                 autocomplete="family-name"
                 maxlength="100"
+                placeholder=" "
                 required
               />
-            </label>
-            <label class="form-field">
-              <span class="field-heading">
-                <span>Email</span>
+              <span class="compact-field-label">
+                Last name <small>(As shown on your ID)</small>
               </span>
+            </label>
+            <label class="compact-field">
               <input
                 name="email"
                 type="email"
                 autocomplete="email"
                 maxlength="254"
+                placeholder=" "
                 required
               />
+              <span class="compact-field-label">Email</span>
             </label>
-            <label class="form-field">
-              <span class="field-heading">
-                <span>Phone / WhatsApp</span>
-              </span>
+            <label class="compact-field">
               <input
                 name="phone"
                 type="tel"
                 autocomplete="tel"
                 inputmode="tel"
                 maxlength="32"
+                placeholder=" "
                 required
               />
+              <span class="compact-field-label">Phone / WhatsApp</span>
             </label>
-            <label class="form-field">
-              <span class="field-heading">
-                <span>Country of birth</span>
-                <small>Eligible countries only</small>
-              </span>
-              <select name="country" required>
-              <option value="">Choose your country</option>
+            <label class="compact-select">
+              <select
+                name="country"
+                aria-label="Country of birth, eligible countries only"
+                required
+              >
+              <option value="">Country of birth (Eligible countries only)</option>
               <option>Afghanistan</option>
               <option>Albania</option>
               <option>Algeria</option>
@@ -933,36 +931,42 @@
             <div class="form-divider">
               <span>Applicant 2</span>
             </div>
-            <label>
-              <span>First name</span>
+            <label class="compact-field">
               <input
                 name="applicant2FirstName"
                 autocomplete="off"
                 maxlength="100"
+                placeholder=" "
                 data-additional-required
               />
+              <span class="compact-field-label">First name</span>
             </label>
-            <label>
-              <span>Middle name</span>
+            <label class="compact-field">
               <input
                 name="applicant2MiddleName"
                 autocomplete="off"
                 maxlength="100"
+                placeholder=" "
               />
+              <span class="compact-field-label">Middle name</span>
             </label>
-            <label>
-              <span>Last name</span>
+            <label class="compact-field">
               <input
                 name="applicant2LastName"
                 autocomplete="off"
                 maxlength="100"
+                placeholder=" "
                 data-additional-required
               />
+              <span class="compact-field-label">Last name</span>
             </label>
-            <label>
-              <span>Relation</span>
-              <select name="applicant2Relation" data-additional-required>
-                <option value="">Choose relation</option>
+            <label class="compact-select">
+              <select
+                name="applicant2Relation"
+                aria-label="Applicant 2 relation"
+                data-additional-required
+              >
+                <option value="">Relation</option>
                 <option>Spouse</option>
                 <option>Child</option>
                 <option>Mother</option>
@@ -972,24 +976,26 @@
                 <option>Other</option>
               </select>
             </label>
-            <label>
-              <span>Email</span>
+            <label class="compact-field">
               <input
                 name="applicant2Email"
                 type="email"
                 autocomplete="off"
                 maxlength="254"
+                placeholder=" "
               />
+              <span class="compact-field-label">Email (optional)</span>
             </label>
-            <label>
-              <span>Phone / WhatsApp</span>
+            <label class="compact-field">
               <input
                 name="applicant2Phone"
                 type="tel"
                 autocomplete="off"
                 inputmode="tel"
                 maxlength="32"
+                placeholder=" "
               />
+              <span class="compact-field-label">Phone / WhatsApp (optional)</span>
             </label>
           </section>
           <section
@@ -1001,36 +1007,42 @@
             <div class="form-divider">
               <span>Applicant 3</span>
             </div>
-            <label>
-              <span>First name</span>
+            <label class="compact-field">
               <input
                 name="applicant3FirstName"
                 autocomplete="off"
                 maxlength="100"
+                placeholder=" "
                 data-additional-required
               />
+              <span class="compact-field-label">First name</span>
             </label>
-            <label>
-              <span>Middle name</span>
+            <label class="compact-field">
               <input
                 name="applicant3MiddleName"
                 autocomplete="off"
                 maxlength="100"
+                placeholder=" "
               />
+              <span class="compact-field-label">Middle name</span>
             </label>
-            <label>
-              <span>Last name</span>
+            <label class="compact-field">
               <input
                 name="applicant3LastName"
                 autocomplete="off"
                 maxlength="100"
+                placeholder=" "
                 data-additional-required
               />
+              <span class="compact-field-label">Last name</span>
             </label>
-            <label>
-              <span>Relation</span>
-              <select name="applicant3Relation" data-additional-required>
-                <option value="">Choose relation</option>
+            <label class="compact-select">
+              <select
+                name="applicant3Relation"
+                aria-label="Applicant 3 relation"
+                data-additional-required
+              >
+                <option value="">Relation</option>
                 <option>Spouse</option>
                 <option>Child</option>
                 <option>Mother</option>
@@ -1040,24 +1052,26 @@
                 <option>Other</option>
               </select>
             </label>
-            <label>
-              <span>Email</span>
+            <label class="compact-field">
               <input
                 name="applicant3Email"
                 type="email"
                 autocomplete="off"
                 maxlength="254"
+                placeholder=" "
               />
+              <span class="compact-field-label">Email (optional)</span>
             </label>
-            <label>
-              <span>Phone / WhatsApp</span>
+            <label class="compact-field">
               <input
                 name="applicant3Phone"
                 type="tel"
                 autocomplete="off"
                 inputmode="tel"
                 maxlength="32"
+                placeholder=" "
               />
+              <span class="compact-field-label">Phone / WhatsApp (optional)</span>
             </label>
           </section>
           <label class="full file-upload" for="identityDocuments">
@@ -1291,6 +1305,6 @@
       </div>
     </footer>
 
-    <script src="assets/app.js?v=20260731-form-v1"></script>
+    <script src="assets/app.js?v=20260731-fields-v1"></script>
   </body>
 </html>

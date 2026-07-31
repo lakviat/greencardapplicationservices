@@ -70,7 +70,7 @@ Implemented frontend features:
    - Couple opens applicant 2.
    - Family opens applicants 2 and 3.
    - Premium lets the user choose 1, 2, or 3 applicants.
-6. Mobile-first public application request form with compact package choices, responsive applicant sections, contact information, eligible-country dropdown, a tap-friendly optional multi-file upload, consent checkbox, and one "Submit & Continue to Payment" action. The action saves the intake to Google Drive before redirecting to the selected Stripe checkout.
+6. Mobile-first public application request form with compact package choices, in-field floating labels, responsive applicant sections, contact information, eligible-country dropdown, a tap-friendly optional multi-file upload, consent checkbox, and one "Submit & Continue to Payment" action. The action saves the intake to Google Drive before redirecting to the selected Stripe checkout.
 7. Google Apps Script intake submission endpoint connected from assets/app.js.
 8. Google Apps Script notification signup endpoint connected from assets/app.js.
 9. Notification signup modal launched from the hero "Notify me when DV opens" button.

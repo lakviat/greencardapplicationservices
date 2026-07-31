@@ -1191,7 +1191,7 @@ legend {
 .applicant-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px 20px;
+  gap: 12px 14px;
 }
 
 .additional-applicant {
@@ -1237,6 +1237,70 @@ label {
   font-weight: 700;
   line-height: 1.15;
   text-align: right;
+}
+
+.compact-field {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.compact-field input {
+  min-height: 58px;
+  padding: 18px 14px 4px;
+}
+
+.compact-field-label {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  left: 14px;
+  overflow: hidden;
+  color: #566174;
+  font-size: 0.94rem;
+  font-weight: 800;
+  line-height: 1.2;
+  pointer-events: none;
+  text-overflow: ellipsis;
+  transform: translateY(-50%);
+  transform-origin: left top;
+  transition: color 150ms ease, font-size 150ms ease, transform 150ms ease;
+  white-space: nowrap;
+}
+
+.compact-field-label small {
+  color: #6a7487;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.compact-field:focus-within .compact-field-label,
+.compact-field input:not(:placeholder-shown) + .compact-field-label {
+  color: var(--blue);
+  font-size: 0.68rem;
+  transform: translateY(-20px);
+}
+
+.compact-field:focus-within .compact-field-label small,
+.compact-field input:not(:placeholder-shown) + .compact-field-label small {
+  color: inherit;
+  font-size: inherit;
+}
+
+.compact-select {
+  display: block;
+  min-width: 0;
+}
+
+.compact-select select {
+  min-height: 58px;
+  color: #566174;
+  font-size: 0.94rem;
+  font-weight: 800;
+}
+
+.compact-select select:valid {
+  color: var(--ink);
 }
 
 input,
