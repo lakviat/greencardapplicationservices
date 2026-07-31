@@ -2050,86 +2050,6 @@ small {
   display: none;
 }
 
-.support-chat {
-  position: fixed;
-  right: 22px;
-  bottom: 22px;
-  z-index: 31;
-  opacity: 0;
-  transform: translateY(14px) scale(0.96);
-  transition:
-    opacity 220ms ease,
-    transform 220ms ease,
-    bottom 220ms ease;
-  pointer-events: none;
-}
-
-.has-scrolled .support-chat,
-.support-chat[open] {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  pointer-events: auto;
-}
-
-.hero-visible .support-chat:not([open]) {
-  opacity: 0;
-  transform: translateY(14px) scale(0.96);
-  pointer-events: none;
-}
-
-.support-chat summary {
-  display: grid;
-  place-items: center;
-  min-width: 118px;
-  min-height: 50px;
-  padding: 0 18px;
-  color: #fff;
-  background: var(--navy);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  box-shadow: 0 16px 36px rgba(16, 33, 61, 0.24);
-  font-weight: 950;
-  cursor: pointer;
-  list-style: none;
-  transition:
-    background 180ms ease,
-    transform 180ms ease,
-    box-shadow 180ms ease;
-}
-
-.support-chat summary:hover {
-  background: #174ea6;
-  box-shadow: 0 18px 42px rgba(16, 33, 61, 0.32);
-  transform: translateY(-2px);
-}
-
-.support-chat summary::-webkit-details-marker {
-  display: none;
-}
-
-.support-panel {
-  position: absolute;
-  right: 0;
-  bottom: 64px;
-  display: grid;
-  gap: 12px;
-  width: min(340px, calc(100vw - 32px));
-  padding: 18px;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  box-shadow: var(--shadow);
-}
-
-.support-panel strong {
-  color: var(--navy);
-}
-
-.support-panel p {
-  margin: 0;
-  color: var(--muted);
-}
-
 .modal-open {
   overflow: hidden;
 }
@@ -2214,6 +2134,54 @@ small {
 .notify-consent,
 .notify-form .form-message {
   grid-column: 1 / -1;
+}
+
+.notify-form .form-message {
+  margin: 0;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.notify-form .form-message.is-info {
+  color: var(--blue);
+}
+
+.notify-form .form-message.is-error {
+  color: #8f1d16;
+}
+
+.notify-form .form-message.is-success {
+  color: #146b35;
+}
+
+.selfie-status.is-error {
+  color: #b42318;
+}
+
+body.is-embedded {
+  overflow: hidden;
+}
+
+body.is-embedded > * {
+  pointer-events: none;
+  visibility: hidden;
+}
+
+body.is-embedded::before {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  padding: 32px;
+  place-items: center;
+  color: var(--navy);
+  background: #fff;
+  content: "For your security, open Green Card Application Services directly in a new browser tab.";
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1.5;
+  text-align: center;
+  visibility: visible;
 }
 
 .site-footer {
@@ -2583,26 +2551,6 @@ small {
     pointer-events: none;
   }
 
-  .support-chat {
-    right: 14px;
-    bottom: 84px;
-  }
-
-  .has-scrolled .support-chat {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    pointer-events: auto;
-  }
-
-  .hero-visible .support-chat:not([open]) {
-    opacity: 0;
-    transform: translateY(14px) scale(0.96);
-    pointer-events: none;
-  }
-
-  .apply-visible .support-chat {
-    bottom: 14px;
-  }
 }
 
 @media (max-width: 360px) {
@@ -2726,6 +2674,18 @@ small {
   filter: saturate(0.95);
   transform: none;
   animation: heroPhotoFade 15s infinite;
+}
+
+.hero-photo-family {
+  background-image: url("images/hero/hero-family-v3.jpg?v=20260731-security-v1");
+}
+
+.hero-photo-couple {
+  background-image: url("images/hero/hero-couple-v3.jpg?v=20260731-security-v1");
+}
+
+.hero-photo-community {
+  background-image: url("images/hero/hero-community-v3.jpg?v=20260731-security-v1");
 }
 
 .hero-photo-slide.is-second {

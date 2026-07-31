@@ -1,5 +1,5 @@
 GREEN CARD APPLICATION SERVICES - REQUIREMENTS
-Last updated: 2026-07-01
+Last updated: 2026-07-31
 
 Purpose
 -------
@@ -92,6 +92,8 @@ Implemented frontend features:
 Implemented Google Apps Script files tracked in repo:
 1. scripts/notifications-apps-script.gs
    Purpose: collect notification signups and write JSON files to the notifications folder.
+2. scripts/intake-apps-script.gs
+   Purpose: validate application requests, enforce upload limits, create customer records, and store approved document types in Drive.
 
 Current production architecture:
 1. The website is static HTML/CSS/JavaScript.
@@ -113,8 +115,8 @@ Product and UX:
 7. The site needs a clearer business identity/trust layer: contact method, support hours, business location display policy, and privacy reassurance near uploads.
 
 Payments:
-1. Payment is not fully implemented.
-2. Stripe/Apple Pay copy exists, but package-specific live checkout links are not wired.
+1. Four package-specific Stripe sandbox Payment Links are wired for Single, Couple, Family, and Premium testing.
+2. Checkout remains Stripe-hosted; the website does not collect card numbers, CVCs, or Apple Pay credentials.
 3. Payment status is not reconciled automatically with Google Drive submissions.
 4. Refund policy and chargeback process are not written.
 
@@ -126,11 +128,17 @@ Operations:
 5. There is no clear manual SOP for staff review, correction requests, final approval, official submission, and confirmation-number delivery.
 
 Security and privacy:
-1. The current public token placeholder should be replaced with a real random shared secret in both frontend and Apps Script.
-2. Apps Script is not a complete security boundary for sensitive identity documents.
-3. Need spam/rate-limit strategy, likely CAPTCHA or backend validation before scaling.
-4. Need data retention policy and deletion process.
-5. Need Google Drive access controls and staff 2FA enforcement.
+1. Frontend JavaScript is public and cannot safely hold a shared secret. The existing token-shaped value is compatibility data only and must never be used as authentication.
+2. Hardened intake and notification Apps Script templates validate allowed websites, payload size, field lengths, timestamps, consent, duplicate submissions, and rate limits. They do not return Drive file/folder IDs.
+3. Apps Script deployment URLs remain public by design. The hardened scripts must be manually configured with Script properties and redeployed before their server-side protections are active.
+4. Uploads are optional and restricted client/server-side to PDF, JPEG, PNG, HEIC, and HEIF; maximum 8 files, 15 MB each, 35 MB total.
+5. The site has a strict meta Content Security Policy without unsafe inline code, a clickjacking guard, input length limits, honeypots, and a pinned GitHub Actions security check.
+6. GitHub secret scanning and push protection are enabled. No private Stripe keys, service-account credentials, private keys, or real secrets were found in the repository or GitHub alerts during the 2026-07-31 audit.
+7. Apps Script is still not a complete security boundary for sensitive identity documents. Add server-verified CAPTCHA and move uploads to a managed backend before high-volume paid traffic.
+8. Need data retention policy and deletion process.
+9. Need Google Drive least-privilege access controls and staff 2FA enforcement.
+10. Production payment confirmation must use a verified Stripe webhook; browser paymentStatus is never proof of payment.
+11. Current no-cors form submissions confirm only that the browser dispatched the request; they do not provide authoritative proof that Google Apps Script stored it.
 
 SEO and localization:
 1. English baseline is expanded, but no translated route exists yet.
@@ -187,13 +195,13 @@ Manual QA checklist before paid traffic:
 
 Recommended next implementation order
 -------------------------------------
-1. Push pending SEO/resource commit if not yet pushed.
-2. Replace placeholder shared secret with a real random value in frontend and Apps Scripts.
-3. Add Privacy Policy, Terms of Service, Refund Policy, and Legal Disclaimer pages.
+1. Configure ROOT_FOLDER_ID and ALLOWED_WEBSITES in both Apps Script projects, paste the hardened scripts, deploy new versions, and verify Drive output.
+2. Add Privacy Policy, Terms of Service, Refund Policy, and Legal Disclaimer pages.
+3. Add server-verified CAPTCHA before increasing paid traffic or upload volume.
 4. Add a better post-submit confirmation card with reference ID and next steps.
-5. Add package-specific payment links or checkout flow.
+5. Implement Stripe webhooks on a trusted backend and reconcile confirmed payments with application submissions.
 6. Add staff/internal notification for application request submissions.
-7. Write staff review SOP.
+7. Write staff review SOP and customer-data retention/deletion SOP.
 8. Decide the remaining six priority countries/languages and build the next country-specific SEO batch.
 9. Build controlled translations after English copy stabilizes.
 10. Plan backend migration if accounts, saved drafts, dashboard, or larger upload volume become required.

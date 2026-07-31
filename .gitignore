@@ -1,0 +1,13 @@
+.DS_Store
+.claude/
+.env
+.env.*
+!.env.example
+node_modules/
+coverage/
+dist/
+*.log
+*.key
+*.pem
+*.p12
+lighthouse-report.*

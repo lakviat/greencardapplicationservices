@@ -46,26 +46,27 @@
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://www.google-analytics.com https://analytics.google.com https://*.google-analytics.com; object-src 'none'; base-uri 'self'; form-action 'self' https://buy.stripe.com https://script.google.com; upgrade-insecure-requests"
+      content="default-src 'self'; script-src 'self' https://www.googletagmanager.com; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://www.google-analytics.com https://analytics.google.com https://*.google-analytics.com; font-src 'self'; frame-src 'none'; media-src 'self' blob:; object-src 'none'; worker-src 'none'; manifest-src 'self'; base-uri 'self'; form-action 'self' https://buy.stripe.com; upgrade-insecure-requests"
     />
     <!-- Google tag (gtag.js) -->
     <script
       async
       src="https://www.googletagmanager.com/gtag/js?id=G-9P726CYPGF"
     ></script>
-    <script src="assets/site-metrics.js?v=20260707-ga"></script>
+    <script src="assets/site-metrics.js?v=20260731-security-v1"></script>
 
     <title>Green Card Application Services</title>
-    <link rel="icon" href="assets/favicon.png?v=20260730-user-logo" type="image/png" />
-    <link rel="apple-touch-icon" href="assets/favicon.png?v=20260730-user-logo" />
+    <link rel="icon" href="assets/favicon.png?v=20260731-security-v1" type="image/png" />
+    <link rel="apple-touch-icon" href="assets/favicon.png?v=20260731-security-v1" />
     <link
       rel="preload"
-      href="assets/images/hero/hero-family-v3.jpg"
+      href="assets/images/hero/hero-family-v3.jpg?v=20260731-security-v1"
       as="image"
+      fetchpriority="high"
     />
     <link
       rel="stylesheet"
-      href="assets/styles.css?v=20260731-stripe-checkout-v1"
+      href="assets/styles.css?v=20260731-security-v1"
     />
   </head>
   <body>
@@ -141,23 +142,14 @@
     <main id="top">
       <section class="hero hero-dashboard">
         <div class="hero-photo-carousel" aria-hidden="true">
-          <div
-            class="hero-photo-slide is-first"
-            style="
-              background-image: url(&quot;assets/images/hero/hero-family-v3.jpg?v=20260716&quot;);
-            "
-          ></div>
+          <div class="hero-photo-slide is-first hero-photo-family"></div>
           <div
             class="hero-photo-slide is-second"
-            style="
-              background-image: url(&quot;assets/images/hero/hero-couple-v3.jpg?v=20260716&quot;);
-            "
+            data-hero-image="hero-photo-couple"
           ></div>
           <div
             class="hero-photo-slide is-third"
-            style="
-              background-image: url(&quot;assets/images/hero/hero-community-v3.jpg?v=20260716&quot;);
-            "
+            data-hero-image="hero-photo-community"
           ></div>
         </div>
         <div class="hero-content">
@@ -676,33 +668,60 @@
               <span>First name</span>
               <small>As shown on your ID</small>
             </span>
-            <input name="firstName" autocomplete="given-name" required />
+            <input
+              name="firstName"
+              autocomplete="given-name"
+              maxlength="100"
+              required
+            />
           </label>
           <label class="form-field">
             <span class="field-heading">
               <span>Middle name</span>
               <small>Only if shown on your ID</small>
             </span>
-            <input name="middleName" autocomplete="additional-name" />
+            <input
+              name="middleName"
+              autocomplete="additional-name"
+              maxlength="100"
+            />
           </label>
           <label class="form-field">
             <span class="field-heading">
               <span>Last name</span>
               <small>As shown on your ID</small>
             </span>
-            <input name="lastName" autocomplete="family-name" required />
+            <input
+              name="lastName"
+              autocomplete="family-name"
+              maxlength="100"
+              required
+            />
           </label>
           <label class="form-field">
             <span class="field-heading">
               <span>Email</span>
             </span>
-            <input name="email" type="email" autocomplete="email" required />
+            <input
+              name="email"
+              type="email"
+              autocomplete="email"
+              maxlength="254"
+              required
+            />
           </label>
           <label class="form-field">
             <span class="field-heading">
               <span>Phone / WhatsApp</span>
             </span>
-            <input name="phone" type="tel" autocomplete="tel" required />
+            <input
+              name="phone"
+              type="tel"
+              autocomplete="tel"
+              inputmode="tel"
+              maxlength="32"
+              required
+            />
           </label>
           <label class="form-field">
             <span class="field-heading">
@@ -902,18 +921,24 @@
               <input
                 name="applicant2FirstName"
                 autocomplete="off"
+                maxlength="100"
                 data-additional-required
               />
             </label>
             <label>
               <span>Middle name</span>
-              <input name="applicant2MiddleName" autocomplete="off" />
+              <input
+                name="applicant2MiddleName"
+                autocomplete="off"
+                maxlength="100"
+              />
             </label>
             <label>
               <span>Last name</span>
               <input
                 name="applicant2LastName"
                 autocomplete="off"
+                maxlength="100"
                 data-additional-required
               />
             </label>
@@ -932,11 +957,22 @@
             </label>
             <label>
               <span>Email</span>
-              <input name="applicant2Email" type="email" autocomplete="off" />
+              <input
+                name="applicant2Email"
+                type="email"
+                autocomplete="off"
+                maxlength="254"
+              />
             </label>
             <label>
               <span>Phone / WhatsApp</span>
-              <input name="applicant2Phone" type="tel" autocomplete="off" />
+              <input
+                name="applicant2Phone"
+                type="tel"
+                autocomplete="off"
+                inputmode="tel"
+                maxlength="32"
+              />
             </label>
           </section>
           <section
@@ -953,18 +989,24 @@
               <input
                 name="applicant3FirstName"
                 autocomplete="off"
+                maxlength="100"
                 data-additional-required
               />
             </label>
             <label>
               <span>Middle name</span>
-              <input name="applicant3MiddleName" autocomplete="off" />
+              <input
+                name="applicant3MiddleName"
+                autocomplete="off"
+                maxlength="100"
+              />
             </label>
             <label>
               <span>Last name</span>
               <input
                 name="applicant3LastName"
                 autocomplete="off"
+                maxlength="100"
                 data-additional-required
               />
             </label>
@@ -983,11 +1025,22 @@
             </label>
             <label>
               <span>Email</span>
-              <input name="applicant3Email" type="email" autocomplete="off" />
+              <input
+                name="applicant3Email"
+                type="email"
+                autocomplete="off"
+                maxlength="254"
+              />
             </label>
             <label>
               <span>Phone / WhatsApp</span>
-              <input name="applicant3Phone" type="tel" autocomplete="off" />
+              <input
+                name="applicant3Phone"
+                type="tel"
+                autocomplete="off"
+                inputmode="tel"
+                maxlength="32"
+              />
             </label>
           </section>
           <label class="full file-upload">
@@ -995,7 +1048,12 @@
               <span>Passport, ID, or supporting document (optional)</span>
               <small>You can provide files now or after we contact you.</small>
             </span>
-            <input name="identityDocument" type="file" multiple />
+            <input
+              name="identityDocument"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,application/pdf,image/jpeg,image/png,image/heic,image/heif"
+              multiple
+            />
           </label>
           <label class="consent full">
             <input type="checkbox" required />
@@ -1112,6 +1170,16 @@
           ×
         </button>
         <form class="notify-form" id="notifyForm">
+          <label class="visually-hidden" aria-hidden="true" tabindex="-1">
+            Company website
+            <input
+              id="notifyCompanyWebsite"
+              name="notifyCompanyWebsite"
+              type="text"
+              autocomplete="off"
+              tabindex="-1"
+            />
+          </label>
           <div>
             <p class="eyebrow">Registration alerts</p>
             <h3 id="notifyTitle">Get notified when DV registration opens.</h3>
@@ -1122,11 +1190,22 @@
           </div>
           <label>
             <span>Email</span>
-            <input name="notifyEmail" type="email" autocomplete="email" />
+            <input
+              name="notifyEmail"
+              type="email"
+              autocomplete="email"
+              maxlength="254"
+            />
           </label>
           <label>
             <span>Phone / WhatsApp</span>
-            <input name="notifyPhone" type="tel" autocomplete="tel" />
+            <input
+              name="notifyPhone"
+              type="tel"
+              autocomplete="tel"
+              inputmode="tel"
+              maxlength="32"
+            />
           </label>
           <label class="consent notify-consent">
             <input type="checkbox" required />
@@ -1145,24 +1224,6 @@
 
     <a class="mobile-cta" href="#apply">Start Application</a>
 
-    <details class="support-chat">
-      <summary>
-        <span>Support</span>
-      </summary>
-      <div class="support-panel">
-        <strong>Application support</strong>
-        <p>
-          Ask us about documents, photos, payment, or the next step. AI support
-          can be connected here later.
-        </p>
-        <label>
-          <span>Message</span>
-          <textarea placeholder="Type your question..." rows="3"></textarea>
-        </label>
-        <button class="button button-small" type="button">Send message</button>
-      </div>
-    </details>
-
     <footer class="site-footer">
       <div>
         <strong>Green Card Application Services</strong>
@@ -1180,6 +1241,6 @@
       </p>
     </footer>
 
-    <script src="assets/app.js?v=20260731-stripe-all-packages-v1"></script>
+    <script src="assets/app.js?v=20260731-security-v1"></script>
   </body>
 </html>

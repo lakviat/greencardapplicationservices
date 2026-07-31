@@ -16,7 +16,7 @@ let latestBlob;
 function setStatus(message, isError = false) {
   if (!statusMessage) return;
   statusMessage.textContent = message;
-  statusMessage.style.color = isError ? "#c5221f" : "#174ea6";
+  statusMessage.classList.toggle("is-error", isError);
 }
 
 function showCameraPanel() {

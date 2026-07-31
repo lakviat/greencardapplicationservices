@@ -92,6 +92,19 @@ Official Diversity Visa information should always be verified at:
 - https://dvprogram.state.gov/
 - https://travel.state.gov/content/travel/en/us-visas/immigrate/diversity-visa-program-entry.html
 
+## Development and Security
+
+The public website is a dependency-free static site. Run it locally with
+`python3 -m http.server 8080`, then run the repository checks with
+`bash scripts/check-static-site.sh` before deployment.
+
+Stripe checkout is hosted by Stripe; card data must never be added to the site,
+Apps Script, Google Drive records, logs, or this repository. The secure Apps
+Script templates in `scripts/` require `ROOT_FOLDER_ID` and `ALLOWED_WEBSITES`
+to be configured in each Apps Script project's Script properties before a new
+version is deployed. See `SECURITY.md` for architecture boundaries and private
+vulnerability reporting.
+
 ## DV-2026 Eligible Countries
 
 This list is based on the currently published U.S. Department of State DV-2026 instructions and matches the country dropdown used on the website. Refresh this list when DV-2027 instructions are published.

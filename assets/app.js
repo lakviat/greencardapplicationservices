@@ -21,14 +21,32 @@ const mobileMenus = document.querySelectorAll(".mobile-menu");
 const applySection = document.querySelector("#apply");
 const heroSection = document.querySelector(".hero-dashboard");
 const honeypotField = document.querySelector("#companyWebsite");
+const notifyHoneypotField = document.querySelector("#notifyCompanyWebsite");
 const googleScriptIntakeUrl =
   "https://script.google.com/macros/s/AKfycbyZp6oqQoPsP6o2RwaFlflHgfF9QAfjtlp172XQZCqEUnV3g3YiwmBYoW0HoFIwN9kv/exec";
 const googleScriptNotifyUrl =
   "https://script.google.com/macros/s/AKfycbzfG-PHP8OR4qR6YGP1dcJ9eXQ8Crrg9ag1jG_WonTdGpwRVcsL5TMDfQADyqnyMg60/exec";
-const googleScriptPublicToken = "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET";
+// Kept only for compatibility with the currently deployed Apps Scripts. This
+// value is public browser code and must never be treated as authentication.
+const appsScriptCompatibilityToken = "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET";
 const maxFiles = 8;
 const maxFileSize = 15 * 1024 * 1024;
 const maxTotalUploadSize = 35 * 1024 * 1024;
+const allowedUploadExtensions = new Set([
+  "jpg",
+  "jpeg",
+  "png",
+  "pdf",
+  "heic",
+  "heif",
+]);
+const allowedUploadTypes = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/heic",
+  "image/heif",
+  "application/pdf",
+]);
 const faqGroups = document.querySelectorAll("[data-faq-accordion]");
 const countdownPanel = document.querySelector("[data-dv-countdown]");
 const stripePackages = {
@@ -53,6 +71,42 @@ const stripePackages = {
     paymentLink: "https://buy.stripe.com/test_dRm4gBb1GcMeguEcqN0ZW04",
   },
 };
+
+const cleanText = (value, maxLength = 200) =>
+  String(value || "")
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxLength);
+
+const isAllowedUpload = (file) => {
+  const extension = file.name.split(".").pop()?.toLowerCase() || "";
+  return (
+    allowedUploadExtensions.has(extension) &&
+    (!file.type || allowedUploadTypes.has(file.type))
+  );
+};
+
+if (window.self !== window.top) {
+  document.body.classList.add("is-embedded");
+  document.querySelectorAll("a, button, input, select, textarea").forEach((element) => {
+    element.setAttribute("tabindex", "-1");
+    if ("disabled" in element) element.disabled = true;
+  });
+}
+
+const loadDeferredHeroImages = () => {
+  document.querySelectorAll("[data-hero-image]").forEach((slide) => {
+    const imageClass = cleanText(slide.dataset.heroImage, 40);
+    if (imageClass) slide.classList.add(imageClass);
+  });
+};
+
+if ("requestIdleCallback" in window) {
+  window.requestIdleCallback(loadDeferredHeroImages, { timeout: 1500 });
+} else {
+  window.setTimeout(loadDeferredHeroImages, 200);
+}
 
 if (countdownPanel) {
   const targetValue = countdownPanel.dataset.countdownDate?.trim();
@@ -370,44 +424,52 @@ if (form && message) {
       );
     }
 
+    if (uploadedFiles.some((file) => !isAllowedUpload(file))) {
+      throw new Error(
+        "Upload PDF, JPEG, PNG, HEIC, or HEIF documents only.",
+      );
+    }
+
     const files = await Promise.all(uploadedFiles.map(fileToPayload));
     const additionalApplicants = [2, 3]
       .filter((number) => number <= applicantCount)
       .map((number) => ({
         applicantNumber: number,
-        firstName: formData.get(`applicant${number}FirstName`) || "",
-        middleName: formData.get(`applicant${number}MiddleName`) || "",
-        lastName: formData.get(`applicant${number}LastName`) || "",
-        relation: formData.get(`applicant${number}Relation`) || "",
-        email: formData.get(`applicant${number}Email`) || "",
-        phone: formData.get(`applicant${number}Phone`) || "",
+        firstName: cleanText(formData.get(`applicant${number}FirstName`), 100),
+        middleName: cleanText(formData.get(`applicant${number}MiddleName`), 100),
+        lastName: cleanText(formData.get(`applicant${number}LastName`), 100),
+        relation: cleanText(formData.get(`applicant${number}Relation`), 40),
+        email: cleanText(formData.get(`applicant${number}Email`), 254),
+        phone: cleanText(formData.get(`applicant${number}Phone`), 32),
       }));
 
     return {
-      secret: googleScriptPublicToken,
+      secret: appsScriptCompatibilityToken,
       submissionId: getSubmissionId(),
       submittedAt: new Date().toISOString(),
       formStartedAt: form.dataset.startedAt || "",
       website: window.location.hostname,
+      companyWebsite: cleanText(honeypotField?.value, 100),
+      consent: true,
       package: selectedPackage?.value || "single",
       packageLabel: selectedPackageLabel,
       applicantCount,
-      firstName: formData.get("firstName"),
-      middleName: formData.get("middleName"),
-      lastName: formData.get("lastName"),
-      email: formData.get("email"),
-      phone: formData.get("phone"),
-      countryOfBirth: formData.get("country"),
+      firstName: cleanText(formData.get("firstName"), 100),
+      middleName: cleanText(formData.get("middleName"), 100),
+      lastName: cleanText(formData.get("lastName"), 100),
+      email: cleanText(formData.get("email"), 254),
+      phone: cleanText(formData.get("phone"), 32),
+      countryOfBirth: cleanText(formData.get("country"), 100),
       applicants: [
         {
           applicantNumber: 1,
           role: "Primary",
-          firstName: formData.get("firstName") || "",
-          middleName: formData.get("middleName") || "",
-          lastName: formData.get("lastName") || "",
-          email: formData.get("email") || "",
-          phone: formData.get("phone") || "",
-          countryOfBirth: formData.get("country") || "",
+          firstName: cleanText(formData.get("firstName"), 100),
+          middleName: cleanText(formData.get("middleName"), 100),
+          lastName: cleanText(formData.get("lastName"), 100),
+          email: cleanText(formData.get("email"), 254),
+          phone: cleanText(formData.get("phone"), 32),
+          countryOfBirth: cleanText(formData.get("country"), 100),
         },
         ...additionalApplicants,
       ],
@@ -549,6 +611,14 @@ if (form && message) {
 }
 
 if (notifyForm && notifyMessage) {
+  notifyForm.dataset.startedAt = new Date().toISOString();
+
+  const setNotifyMessage = (text, state = "info") => {
+    notifyMessage.textContent = text;
+    notifyMessage.classList.remove("is-info", "is-error", "is-success");
+    if (text) notifyMessage.classList.add(`is-${state}`);
+  };
+
   const setNotifyState = (state) => {
     if (!notifySubmitButton) return;
 
@@ -592,13 +662,15 @@ if (notifyForm && notifyMessage) {
         "Content-Type": "text/plain;charset=utf-8",
       },
       body: JSON.stringify({
-        secret: googleScriptPublicToken,
+        secret: appsScriptCompatibilityToken,
         notificationId: createNotificationId(),
         submittedAt: new Date().toISOString(),
+        formStartedAt: notifyForm.dataset.startedAt || "",
         website: window.location.hostname,
         sourcePage: window.location.pathname || "/",
         email,
         phone,
+        notifyCompanyWebsite: cleanText(notifyHoneypotField?.value, 100),
         consent:
           "I agree to be contacted about DV registration updates and application support.",
       }),
@@ -609,13 +681,19 @@ if (notifyForm && notifyMessage) {
     event.preventDefault();
 
     const formData = new FormData(notifyForm);
-    const email = String(formData.get("notifyEmail") || "").trim();
-    const phone = String(formData.get("notifyPhone") || "").trim();
+    const email = cleanText(formData.get("notifyEmail"), 254);
+    const phone = cleanText(formData.get("notifyPhone"), 32);
+
+    if (notifyHoneypotField?.value) {
+      setNotifyMessage("Notification request could not be completed.", "error");
+      return;
+    }
 
     if (!email && !phone) {
-      notifyMessage.textContent =
-        "Enter an email or WhatsApp number so we can notify you.";
-      notifyMessage.style.color = "#b42318";
+      setNotifyMessage(
+        "Enter an email or WhatsApp number so we can notify you.",
+        "error",
+      );
       return;
     }
 
@@ -625,23 +703,26 @@ if (notifyForm && notifyMessage) {
     }
 
     setNotifyState("submitting");
-    notifyMessage.textContent =
-      "Submitting your notification request. Please keep this window open.";
-    notifyMessage.style.color = "#174ea6";
+    setNotifyMessage(
+      "Submitting your notification request. Please keep this window open.",
+      "info",
+    );
 
     try {
       await sendNotificationToDrive({ email, phone });
 
       setNotifyState("submitted");
-      notifyMessage.textContent =
-        "Thank you for staying up to date with Green Card Application Services. We will contact you when DV registration opens.";
-      notifyMessage.style.color = "#188038";
+      setNotifyMessage(
+        "Thank you for staying up to date with Green Card Application Services. We will contact you when DV registration opens.",
+        "success",
+      );
     } catch (error) {
       setNotifyState("idle");
-      notifyMessage.textContent =
+      setNotifyMessage(
         error.message ||
-        "We could not submit the notification request. Please try again.";
-      notifyMessage.style.color = "#b42318";
+          "We could not submit the notification request. Please try again.",
+        "error",
+      );
     }
   });
 }
