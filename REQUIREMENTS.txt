@@ -73,7 +73,7 @@ Implemented frontend features:
 6. Public application request form with contact information, eligible-country dropdown, multi-file document upload, consent checkbox, optional payment copy, and submit state animation.
 7. Google Apps Script intake submission endpoint connected from assets/app.js.
 8. Google Apps Script notification signup endpoint connected from assets/app.js.
-9. Notification signup modal launched from the hero "Notify me" button.
+9. Notification signup modal launched from the hero "Notify me when DV opens" button.
 10. Notification submissions write JSON files into the Google Drive notifications folder through Apps Script.
 11. Requirements page includes photo examples, document guidance, and local camera/selfie capture planning code.
 12. Social sharing previews now include title, description, canonical URL, and share image.

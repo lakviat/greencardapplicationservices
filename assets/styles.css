@@ -328,6 +328,27 @@ a {
   background: rgba(255, 255, 255, 0.22);
 }
 
+.button-alert {
+  gap: 8px;
+  color: #244a78;
+  background: #f4f8fc;
+  border: 1px solid rgba(36, 74, 120, 0.2);
+  box-shadow: none;
+}
+
+.button-alert:hover {
+  color: #173f70;
+  background: #edf4fa;
+  border-color: rgba(36, 74, 120, 0.3);
+  box-shadow: 0 8px 18px rgba(36, 74, 120, 0.08);
+}
+
+.button-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+}
+
 .button-small {
   min-height: 40px;
   padding: 0 15px;
@@ -2455,6 +2476,10 @@ body.is-embedded::before {
 
   .hero-actions .button {
     width: 100%;
+  }
+
+  .hero-actions .button-alert {
+    min-height: 54px;
   }
 
   .dream-note {
