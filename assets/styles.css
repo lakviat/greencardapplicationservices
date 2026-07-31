@@ -156,6 +156,10 @@ a {
   box-shadow: var(--shadow);
 }
 
+.mobile-menu:not([open]) nav {
+  display: none;
+}
+
 .mobile-menu nav a {
   padding: 11px 12px;
   color: var(--muted);
@@ -1193,7 +1197,8 @@ label {
 }
 
 .field-heading > span {
-  flex: 0 0 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .field-heading small {
@@ -1291,7 +1296,7 @@ small {
   min-height: 48px;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 10px;
   width: 100%;
   color: #fff;
   background: #050505;
@@ -1303,16 +1308,24 @@ small {
 }
 
 .apple-pay-button span {
-  opacity: 0.86;
+  font-weight: 850;
 }
 
 .apple-pay-button strong {
-  font-size: 1.12rem;
+  padding-left: 10px;
+  font-size: 1rem;
   letter-spacing: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.35);
 }
 
-.apple-pay-button.is-confirmed {
-  background: #188038;
+.payment-help {
+  display: block;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.payment-help strong {
+  color: var(--ink);
 }
 
 .button-form {
@@ -1349,8 +1362,8 @@ small {
 }
 
 .button-form.is-submitted {
-  background: #188038;
-  box-shadow: 0 18px 36px rgba(24, 128, 56, 0.22);
+  background: var(--navy);
+  box-shadow: 0 16px 32px rgba(10, 32, 66, 0.2);
 }
 
 .button-form:disabled {
@@ -1363,11 +1376,62 @@ small {
   }
 }
 
-.form-message {
-  min-height: 24px;
+#formMessage {
+  display: none;
+  min-height: 0;
   margin: 0;
   color: var(--blue);
-  font-weight: 850;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+#formMessage.is-info,
+#formMessage.is-error,
+#formMessage.is-success {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #f5f8fe;
+  border: 1px solid #ccd9ee;
+  border-radius: 8px;
+}
+
+#formMessage::before {
+  display: grid;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  color: #fff;
+  background: var(--blue);
+  border-radius: 50%;
+  content: "i";
+  font-size: 0.78rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+#formMessage.is-error {
+  color: #8f1d16;
+  background: #fff7f6;
+  border-color: #efc3bf;
+}
+
+#formMessage.is-error::before {
+  background: #b42318;
+  content: "!";
+}
+
+#formMessage.is-success {
+  color: var(--navy);
+  background: #f3f7fc;
+  border-color: #bfcfe5;
+}
+
+#formMessage.is-success::before {
+  background: var(--navy);
+  content: "\2713";
 }
 
 .faq-section {

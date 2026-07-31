@@ -2,6 +2,8 @@ const form = document.querySelector("#intakeForm");
 const message = document.querySelector("#formMessage");
 const submitButton = document.querySelector("#applicationSubmit");
 const applePayButton = document.querySelector("#applePayButton");
+const paymentButtonLabel = document.querySelector("#paymentButtonLabel");
+const paymentButtonAmount = document.querySelector("#paymentButtonAmount");
 const paymentStatus = document.querySelector("#paymentStatus");
 const packageOptions = document.querySelectorAll('input[name="package"]');
 const premiumCountField = document.querySelector("#premiumCountField");
@@ -29,6 +31,28 @@ const maxFileSize = 15 * 1024 * 1024;
 const maxTotalUploadSize = 35 * 1024 * 1024;
 const faqGroups = document.querySelectorAll("[data-faq-accordion]");
 const countdownPanel = document.querySelector("[data-dv-countdown]");
+const stripePackages = {
+  single: {
+    label: "Single",
+    amount: 39,
+    paymentLink: "",
+  },
+  couple: {
+    label: "Couple",
+    amount: 69,
+    paymentLink: "",
+  },
+  family: {
+    label: "Family",
+    amount: 99,
+    paymentLink: "",
+  },
+  premium: {
+    label: "Premium",
+    amount: 149,
+    paymentLink: "",
+  },
+};
 
 if (countdownPanel) {
   const targetValue = countdownPanel.dataset.countdownDate?.trim();
@@ -211,6 +235,47 @@ if (form && message) {
     return Number(selectedPackage?.dataset.applicantCount || 1);
   };
 
+  const getSelectedStripePackage = () => {
+    const packageKey = getSelectedPackage()?.value || "single";
+    return stripePackages[packageKey] || stripePackages.single;
+  };
+
+  const setFormMessage = (text, state = "info") => {
+    message.textContent = text;
+    message.classList.remove("is-info", "is-error", "is-success");
+
+    if (text) {
+      message.classList.add(`is-${state}`);
+    }
+  };
+
+  const getSubmissionId = () => {
+    if (form.dataset.submissionId) {
+      return form.dataset.submissionId;
+    }
+
+    const random =
+      window.crypto && "randomUUID" in window.crypto
+        ? window.crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    form.dataset.submissionId = `gcas-${random}`;
+    return form.dataset.submissionId;
+  };
+
+  const updatePaymentButton = () => {
+    if (!applePayButton) return;
+
+    const stripePackage = getSelectedStripePackage();
+    paymentButtonLabel.textContent = "Apple Pay / Card";
+    paymentButtonAmount.textContent = `$${stripePackage.amount}`;
+    applePayButton.setAttribute(
+      "aria-label",
+      `Pay securely for the ${stripePackage.label} package, ${stripePackage.amount} dollars`,
+    );
+
+  };
+
   const updateApplicantSections = () => {
     const applicantCount = getApplicantCount();
     const selectedPackage = getSelectedPackage();
@@ -272,15 +337,6 @@ if (form && message) {
       reader.readAsDataURL(file);
     });
 
-  const createSubmissionId = () => {
-    const random =
-      window.crypto && "randomUUID" in window.crypto
-        ? window.crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-
-    return `gcas-${random}`;
-  };
-
   const buildApplicationPayload = async () => {
     const formData = new FormData(form);
     const selectedPackage = getSelectedPackage();
@@ -329,7 +385,7 @@ if (form && message) {
 
     return {
       secret: googleScriptPublicToken,
-      submissionId: createSubmissionId(),
+      submissionId: getSubmissionId(),
       submittedAt: new Date().toISOString(),
       formStartedAt: form.dataset.startedAt || "",
       website: window.location.hostname,
@@ -387,6 +443,7 @@ if (form && message) {
     option.addEventListener("change", () => {
       updateApplicantSections();
       updateSubmitLabel();
+      updatePaymentButton();
     });
   });
   premiumApplicantCount?.addEventListener("change", () => {
@@ -395,24 +452,61 @@ if (form && message) {
   });
   updateApplicantSections();
   updateSubmitLabel();
+  updatePaymentButton();
 
   if (applePayButton) {
     applePayButton.addEventListener("click", () => {
       if (!form.checkValidity()) {
         form.reportValidity();
-        message.textContent =
-          "Complete the required application fields before continuing to payment.";
-        message.style.color = "#b42318";
+        setFormMessage(
+          "Complete the required applicant and contact fields, then accept the service notice before continuing to payment.",
+          "error",
+        );
         return;
       }
 
-      if (paymentStatus) {
-        paymentStatus.value = "payment-link-pending";
+      const stripePackage = getSelectedStripePackage();
+
+      if (!stripePackage.paymentLink) {
+        setFormMessage(
+          `${stripePackage.label} sandbox checkout is waiting for its new $${stripePackage.amount} Stripe Payment Link. You can still submit the application request now.`,
+          "info",
+        );
+        return;
       }
 
-      message.textContent =
-        "Secure checkout links are being updated for the new packages. You can submit the request now and we will confirm payment next.";
-      message.style.color = "#174ea6";
+      let checkoutUrl;
+
+      try {
+        checkoutUrl = new URL(stripePackage.paymentLink);
+
+        if (
+          checkoutUrl.protocol !== "https:" ||
+          checkoutUrl.hostname !== "buy.stripe.com"
+        ) {
+          throw new Error("Unexpected checkout host.");
+        }
+      } catch (error) {
+        setFormMessage(
+          "Secure checkout is temporarily unavailable for this package. Please submit the application request and we will contact you.",
+          "error",
+        );
+        return;
+      }
+
+      const email = String(new FormData(form).get("email") || "").trim();
+      checkoutUrl.searchParams.set("prefilled_email", email);
+      checkoutUrl.searchParams.set("client_reference_id", getSubmissionId());
+
+      if (paymentStatus) {
+        paymentStatus.value = "checkout-opened";
+      }
+
+      setFormMessage(
+        `Opening secure Stripe checkout for the ${stripePackage.label} package ($${stripePackage.amount}). This application will remain open in the current tab.`,
+        "info",
+      );
+      window.open(checkoutUrl.toString(), "_blank", "noopener,noreferrer");
     });
   }
 
@@ -425,29 +519,31 @@ if (form && message) {
     }
 
     if (honeypotField?.value) {
-      message.textContent = "Submission could not be completed.";
-      message.style.color = "#b42318";
+      setFormMessage("Submission could not be completed.", "error");
       return;
     }
 
     setSubmitState("submitting");
-    message.textContent =
-      "Submitting your application and uploaded document. Please keep this page open.";
-    message.style.color = "#174ea6";
+    setFormMessage(
+      "Submitting your application. Please keep this page open.",
+      "info",
+    );
 
     try {
       await sendApplicationToDrive();
 
       setSubmitState("submitted");
-      message.textContent =
-        "Submitted. We received your request and will contact you to confirm documents, package, and payment before staff review begins.";
-      message.style.color = "#188038";
+      setFormMessage(
+        "Application received. We will contact you to confirm documents, package, and payment before staff review begins.",
+        "success",
+      );
     } catch (error) {
       setSubmitState("idle");
-      message.textContent =
+      setFormMessage(
         error.message ||
-        "We could not submit the application. Please try again or contact support.";
-      message.style.color = "#b42318";
+          "We could not submit the application. Please try again or contact support.",
+        "error",
+      );
     }
   });
 }

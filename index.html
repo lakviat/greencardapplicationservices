@@ -65,7 +65,7 @@
     />
     <link
       rel="stylesheet"
-      href="assets/styles.css?v=20260731-service-comparison-v3"
+      href="assets/styles.css?v=20260731-stripe-checkout-v1"
     />
   </head>
   <body>
@@ -579,8 +579,8 @@
           <p class="eyebrow">Start here</p>
           <h2>Submit your application request</h2>
           <p>
-            Choose a package, enter your contact details, and upload your
-            identity document. We will contact you before review and payment.
+            Choose a package and enter your contact details. You can add
+            identity documents now or provide them after we contact you.
           </p>
           <div class="notice-box">
             <strong>Important:</strong>
@@ -992,12 +992,10 @@
           </section>
           <label class="full file-upload">
             <span class="field-heading">
-              <span>Passport, ID, or supporting document</span>
-              <small
-                >Upload files for all applicants if they are ready.</small
-              >
+              <span>Passport, ID, or supporting document (optional)</span>
+              <small>You can provide files now or after we contact you.</small>
             </span>
-            <input name="identityDocument" type="file" multiple required />
+            <input name="identityDocument" type="file" multiple />
           </label>
           <label class="consent full">
             <input type="checkbox" required />
@@ -1017,15 +1015,15 @@
               class="apple-pay-button"
               id="applePayButton"
               type="button"
-              aria-label="Pay with Apple Pay"
+              aria-label="Pay securely for the Single package, 39 dollars"
             >
-              <span>Pay with</span>
-              <strong>Apple Pay / Card</strong>
+              <span id="paymentButtonLabel">Apple Pay / Card</span>
+              <strong id="paymentButtonAmount">$39</strong>
             </button>
-            <small>
-              Optional for now. You may submit the request first, and our team
-              can contact you to confirm documents, package, and payment.
-              Checkout links will be updated for the new package prices.
+            <small id="paymentHelp" class="payment-help">
+              <strong>Secure Stripe checkout.</strong>
+              Apple Pay appears when it is available on your device. You can
+              also submit the request first and pay after we contact you.
             </small>
           </div>
           <button
@@ -1182,6 +1180,6 @@
       </p>
     </footer>
 
-    <script src="assets/app.js?v=20260731-compact-countdown-form"></script>
+    <script src="assets/app.js?v=20260731-stripe-checkout-v1"></script>
   </body>
 </html>
