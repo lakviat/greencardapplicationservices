@@ -65,7 +65,7 @@
     />
     <link
       rel="stylesheet"
-      href="assets/styles.css?v=20260731-service-comparison"
+      href="assets/styles.css?v=20260731-service-comparison-v2"
     />
   </head>
   <body>
@@ -219,62 +219,93 @@
           >
         </p>
 
-        <div class="service-comparison" id="comparison">
-          <div class="comparison-heading">
-            <div>
-              <p class="eyebrow">Compare your options</p>
-              <h3>Applying yourself vs. applying with our service</h3>
-            </div>
-            <p>
-              The lottery drawing stays random. The difference is how your
-              entry is prepared and checked before submission.
-            </p>
-          </div>
+      </section>
 
-          <div
-            class="comparison-table"
-            role="table"
-            aria-label="Application preparation comparison"
-          >
-            <div class="comparison-row comparison-header" role="row">
-              <div role="columnheader">Applying yourself</div>
-              <div role="columnheader">
-                <span class="comparison-check" aria-hidden="true"
-                  >&#10003;</span
-                >
-                With our service
-              </div>
-            </div>
-            <div class="comparison-row" role="row">
-              <div role="cell">Read and interpret official instructions</div>
-              <div role="cell">Clear, guided application process</div>
-            </div>
-            <div class="comparison-row" role="row">
-              <div role="cell">Check DV photo requirements yourself</div>
-              <div role="cell">Photo reviewed for common compliance issues</div>
-            </div>
-            <div class="comparison-row" role="row">
-              <div role="cell">Verify spouse and child details yourself</div>
-              <div role="cell">Family details reviewed for omissions</div>
-            </div>
-            <div class="comparison-row" role="row">
-              <div role="cell">Track duplicate, name, and date risks</div>
-              <div role="cell">Duplicate and data-consistency safeguards</div>
-            </div>
-            <div class="comparison-row" role="row">
-              <div role="cell">Submit without an independent final review</div>
-              <div role="cell">Review and approve your final summary</div>
-            </div>
+      <section
+        class="comparison-section"
+        id="comparison"
+        aria-labelledby="comparison-title"
+      >
+        <div class="comparison-intro">
+          <div>
+            <p class="eyebrow">Compare your options</p>
+            <h2 id="comparison-title">
+              Applying yourself vs. applying with our service
+            </h2>
           </div>
-
-          <p class="comparison-note">
-            <strong>Selection alone does not guarantee a visa.</strong> We
-            cannot influence the random drawing. Our service helps reduce
-            preventable filing errors using the information and documents you
-            provide; eligibility and visa issuance remain government
-            decisions.
+          <p>
+            The lottery drawing stays random. The difference is how your entry
+            is prepared, checked, and confirmed before submission.
           </p>
         </div>
+
+        <div class="comparison-cards">
+          <article class="comparison-card comparison-card-self">
+            <header>
+              <span class="comparison-card-mark" aria-hidden="true"></span>
+              <h3>Applying yourself</h3>
+            </header>
+            <ul>
+              <li>
+                <span aria-hidden="true"></span>
+                Read and interpret official instructions
+              </li>
+              <li>
+                <span aria-hidden="true"></span>
+                Check DV photo requirements yourself
+              </li>
+              <li>
+                <span aria-hidden="true"></span>
+                Verify spouse and child details yourself
+              </li>
+              <li>
+                <span aria-hidden="true"></span>
+                Track duplicate, name, and date risks
+              </li>
+              <li>
+                <span aria-hidden="true"></span>
+                Submit without an independent final review
+              </li>
+            </ul>
+          </article>
+
+          <article class="comparison-card comparison-card-guided">
+            <span class="comparison-badge">Guided support</span>
+            <header>
+              <span class="comparison-card-mark" aria-hidden="true"></span>
+              <h3>With our service</h3>
+            </header>
+            <ul>
+              <li>
+                <span aria-hidden="true"></span>
+                Clear, guided application process
+              </li>
+              <li>
+                <span aria-hidden="true"></span>
+                Photo reviewed for common compliance issues
+              </li>
+              <li>
+                <span aria-hidden="true"></span>
+                Family details reviewed for omissions
+              </li>
+              <li>
+                <span aria-hidden="true"></span>
+                Duplicate and data-consistency safeguards
+              </li>
+              <li>
+                <span aria-hidden="true"></span>
+                Review and approve your final summary
+              </li>
+            </ul>
+          </article>
+        </div>
+
+        <p class="comparison-disclaimer">
+          <strong>Selection alone does not guarantee a visa.</strong> We cannot
+          influence the random drawing. Our service helps reduce preventable
+          filing errors using the information and documents you provide;
+          eligibility and visa issuance remain government decisions.
+        </p>
       </section>
 
       <section id="process" class="section process-section">
