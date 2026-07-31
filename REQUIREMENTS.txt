@@ -1153,3 +1153,19 @@ Implemented decisions:
 4. Activate the countdown by setting the official ISO timestamp in the homepage data-countdown-date attribute.
 5. Replace the former line-art Liberty icon with an original red, white, and navy Liberty portrait mark.
 6. Use the same mark in the site header and browser favicon across every page.
+
+Countdown estimate update - July 30, 2026
+------------------------------------------
+1. Show a live planning countdown to Wednesday, October 7, 2026 at 12:00 PM Eastern Daylight Time.
+2. Label this timestamp as estimated, not official.
+3. State beside the countdown that the Department of State has not announced the official DV-2027 registration dates.
+4. Replace the estimate with the published timestamp as soon as the Department of State announces it.
+
+User-provided logo update - July 30, 2026
+-----------------------------------------
+Implemented decisions:
+1. Replace the generated Liberty portrait with the user-provided navy line-art Statue of Liberty and red torch-flame design.
+2. Use a responsive header lockup with the Liberty symbol and the full Green Card Application Services name.
+3. Keep the complete company name visible on desktop and mobile instead of shortening it on phones.
+4. Use the isolated Liberty symbol for the browser favicon and Apple touch icon so it remains legible at small sizes.
+5. Remove the baked checkerboard background and use transparent production PNG assets.

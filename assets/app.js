@@ -33,6 +33,7 @@ const countdownPanel = document.querySelector("[data-dv-countdown]");
 if (countdownPanel) {
   const targetValue = countdownPanel.dataset.countdownDate?.trim();
   const targetDate = targetValue ? new Date(targetValue) : null;
+  const isEstimated = countdownPanel.dataset.countdownStatus === "estimated";
   const heading = countdownPanel.querySelector("[data-countdown-heading]");
   const description = countdownPanel.querySelector(
     "[data-countdown-description]",
@@ -47,10 +48,15 @@ if (countdownPanel) {
 
   if (targetDate && !Number.isNaN(targetDate.getTime())) {
     countdownPanel.classList.add("is-active");
-    chip.textContent = "Official opening date confirmed";
-    heading.textContent = "Registration opens in:";
-    description.textContent =
-      "The countdown uses the official Department of State opening time.";
+    chip.textContent = isEstimated
+      ? "Estimated opening date"
+      : "Official opening date confirmed";
+    heading.textContent = isEstimated
+      ? "Estimated registration opening in:"
+      : "Registration opens in:";
+    description.textContent = isEstimated
+      ? "Planning estimate: Wednesday, October 7, 2026 at 12:00 PM Eastern. The Department of State has not announced the official DV-2027 registration dates yet."
+      : "The countdown uses the official Department of State opening time.";
     let countdownTimer;
 
     const updateCountdown = () => {
@@ -70,7 +76,12 @@ if (countdownPanel) {
 
       if (remaining === 0) {
         chip.textContent = "Registration period status";
-        heading.textContent = "The official opening time has arrived.";
+        heading.textContent = isEstimated
+          ? "The estimated opening time has arrived."
+          : "The official opening time has arrived.";
+        description.textContent = isEstimated
+          ? "Check the official Department of State website before submitting an entry."
+          : "The official DV registration period is scheduled to be open.";
         window.clearInterval(countdownTimer);
       }
     };

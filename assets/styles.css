@@ -70,10 +70,10 @@ a {
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   max-width: min(38vw, 430px);
   font-weight: 900;
-  white-space: nowrap;
+  line-height: 1.02;
 }
 
 .brand-mark {
@@ -81,16 +81,11 @@ a {
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  width: 44px;
-  height: 44px;
+  width: 39px;
+  height: 52px;
   overflow: hidden;
-  background:
-    url("liberty-mark.svg?v=20260730-brand-countdown") center / 35px 35px
-      no-repeat,
-    #fff;
-  border: 1px solid rgba(16, 33, 61, 0.1);
-  border-radius: 12px;
-  box-shadow: 0 8px 22px rgba(16, 33, 61, 0.08);
+  background: url("favicon.png?v=20260730-user-logo") center / auto 100%
+    no-repeat;
 }
 
 .brand-mark::before {
@@ -106,8 +101,13 @@ a {
 }
 
 .brand > span:last-child {
+  display: block;
+  width: 178px;
   overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--navy);
+  font-size: 0.86rem;
+  text-transform: uppercase;
+  white-space: normal;
 }
 
 .site-nav {
@@ -2173,23 +2173,18 @@ small {
   }
 
   .brand {
-    max-width: calc(100vw - 138px);
-    font-size: 0.98rem;
+    gap: 9px;
+    max-width: calc(100vw - 106px);
   }
 
   .brand > span:last-child {
-    font-size: 0;
-  }
-
-  .brand > span:last-child::after {
-    content: "Green Card Services";
-    font-size: 1rem;
+    width: min(162px, calc(100vw - 157px));
+    font-size: 0.76rem;
   }
 
   .brand-mark {
-    width: 42px;
-    height: 42px;
-    background-size: 31px 31px;
+    width: 34px;
+    height: 46px;
   }
 
   .site-header > .button {
