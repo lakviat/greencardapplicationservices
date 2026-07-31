@@ -70,7 +70,7 @@ Implemented frontend features:
    - Couple opens applicant 2.
    - Family opens applicants 2 and 3.
    - Premium lets the user choose 1, 2, or 3 applicants.
-6. Public application request form with contact information, eligible-country dropdown, optional multi-file document upload, consent checkbox, and one "Submit & Continue to Payment" action. The action saves the intake to Google Drive before redirecting to the selected Stripe checkout.
+6. Mobile-first public application request form with compact package choices, responsive applicant sections, contact information, eligible-country dropdown, a tap-friendly optional multi-file upload, consent checkbox, and one "Submit & Continue to Payment" action. The action saves the intake to Google Drive before redirecting to the selected Stripe checkout.
 7. Google Apps Script intake submission endpoint connected from assets/app.js.
 8. Google Apps Script notification signup endpoint connected from assets/app.js.
 9. Notification signup modal launched from the hero "Notify me when DV opens" button.
@@ -189,10 +189,11 @@ Manual QA checklist before paid traffic:
 9. Submit button state changes from idle to submitting to opening secure checkout.
 10. Save/checkout status messages span the full form width on desktop and wrap cleanly on mobile.
 11. Package selector reveals the correct additional applicant sections.
-12. FAQ/resource pages are reachable from homepage and Guide.
-13. Social link preview metadata is present on homepage and resource pages.
-14. Official government links work.
-15. Footer disclaimer is visible.
+12. Application form remains free of horizontal overflow at 360px, 430px, tablet, and desktop widths; package choices switch to a 2-by-2 grid on narrow phones.
+13. FAQ/resource pages are reachable from homepage and Guide.
+14. Social link preview metadata is present on homepage and resource pages.
+15. Official government links work.
+16. Footer disclaimer is visible.
 
 Recommended next implementation order
 -------------------------------------

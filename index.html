@@ -53,20 +53,20 @@
       async
       src="https://www.googletagmanager.com/gtag/js?id=G-9P726CYPGF"
     ></script>
-    <script src="assets/site-metrics.js?v=20260731-submit-pay-v1"></script>
+    <script src="assets/site-metrics.js?v=20260731-form-v1"></script>
 
     <title>Green Card Application Services</title>
-    <link rel="icon" href="assets/favicon.png?v=20260731-submit-pay-v1" type="image/png" />
-    <link rel="apple-touch-icon" href="assets/favicon.png?v=20260731-submit-pay-v1" />
+    <link rel="icon" href="assets/favicon.png?v=20260731-form-v1" type="image/png" />
+    <link rel="apple-touch-icon" href="assets/favicon.png?v=20260731-form-v1" />
     <link
       rel="preload"
-      href="assets/images/hero/hero-family-v3.jpg?v=20260731-submit-pay-v1"
+      href="assets/images/hero/hero-family-v3.jpg?v=20260731-form-v1"
       as="image"
       fetchpriority="high"
     />
     <link
       rel="stylesheet"
-      href="assets/styles.css?v=20260731-submit-pay-v1"
+      href="assets/styles.css?v=20260731-form-v1"
     />
   </head>
   <body>
@@ -678,72 +678,73 @@
           <div class="form-divider full">
             <span>Primary applicant</span>
           </div>
-          <label class="form-field">
-            <span class="field-heading">
-              <span>First name</span>
-              <small>As shown on your ID</small>
-            </span>
-            <input
-              name="firstName"
-              autocomplete="given-name"
-              maxlength="100"
-              required
-            />
-          </label>
-          <label class="form-field">
-            <span class="field-heading">
-              <span>Middle name</span>
-              <small>Only if shown on your ID</small>
-            </span>
-            <input
-              name="middleName"
-              autocomplete="additional-name"
-              maxlength="100"
-            />
-          </label>
-          <label class="form-field">
-            <span class="field-heading">
-              <span>Last name</span>
-              <small>As shown on your ID</small>
-            </span>
-            <input
-              name="lastName"
-              autocomplete="family-name"
-              maxlength="100"
-              required
-            />
-          </label>
-          <label class="form-field">
-            <span class="field-heading">
-              <span>Email</span>
-            </span>
-            <input
-              name="email"
-              type="email"
-              autocomplete="email"
-              maxlength="254"
-              required
-            />
-          </label>
-          <label class="form-field">
-            <span class="field-heading">
-              <span>Phone / WhatsApp</span>
-            </span>
-            <input
-              name="phone"
-              type="tel"
-              autocomplete="tel"
-              inputmode="tel"
-              maxlength="32"
-              required
-            />
-          </label>
-          <label class="form-field">
-            <span class="field-heading">
-              <span>Country of birth</span>
-              <small>Eligible countries only</small>
-            </span>
-            <select name="country" required>
+          <section class="applicant-fields primary-applicant full">
+            <label class="form-field">
+              <span class="field-heading">
+                <span>First name</span>
+                <small>As shown on your ID</small>
+              </span>
+              <input
+                name="firstName"
+                autocomplete="given-name"
+                maxlength="100"
+                required
+              />
+            </label>
+            <label class="form-field">
+              <span class="field-heading">
+                <span>Middle name</span>
+                <small>Only if shown on your ID</small>
+              </span>
+              <input
+                name="middleName"
+                autocomplete="additional-name"
+                maxlength="100"
+              />
+            </label>
+            <label class="form-field">
+              <span class="field-heading">
+                <span>Last name</span>
+                <small>As shown on your ID</small>
+              </span>
+              <input
+                name="lastName"
+                autocomplete="family-name"
+                maxlength="100"
+                required
+              />
+            </label>
+            <label class="form-field">
+              <span class="field-heading">
+                <span>Email</span>
+              </span>
+              <input
+                name="email"
+                type="email"
+                autocomplete="email"
+                maxlength="254"
+                required
+              />
+            </label>
+            <label class="form-field">
+              <span class="field-heading">
+                <span>Phone / WhatsApp</span>
+              </span>
+              <input
+                name="phone"
+                type="tel"
+                autocomplete="tel"
+                inputmode="tel"
+                maxlength="32"
+                required
+              />
+            </label>
+            <label class="form-field">
+              <span class="field-heading">
+                <span>Country of birth</span>
+                <small>Eligible countries only</small>
+              </span>
+              <select name="country" required>
               <option value="">Choose your country</option>
               <option>Afghanistan</option>
               <option>Albania</option>
@@ -920,10 +921,11 @@
               <option>Yemen</option>
               <option>Zambia</option>
               <option>Zimbabwe</option>
-            </select>
-          </label>
+              </select>
+            </label>
+          </section>
           <section
-            class="additional-applicant full"
+            class="applicant-fields additional-applicant full"
             id="applicantTwo"
             data-applicant-section="2"
             hidden
@@ -991,7 +993,7 @@
             </label>
           </section>
           <section
-            class="additional-applicant full"
+            class="applicant-fields additional-applicant full"
             id="applicantThree"
             data-applicant-section="3"
             hidden
@@ -1058,17 +1060,32 @@
               />
             </label>
           </section>
-          <label class="full file-upload">
+          <label class="full file-upload" for="identityDocuments">
             <span class="field-heading">
               <span>Passport, ID, or supporting document (optional)</span>
               <small>You can provide files now or after we contact you.</small>
             </span>
             <input
+              class="file-upload-input"
+              id="identityDocuments"
               name="identityDocument"
               type="file"
+              aria-label="Upload passport, ID, or supporting documents"
               accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,application/pdf,image/jpeg,image/png,image/heic,image/heif"
               multiple
             />
+            <span class="file-upload-dropzone">
+              <span class="file-upload-icon" aria-hidden="true">&#8593;</span>
+              <strong>Tap to upload files</strong>
+              <small>PDF, JPG, PNG, HEIC, or HEIF</small>
+              <span
+                class="file-upload-selection"
+                id="fileUploadSelection"
+                aria-live="polite"
+              >
+                No files selected
+              </span>
+            </span>
           </label>
           <label class="consent full">
             <input type="checkbox" required />
@@ -1274,6 +1291,6 @@
       </div>
     </footer>
 
-    <script src="assets/app.js?v=20260731-submit-pay-v1"></script>
+    <script src="assets/app.js?v=20260731-form-v1"></script>
   </body>
 </html>

@@ -5,6 +5,8 @@ const paymentStatus = document.querySelector("#paymentStatus");
 const packageOptions = document.querySelectorAll('input[name="package"]');
 const premiumCountField = document.querySelector("#premiumCountField");
 const premiumApplicantCount = document.querySelector("#premiumApplicantCount");
+const identityDocumentInput = document.querySelector("#identityDocuments");
+const fileUploadSelection = document.querySelector("#fileUploadSelection");
 const additionalApplicantSections = document.querySelectorAll(
   "[data-applicant-section]",
 );
@@ -493,6 +495,20 @@ if (form && message) {
     submitButton.textContent = "Submit & Continue to Payment";
   };
 
+  const updateFileUploadSelection = () => {
+    if (!identityDocumentInput || !fileUploadSelection) return;
+
+    const selectedFiles = Array.from(identityDocumentInput.files || []);
+
+    if (selectedFiles.length === 0) {
+      fileUploadSelection.textContent = "No files selected";
+    } else if (selectedFiles.length === 1) {
+      fileUploadSelection.textContent = selectedFiles[0].name;
+    } else {
+      fileUploadSelection.textContent = `${selectedFiles.length} files selected`;
+    }
+  };
+
   const buildStripeCheckoutUrl = () => {
     const stripePackage = getSelectedStripePackage();
 
@@ -530,8 +546,10 @@ if (form && message) {
     updateApplicantSections();
     updateSubmitLabel();
   });
+  identityDocumentInput?.addEventListener("change", updateFileUploadSelection);
   updateApplicantSections();
   updateSubmitLabel();
+  updateFileUploadSelection();
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
