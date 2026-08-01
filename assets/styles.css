@@ -975,19 +975,6 @@ h3 {
   font-weight: 850;
 }
 
-.pricing-grid em {
-  width: fit-content;
-  margin-top: 8px;
-  padding: 6px 10px;
-  color: #17472a;
-  background: #e9f7ef;
-  border: 1px solid #c7ead4;
-  border-radius: 999px;
-  font-size: 0.84rem;
-  font-style: normal;
-  font-weight: 900;
-}
-
 .featured-price {
   border-top: 6px solid var(--red);
   box-shadow: var(--shadow);
