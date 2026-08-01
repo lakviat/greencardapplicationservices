@@ -54,22 +54,22 @@ const stripePackages = {
   single: {
     label: "Single",
     amount: 39,
-    paymentLink: "https://buy.stripe.com/test_6oUdRbd9OaE6disfCZ0ZW01",
+    paymentLink: "https://buy.stripe.com/14A3cx3BAgBp4pF4uo0Ny01",
   },
   couple: {
     label: "Couple",
     amount: 69,
-    paymentLink: "https://buy.stripe.com/test_bJe9AVd9O7rUemwgH30ZW02",
+    paymentLink: "https://buy.stripe.com/eVq9AV2xw70PcWbgd60Ny02",
   },
   family: {
     label: "Family",
     amount: 99,
-    paymentLink: "https://buy.stripe.com/test_6oUdRbedS27A3HSeyV0ZW03",
+    paymentLink: "https://buy.stripe.com/cNi7sN4FE5WL7BR8KE0Ny03",
   },
   premium: {
     label: "Premium",
     amount: 149,
-    paymentLink: "https://buy.stripe.com/test_dRm4gBb1GcMeguEcqN0ZW04",
+    paymentLink: "https://buy.stripe.com/cNieVf1tsbh509p2mg0Ny04",
   },
 };
 
