@@ -1,4 +1,5 @@
 const form = document.querySelector("#intakeForm");
+const applicationGuide = document.querySelector(".application-guide");
 const message = document.querySelector("#formMessage");
 const submitButton = document.querySelector("#applicationSubmit");
 const paymentStatus = document.querySelector("#paymentStatus");
@@ -71,6 +72,16 @@ const stripePackages = {
     paymentLink: "https://buy.stripe.com/test_dRm4gBb1GcMeguEcqN0ZW04",
   },
 };
+
+if (applicationGuide) {
+  const applicationGuideMobile = window.matchMedia("(max-width: 1000px)");
+  const syncApplicationGuide = ({ matches }) => {
+    applicationGuide.open = !matches;
+  };
+
+  syncApplicationGuide(applicationGuideMobile);
+  applicationGuideMobile.addEventListener("change", syncApplicationGuide);
+}
 
 const cleanText = (value, maxLength = 200) =>
   String(value || "")
