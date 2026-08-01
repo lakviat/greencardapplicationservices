@@ -3159,7 +3159,7 @@ body.is-embedded::before {
   opacity: 0;
   filter: saturate(0.95);
   transform: none;
-  animation: heroPhotoFade 15s infinite;
+  animation: heroPhotoFade 20s infinite;
 }
 
 .hero-photo-family {
@@ -3174,12 +3174,20 @@ body.is-embedded::before {
   background-image: url("images/hero/hero-community-v3.jpg?v=20260731-security-v1");
 }
 
+.hero-photo-green-card-family {
+  background-image: url("images/hero/hero-green-card-family-v1.jpg?v=20260731-green-card-hero-v1");
+}
+
 .hero-photo-slide.is-second {
   animation-delay: 5s;
 }
 
 .hero-photo-slide.is-third {
   animation-delay: 10s;
+}
+
+.hero-photo-slide.is-fourth {
+  animation-delay: 15s;
 }
 
 .hero-carousel-dots {
@@ -3201,7 +3209,7 @@ body.is-embedded::before {
   height: 8px;
   background: rgba(16, 33, 61, 0.22);
   border-radius: 999px;
-  animation: heroDotFade 15s infinite;
+  animation: heroDotFade 20s infinite;
 }
 
 .hero-carousel-dots span:nth-child(2) {
@@ -3212,14 +3220,18 @@ body.is-embedded::before {
   animation-delay: 10s;
 }
 
+.hero-carousel-dots span:nth-child(4) {
+  animation-delay: 15s;
+}
+
 @keyframes heroPhotoFade {
   0%,
-  28% {
+  20% {
     opacity: 1;
   }
 
-  33%,
-  94% {
+  25%,
+  95% {
     opacity: 0;
   }
 
@@ -3230,13 +3242,13 @@ body.is-embedded::before {
 
 @keyframes heroDotFade {
   0%,
-  28% {
+  20% {
     width: 26px;
     background: var(--blue);
   }
 
-  33%,
-  94% {
+  25%,
+  95% {
     width: 8px;
     background: rgba(16, 33, 61, 0.22);
   }
@@ -3618,7 +3630,8 @@ body.is-embedded::before {
 
   .hero-photo-slide.is-first,
   .hero-photo-slide.is-second,
-  .hero-photo-slide.is-third {
+  .hero-photo-slide.is-third,
+  .hero-photo-slide.is-fourth {
     background-position: center top;
   }
 
@@ -3668,7 +3681,8 @@ body.is-embedded::before {
 
   .hero-photo-slide.is-first,
   .hero-photo-slide.is-second,
-  .hero-photo-slide.is-third {
+  .hero-photo-slide.is-third,
+  .hero-photo-slide.is-fourth {
     background-position: center top;
     background-size: 100% auto;
     transform: none;
@@ -3768,6 +3782,10 @@ body.is-embedded::before {
   }
 
   .hero-photo-slide.is-third {
+    opacity: 0;
+  }
+
+  .hero-photo-slide.is-fourth {
     opacity: 0;
   }
 }
