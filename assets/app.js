@@ -50,6 +50,7 @@ const allowedUploadTypes = new Set([
 ]);
 const faqGroups = document.querySelectorAll("[data-faq-accordion]");
 const countdownPanel = document.querySelector("[data-dv-countdown]");
+const countryCombobox = document.querySelector("[data-country-combobox]");
 const stripePackages = {
   single: {
     label: "Single",
@@ -89,6 +90,207 @@ const cleanText = (value, maxLength = 200) =>
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, maxLength);
+
+const initializeCountryCombobox = () => {
+  if (!countryCombobox) return;
+
+  const sourceSelect = countryCombobox.querySelector('select[name="country"]');
+  const searchControl = countryCombobox.querySelector(
+    ".country-search-control",
+  );
+  const searchInput = countryCombobox.querySelector(".country-search-input");
+  const toggleButton = countryCombobox.querySelector(".country-search-toggle");
+  const optionsList = countryCombobox.querySelector(".country-search-options");
+  const searchStatus = countryCombobox.querySelector(
+    "[data-country-search-status]",
+  );
+
+  if (
+    !sourceSelect ||
+    !searchControl ||
+    !searchInput ||
+    !toggleButton ||
+    !optionsList
+  ) {
+    return;
+  }
+
+  const countries = Array.from(sourceSelect.options)
+    .filter((option) => option.value)
+    .map((option) => ({ label: option.textContent.trim(), value: option.value }));
+  const normalizeCountry = (value) =>
+    String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLocaleLowerCase()
+      .trim();
+  let filteredCountries = countries;
+  let activeIndex = -1;
+
+  const closeOptions = () => {
+    optionsList.hidden = true;
+    searchInput.setAttribute("aria-expanded", "false");
+    searchInput.removeAttribute("aria-activedescendant");
+    activeIndex = -1;
+  };
+
+  const setActiveOption = (nextIndex) => {
+    const optionButtons = Array.from(
+      optionsList.querySelectorAll("[data-country-option]"),
+    );
+    if (!optionButtons.length) return;
+
+    activeIndex = (nextIndex + optionButtons.length) % optionButtons.length;
+    optionButtons.forEach((button, index) => {
+      const isActive = index === activeIndex;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-selected", String(isActive));
+    });
+
+    const activeOption = optionButtons[activeIndex];
+    searchInput.setAttribute("aria-activedescendant", activeOption.id);
+    activeOption.scrollIntoView({ block: "nearest" });
+  };
+
+  const selectCountry = (country) => {
+    sourceSelect.value = country.value;
+    searchInput.value = country.label;
+    searchInput.setCustomValidity("");
+    sourceSelect.dispatchEvent(new Event("change", { bubbles: true }));
+    closeOptions();
+  };
+
+  const renderOptions = (query = "") => {
+    const normalizedQuery = normalizeCountry(query);
+    filteredCountries = normalizedQuery
+      ? countries.filter((country) =>
+          normalizeCountry(country.label).startsWith(normalizedQuery),
+        )
+      : countries;
+    activeIndex = -1;
+    optionsList.replaceChildren();
+
+    if (!filteredCountries.length) {
+      const emptyMessage = document.createElement("p");
+      emptyMessage.className = "country-search-empty";
+      emptyMessage.textContent = "No eligible country starts with those letters.";
+      optionsList.append(emptyMessage);
+    } else {
+      const fragment = document.createDocumentFragment();
+      filteredCountries.forEach((country, index) => {
+        const optionButton = document.createElement("button");
+        optionButton.id = `country-search-option-${index}`;
+        optionButton.className = "country-search-option";
+        optionButton.type = "button";
+        optionButton.tabIndex = -1;
+        optionButton.dataset.countryOption = country.value;
+        optionButton.setAttribute("role", "option");
+        optionButton.setAttribute("aria-selected", "false");
+        optionButton.textContent = country.label;
+        optionButton.addEventListener("mousedown", (event) => {
+          event.preventDefault();
+        });
+        optionButton.addEventListener("click", () => selectCountry(country));
+        fragment.append(optionButton);
+      });
+      optionsList.append(fragment);
+    }
+
+    optionsList.hidden = false;
+    searchInput.setAttribute("aria-expanded", "true");
+    if (searchStatus) {
+      searchStatus.textContent = filteredCountries.length
+        ? `${filteredCountries.length} eligible ${
+            filteredCountries.length === 1 ? "country" : "countries"
+          } found.`
+        : "No eligible countries found.";
+    }
+  };
+
+  const syncExactMatch = () => {
+    const normalizedValue = normalizeCountry(searchInput.value);
+    const exactCountry = countries.find(
+      (country) => normalizeCountry(country.label) === normalizedValue,
+    );
+
+    if (exactCountry) {
+      sourceSelect.value = exactCountry.value;
+      searchInput.value = exactCountry.label;
+      searchInput.setCustomValidity("");
+      return true;
+    }
+
+    sourceSelect.value = "";
+    searchInput.setCustomValidity(
+      searchInput.value.trim()
+        ? "Choose a country from the eligible list."
+        : "",
+    );
+    return false;
+  };
+
+  sourceSelect.required = false;
+  sourceSelect.tabIndex = -1;
+  sourceSelect.setAttribute("aria-hidden", "true");
+  sourceSelect.classList.add("country-source-select");
+  searchControl.hidden = false;
+  searchInput.required = true;
+
+  searchInput.addEventListener("focus", () => renderOptions(searchInput.value));
+  searchInput.addEventListener("input", () => {
+    sourceSelect.value = "";
+    searchInput.setCustomValidity("");
+    renderOptions(searchInput.value);
+    if (filteredCountries.length) setActiveOption(0);
+    syncExactMatch();
+  });
+  searchInput.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      if (optionsList.hidden) renderOptions(searchInput.value);
+      setActiveOption(activeIndex + 1);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      if (optionsList.hidden) renderOptions(searchInput.value);
+      setActiveOption(activeIndex < 0 ? filteredCountries.length - 1 : activeIndex - 1);
+    } else if (event.key === "Enter" && !optionsList.hidden) {
+      event.preventDefault();
+      const selectedCountry = filteredCountries[activeIndex];
+      if (selectedCountry) selectCountry(selectedCountry);
+    } else if (event.key === "Escape") {
+      if (sourceSelect.value) {
+        searchInput.value = sourceSelect.selectedOptions[0]?.textContent || "";
+      }
+      closeOptions();
+    }
+  });
+  searchInput.addEventListener("blur", () => {
+    window.setTimeout(() => {
+      syncExactMatch();
+      closeOptions();
+    }, 100);
+  });
+  toggleButton.addEventListener("click", () => {
+    searchInput.focus();
+    if (optionsList.hidden) {
+      renderOptions(searchInput.value);
+    } else {
+      closeOptions();
+    }
+  });
+  document.addEventListener("pointerdown", (event) => {
+    if (!countryCombobox.contains(event.target)) closeOptions();
+  });
+  sourceSelect.form?.addEventListener("reset", () => {
+    window.setTimeout(() => {
+      searchInput.value = "";
+      searchInput.setCustomValidity("");
+      closeOptions();
+    });
+  });
+};
+
+initializeCountryCombobox();
 
 const isAllowedUpload = (file) => {
   const extension = file.name.split(".").pop()?.toLowerCase() || "";

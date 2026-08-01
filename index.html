@@ -53,20 +53,20 @@
       async
       src="https://www.googletagmanager.com/gtag/js?id=G-9P726CYPGF"
     ></script>
-    <script src="assets/site-metrics.js?v=20260731-green-card-hero-v1"></script>
+    <script src="assets/site-metrics.js?v=20260731-country-search-v1"></script>
 
     <title>Green Card Application Services</title>
-    <link rel="icon" href="assets/favicon.png?v=20260731-green-card-hero-v1" type="image/png" />
-    <link rel="apple-touch-icon" href="assets/favicon.png?v=20260731-green-card-hero-v1" />
+    <link rel="icon" href="assets/favicon.png?v=20260731-country-search-v1" type="image/png" />
+    <link rel="apple-touch-icon" href="assets/favicon.png?v=20260731-country-search-v1" />
     <link
       rel="preload"
-      href="assets/images/hero/hero-family-v3.jpg?v=20260731-green-card-hero-v1"
+      href="assets/images/hero/hero-family-v3.jpg?v=20260731-country-search-v1"
       as="image"
       fetchpriority="high"
     />
     <link
       rel="stylesheet"
-      href="assets/styles.css?v=20260731-green-card-hero-v1"
+      href="assets/styles.css?v=20260731-country-search-v1"
     />
   </head>
   <body>
@@ -789,7 +789,42 @@
               />
               <span class="compact-field-label">Phone / WhatsApp</span>
             </label>
-            <label class="compact-select">
+            <div class="compact-select country-field" data-country-combobox>
+              <div class="country-search-control" hidden>
+                <input
+                  id="countrySearch"
+                  class="country-search-input"
+                  type="text"
+                  placeholder="Country of birth (Eligible only)"
+                  autocomplete="off"
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded="false"
+                  aria-controls="countrySearchOptions"
+                  aria-label="Country of birth, eligible countries only"
+                />
+                <button
+                  class="country-search-toggle"
+                  type="button"
+                  tabindex="-1"
+                  aria-label="Show eligible countries"
+                  aria-controls="countrySearchOptions"
+                >
+                  <span aria-hidden="true"></span>
+                </button>
+                <div
+                  class="country-search-options"
+                  id="countrySearchOptions"
+                  role="listbox"
+                  aria-label="Eligible countries"
+                  hidden
+                ></div>
+                <span
+                  class="visually-hidden"
+                  data-country-search-status
+                  aria-live="polite"
+                ></span>
+              </div>
               <select
                 name="country"
                 aria-label="Country of birth, eligible countries only"
@@ -972,7 +1007,7 @@
               <option>Zambia</option>
               <option>Zimbabwe</option>
               </select>
-            </label>
+            </div>
           </section>
           <section
             class="applicant-fields additional-applicant full"
@@ -1357,6 +1392,6 @@
       </div>
     </footer>
 
-    <script src="assets/app.js?v=20260731-green-card-hero-v1"></script>
+    <script src="assets/app.js?v=20260731-country-search-v1"></script>
   </body>
 </html>

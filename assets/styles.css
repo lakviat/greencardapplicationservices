@@ -1450,6 +1450,116 @@ label {
   color: var(--ink);
 }
 
+.country-field {
+  position: relative;
+  z-index: 4;
+}
+
+.country-search-control {
+  position: relative;
+}
+
+.country-search-input {
+  min-height: 58px;
+  padding-right: 48px;
+  color: var(--ink);
+  font-size: 0.94rem;
+  font-weight: 800;
+}
+
+.country-search-input::placeholder {
+  color: #566174;
+  opacity: 1;
+}
+
+.country-search-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: grid;
+  width: 48px;
+  height: 58px;
+  min-height: 0;
+  padding: 0;
+  place-items: center;
+  color: var(--navy);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.country-search-toggle span {
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 150ms ease;
+}
+
+.country-search-input[aria-expanded="true"] + .country-search-toggle span {
+  transform: translateY(2px) rotate(225deg);
+}
+
+.country-search-options {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  left: 0;
+  z-index: 30;
+  max-height: 260px;
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 16px 36px rgba(16, 33, 61, 0.18);
+}
+
+.country-search-option {
+  display: block;
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 750;
+  text-align: left;
+  cursor: pointer;
+}
+
+.country-search-option:hover,
+.country-search-option.is-active {
+  color: var(--blue);
+  background: #eef5ff;
+}
+
+.country-search-empty {
+  margin: 0;
+  padding: 12px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.country-source-select {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 input,
 select,
 textarea {
