@@ -3584,6 +3584,7 @@ body.is-embedded::before {
   }
 
   .hero-dashboard::after {
+    inset: min(66vw, 540px) 0 0;
     clip-path: none;
     background:
       linear-gradient(
@@ -3603,10 +3604,15 @@ body.is-embedded::before {
     clip-path: polygon(0 0, 100% 0, 100% 94%, 0 100%);
   }
 
+  .hero-photo-carousel::after {
+    background: none;
+  }
+
   .hero-photo-slide {
     inset: 0;
     background-position: center top;
     background-size: 100% auto;
+    filter: none;
     transform: none;
   }
 
@@ -3641,6 +3647,7 @@ body.is-embedded::before {
   }
 
   .hero-dashboard::after {
+    inset: min(82vw, 380px) 0 0;
     clip-path: none;
     background:
       linear-gradient(

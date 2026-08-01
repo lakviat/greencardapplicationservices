@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cache_version="20260731-live-payments-v1"
+cache_version="20260731-mobile-photo-v1"
 
 node --check assets/app.js
 node --check assets/requirements.js
