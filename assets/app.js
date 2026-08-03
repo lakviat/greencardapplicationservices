@@ -604,6 +604,8 @@ if (form && message) {
 
   const buildApplicationPayload = async () => {
     const formData = new FormData(form);
+    const submissionId = getSubmissionId();
+    const policyAgreedAt = new Date().toISOString();
     const selectedPackage = getSelectedPackage();
     const selectedPackageLabel =
       selectedPackage
@@ -656,14 +658,20 @@ if (form && message) {
 
     return {
       secret: appsScriptCompatibilityToken,
-      submissionId: getSubmissionId(),
-      submittedAt: new Date().toISOString(),
+      submissionId,
+      submittedAt: policyAgreedAt,
       formStartedAt: form.dataset.startedAt || "",
       website: window.location.hostname,
       companyWebsite: cleanText(honeypotField?.value, 100),
-      consent: true,
-      policyConsent: true,
+      consent: formData.get("serviceDisclaimer") === "on",
+      serviceDisclaimer: formData.get("serviceDisclaimer") === "on",
+      contactAuthorization: formData.get("contactAuthorization") === "on",
+      marketingConsent: formData.get("marketingConsent") === "on",
+      policyConsent: formData.get("policyConsent") === "on",
+      policyAgreedAt,
       policyVersion: "2026-08-03",
+      paymentReference: submissionId,
+      stripeClientReferenceId: submissionId,
       package: selectedPackage?.value || "single",
       packageLabel: selectedPackageLabel,
       applicantCount,

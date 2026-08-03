@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cache_version="20260803-footer-gap-v1"
+cache_version="20260803-policy-final-v1"
 
 html_files=()
 while IFS= read -r html_file; do
@@ -46,6 +46,27 @@ fi
 
 if git grep -nE '(sk|rk)_(live|test)_[A-Za-z0-9]{16,}|BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY' -- ':!scripts/check-static-site.sh'; then
   echo "Potential credential detected." >&2
+  exit 1
+fi
+
+if git grep -nE '\[INSERT|pending confirmation|pending final business approval' -- '*.html' '*.js' '*.css'; then
+  echo "Unfinished public policy content detected." >&2
+  exit 1
+fi
+
+if ! grep -q 'name="policyConsent" type="checkbox" required' index.html; then
+  echo "The required policy agreement checkbox is missing." >&2
+  exit 1
+fi
+
+if ! grep -q 'name="contactAuthorization" type="checkbox" required' index.html; then
+  echo "The required operational-contact authorization is missing." >&2
+  exit 1
+fi
+
+if ! grep -q 'name="marketingConsent" type="checkbox"' index.html ||
+  grep -q 'name="marketingConsent" type="checkbox" required' index.html; then
+  echo "Marketing consent must be present, optional, and unchecked." >&2
   exit 1
 fi
 

@@ -105,6 +105,27 @@ function validateAndNormalizeRequest(body) {
   if (body.consent !== true) {
     throw new Error("Consent is required.");
   }
+  if (body.serviceDisclaimer !== true) {
+    throw new Error("Service disclaimer acknowledgement is required.");
+  }
+  if (body.contactAuthorization !== true) {
+    throw new Error("Operational contact authorization is required.");
+  }
+  if (body.policyConsent !== true) {
+    throw new Error("Policy agreement is required.");
+  }
+
+  const policyAgreedAt = validRecentDate(body.policyAgreedAt, "Policy agreement time");
+  const policyVersion = cleanText(body.policyVersion, 40);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(policyVersion)) {
+    throw new Error("Policy version is invalid.");
+  }
+
+  const paymentReference = cleanText(body.paymentReference, 100);
+  const stripeClientReferenceId = cleanText(body.stripeClientReferenceId, 100);
+  if (paymentReference !== submissionId || stripeClientReferenceId !== submissionId) {
+    throw new Error("Payment reference is invalid.");
+  }
 
   const packageName = cleanText(body.package, 20).toLowerCase();
   if (!Object.prototype.hasOwnProperty.call(PACKAGE_LIMITS, packageName)) {
@@ -137,6 +158,14 @@ function validateAndNormalizeRequest(body) {
     phone: primary.phone,
     countryOfBirth: primary.countryOfBirth,
     applicants: applicants,
+    serviceDisclaimer: true,
+    contactAuthorization: true,
+    marketingConsent: body.marketingConsent === true,
+    policyConsent: true,
+    policyAgreedAt: policyAgreedAt,
+    policyVersion: policyVersion,
+    paymentReference: paymentReference,
+    stripeClientReferenceId: stripeClientReferenceId,
     paymentStatus: `Unverified browser status: ${cleanText(body.paymentStatus, 40) || "pending"}`,
     files: files,
   };
@@ -235,6 +264,15 @@ function createCustomerRecord(folder, payload) {
     package: payload.package,
     packageLabel: payload.packageLabel,
     applicantCount: payload.applicantCount,
+    customerEmail: payload.email,
+    serviceDisclaimer: payload.serviceDisclaimer,
+    contactAuthorization: payload.contactAuthorization,
+    marketingConsent: payload.marketingConsent,
+    policyConsent: payload.policyConsent,
+    policyAgreedAt: payload.policyAgreedAt,
+    policyVersion: payload.policyVersion,
+    paymentReference: payload.paymentReference,
+    stripeClientReferenceId: payload.stripeClientReferenceId,
     paymentStatus: payload.paymentStatus,
     applicants: payload.applicants,
   };

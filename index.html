@@ -54,7 +54,7 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://www.googleadservices.com https://www.google.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.google.com https://pagead2.googlesyndication.com https://www.googleadservices.com https://google.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://www.google-analytics.com https://analytics.google.com https://*.google-analytics.com https://pagead2.googlesyndication.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://ad.doubleclick.net https://www.google.com https://google.com; font-src 'self'; frame-src https://www.googletagmanager.com; media-src 'self' blob:; object-src 'none'; worker-src 'none'; manifest-src 'self'; base-uri 'self'; form-action 'self' https://buy.stripe.com; upgrade-insecure-requests"
     />
-    <script src="assets/site-metrics.js?v=20260803-footer-gap-v1"></script>
+    <script src="assets/site-metrics.js?v=20260803-policy-final-v1"></script>
     <!-- Google tag (gtag.js) -->
     <script
       async
@@ -90,22 +90,22 @@
     <title>DV Lottery Application Services | Green Card Support</title>
     <link
       rel="icon"
-      href="assets/favicon.png?v=20260803-footer-gap-v1"
+      href="assets/favicon.png?v=20260803-policy-final-v1"
       type="image/png"
     />
     <link
       rel="apple-touch-icon"
-      href="assets/favicon.png?v=20260803-footer-gap-v1"
+      href="assets/favicon.png?v=20260803-policy-final-v1"
     />
     <link
       rel="preload"
-      href="assets/images/hero/hero-family-v3.jpg?v=20260803-footer-gap-v1"
+      href="assets/images/hero/hero-family-v3.jpg?v=20260803-policy-final-v1"
       as="image"
       fetchpriority="high"
     />
     <link
       rel="stylesheet"
-      href="assets/styles.css?v=20260803-footer-gap-v1"
+      href="assets/styles.css?v=20260803-policy-final-v1"
     />
   </head>
   <body>
@@ -1238,6 +1238,23 @@
               a government service.
             </span>
           </label>
+          <label class="consent full">
+            <input name="contactAuthorization" type="checkbox" required />
+            <span>
+              I authorize Green Card Application Services to contact me by
+              email, phone, SMS, or WhatsApp regarding my application, missing
+              information, review, approval, submission, confirmation records,
+              and important service updates.
+            </span>
+          </label>
+          <label class="consent full">
+            <input name="marketingConsent" type="checkbox" />
+            <span>
+              Optional: I would like to receive DV registration news,
+              reminders, and service offers by email or WhatsApp. I can
+              unsubscribe at any time.
+            </span>
+          </label>
           <div class="checkout-note full">
             <input
               id="paymentStatus"
@@ -1256,9 +1273,12 @@
             <input name="policyConsent" type="checkbox" required />
             <span>
               I agree to the
-              <a href="/policies#terms">Terms of Service</a> and acknowledge the
-              <a href="/policies#privacy">Privacy Policy</a> and
-              <a href="/policies#refunds">Refund Policy</a>.
+              <a href="/policies/#terms">Terms of Service</a> and acknowledge
+              the <a href="/policies/#privacy">Privacy Policy</a> and
+              <a href="/policies/#refunds">Refund Policy</a>. I understand that
+              purchases are generally final and non-cancellable except as
+              stated in the Refund Policy or required by law. I request that
+              preparation and support services begin after payment.
             </span>
           </label>
           <button
@@ -1425,6 +1445,6 @@
       </div>
     </footer>
 
-    <script src="assets/app.js?v=20260803-footer-gap-v1"></script>
+    <script src="assets/app.js?v=20260803-policy-final-v1"></script>
   </body>
 </html>
