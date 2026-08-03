@@ -662,6 +662,8 @@ if (form && message) {
       website: window.location.hostname,
       companyWebsite: cleanText(honeypotField?.value, 100),
       consent: true,
+      policyConsent: true,
+      policyVersion: "2026-08-03",
       package: selectedPackage?.value || "single",
       packageLabel: selectedPackageLabel,
       applicantCount,
@@ -938,3 +940,198 @@ if (notifyForm && notifyMessage) {
     }
   });
 }
+
+const initializeCookiePreferences = () => {
+  const consentApi = window.gcasConsent;
+  if (!consentApi) return;
+
+  const preferenceButtons = document.querySelectorAll(
+    "[data-cookie-preferences]",
+  );
+  const root = document.createElement("div");
+  root.className = "cookie-consent";
+
+  const banner = document.createElement("section");
+  banner.className = "cookie-banner";
+  banner.setAttribute("role", "dialog");
+  banner.setAttribute("aria-label", "Cookie preferences");
+
+  const bannerCopy = document.createElement("div");
+  const bannerTitle = document.createElement("strong");
+  bannerTitle.textContent = "Your privacy choices";
+  const bannerText = document.createElement("p");
+  bannerText.append(
+    "We use essential storage and, with your permission, analytics and advertising technologies. ",
+  );
+  const cookiePolicyLink = document.createElement("a");
+  cookiePolicyLink.href = "/policies#cookies";
+  cookiePolicyLink.textContent = "Cookie Policy";
+  bannerText.append(cookiePolicyLink, ".");
+  bannerCopy.append(bannerTitle, bannerText);
+
+  const bannerActions = document.createElement("div");
+  bannerActions.className = "cookie-actions";
+
+  const makeButton = (label, className) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = className;
+    button.textContent = label;
+    return button;
+  };
+
+  const rejectButton = makeButton(
+    "Reject nonessential",
+    "button button-secondary",
+  );
+  const customizeButton = makeButton(
+    "Customize",
+    "button button-secondary",
+  );
+  const acceptButton = makeButton("Accept all", "button");
+  bannerActions.append(rejectButton, customizeButton, acceptButton);
+  banner.append(bannerCopy, bannerActions);
+
+  const backdrop = document.createElement("div");
+  backdrop.className = "cookie-dialog-backdrop";
+  backdrop.hidden = true;
+
+  const dialog = document.createElement("section");
+  dialog.className = "cookie-dialog";
+  dialog.setAttribute("role", "dialog");
+  dialog.setAttribute("aria-modal", "true");
+  dialog.setAttribute("aria-labelledby", "cookieDialogTitle");
+
+  const dialogHeader = document.createElement("div");
+  dialogHeader.className = "cookie-dialog-header";
+  const dialogHeading = document.createElement("div");
+  const dialogTitle = document.createElement("h2");
+  dialogTitle.id = "cookieDialogTitle";
+  dialogTitle.textContent = "Cookie preferences";
+  const dialogIntro = document.createElement("p");
+  dialogIntro.textContent =
+    "Choose which optional technologies may be used. Essential security and consent storage remain active.";
+  dialogHeading.append(dialogTitle, dialogIntro);
+  const closeButton = makeButton("Close", "cookie-dialog-close");
+  closeButton.setAttribute("aria-label", "Close cookie preferences");
+  dialogHeader.append(dialogHeading, closeButton);
+
+  const options = document.createElement("div");
+  options.className = "cookie-options";
+
+  const createOption = ({ title, description, name, required = false }) => {
+    const row = document.createElement("label");
+    row.className = "cookie-option";
+    const copy = document.createElement("span");
+    const heading = document.createElement("strong");
+    heading.textContent = title;
+    const detail = document.createElement("small");
+    detail.textContent = description;
+    copy.append(heading, detail);
+
+    if (required) {
+      const status = document.createElement("span");
+      status.className = "cookie-required";
+      status.textContent = "Always active";
+      row.append(copy, status);
+      return { row, input: null };
+    }
+
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.name = name;
+    row.append(copy, input);
+    return { row, input };
+  };
+
+  const essential = createOption({
+    title: "Essential and security",
+    description:
+      "Needed for security, payments, form operation, and remembering your privacy choice.",
+    required: true,
+  });
+  const preferences = createOption({
+    title: "Preferences",
+    description: "Allows optional settings that make the site more convenient.",
+    name: "preferences",
+  });
+  const analytics = createOption({
+    title: "Analytics",
+    description: "Helps us understand site use and improve performance.",
+    name: "analytics",
+  });
+  const advertising = createOption({
+    title: "Advertising",
+    description: "Helps measure campaigns and show more relevant advertising.",
+    name: "advertising",
+  });
+  options.append(
+    essential.row,
+    preferences.row,
+    analytics.row,
+    advertising.row,
+  );
+
+  const dialogActions = document.createElement("div");
+  dialogActions.className = "cookie-dialog-actions";
+  const saveButton = makeButton("Save preferences", "button");
+  dialogActions.append(saveButton);
+  dialog.append(dialogHeader, options, dialogActions);
+  backdrop.append(dialog);
+  root.append(banner, backdrop);
+  document.body.append(root);
+
+  const hideBanner = () => {
+    banner.hidden = true;
+  };
+
+  const closeDialog = () => {
+    backdrop.hidden = true;
+    document.body.classList.remove("cookie-dialog-open");
+  };
+
+  const openDialog = () => {
+    const saved = consentApi.get() || {};
+    preferences.input.checked = Boolean(saved.preferences);
+    analytics.input.checked = Boolean(saved.analytics);
+    advertising.input.checked = Boolean(saved.advertising);
+    backdrop.hidden = false;
+    document.body.classList.add("cookie-dialog-open");
+    closeButton.focus();
+  };
+
+  const saveConsent = (value) => {
+    consentApi.save(value);
+    hideBanner();
+    closeDialog();
+  };
+
+  acceptButton.addEventListener("click", () => {
+    saveConsent({ preferences: true, analytics: true, advertising: true });
+  });
+  rejectButton.addEventListener("click", () => {
+    saveConsent({ preferences: false, analytics: false, advertising: false });
+  });
+  customizeButton.addEventListener("click", openDialog);
+  closeButton.addEventListener("click", closeDialog);
+  saveButton.addEventListener("click", () => {
+    saveConsent({
+      preferences: preferences.input.checked,
+      analytics: analytics.input.checked,
+      advertising: advertising.input.checked,
+    });
+  });
+  backdrop.addEventListener("click", (event) => {
+    if (event.target === backdrop) closeDialog();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !backdrop.hidden) closeDialog();
+  });
+  preferenceButtons.forEach((button) => {
+    button.addEventListener("click", openDialog);
+  });
+
+  if (consentApi.get()) hideBanner();
+};
+
+initializeCookiePreferences();

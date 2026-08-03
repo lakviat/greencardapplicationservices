@@ -1218,3 +1218,17 @@ Stripe checkout - July 31, 2026
 9. Show package pricing only in the package selector; do not duplicate the amount in the checkout action.
 10. Keep the primary action red while it progresses from saving to opening secure checkout; do not show an in-place paid or submitted success state before server verification.
 11. Live checkout is configured for all four MVP packages: Single $39, Couple $69, Family $99, and Premium $149.
+
+Legal and service policies - August 3, 2026
+-------------------------------------------
+1. Publish one complete Legal & Service Policies page at /policies with visible sections for Terms of Service, Privacy Policy, Refund Policy, Cookie Policy, Government and Legal Disclaimer, and Contact and Privacy Requests.
+2. Add Policies after Requirements in desktop and mobile navigation on every page.
+3. Keep the footer compact and link to Legal & Policies, Cookie Preferences, FAQ, Requirements, and Support.
+4. Require a separate, unchecked agreement to the Terms of Service, Privacy Policy, and Refund Policy before an application can continue to payment.
+5. Keep optional marketing consent separate from service and policy consent.
+6. Default nonessential analytics and advertising storage to denied until a visitor accepts or customizes cookie preferences.
+7. Offer Accept all, Reject nonessential, and Customize controls, and allow visitors to reopen Cookie Preferences from the footer.
+8. Preserve placeholders instead of inventing undecided business terms for the legal business name, mailing address, hosting provider, document-retention period, cancellation window, partial-refund rule, and response periods.
+9. State prominently that the company is a private paid preparation service, is not a law firm or government agency, cannot influence random selection, and does not guarantee an immigration result.
+10. State that the official Diversity Visa entry is free at dvprogram.state.gov and that official government instructions control.
+11. Have qualified Florida counsel review all policy language and replace every bracketed placeholder before relying on the policies as final production terms.

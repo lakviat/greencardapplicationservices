@@ -2,7 +2,25 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = process.cwd();
-const htmlFiles = fs.readdirSync(root).filter((name) => name.endsWith(".html"));
+const ignoredDirectories = new Set([".git", "node_modules"]);
+const htmlFiles = [];
+
+function collectHtmlFiles(directory, relativeDirectory = "") {
+  for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+    if (entry.isDirectory() && ignoredDirectories.has(entry.name)) continue;
+
+    const relativePath = path.join(relativeDirectory, entry.name);
+    const absolutePath = path.join(directory, entry.name);
+    if (entry.isDirectory()) {
+      collectHtmlFiles(absolutePath, relativePath);
+    } else if (entry.isFile() && entry.name.endsWith(".html")) {
+      htmlFiles.push(relativePath);
+    }
+  }
+}
+
+collectHtmlFiles(root);
+htmlFiles.sort();
 const failures = [];
 const siteOrigin = "https://greencardapplicationservices.com";
 const sitemapPath = path.join(root, "sitemap.xml");
