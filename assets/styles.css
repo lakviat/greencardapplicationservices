@@ -3174,14 +3174,10 @@ body.cookie-dialog-open {
 }
 
 @media (max-width: 620px) {
-  body {
-    padding-bottom: 78px;
-  }
-
   .site-footer {
     grid-template-columns: 1fr;
     gap: 14px;
-    padding: 22px 18px 24px;
+    padding: 22px 18px calc(24px + env(safe-area-inset-bottom));
   }
 
   .footer-brand > strong {

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cache_version="20260803-policies-v1"
+cache_version="20260803-footer-gap-v1"
 
 html_files=()
 while IFS= read -r html_file; do
