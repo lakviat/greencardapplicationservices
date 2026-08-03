@@ -8,6 +8,10 @@ node --check assets/requirements.js
 node --check assets/site-metrics.js
 node scripts/check-local-references.mjs
 
+if command -v xmllint >/dev/null 2>&1; then
+  xmllint --noout sitemap.xml
+fi
+
 if grep -nE '[[:space:]]style=|[[:space:]]on[a-z]+=' -- *.html; then
   echo "Inline styles or event handlers are not allowed by the CSP." >&2
   exit 1

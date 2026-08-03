@@ -1,5 +1,5 @@
 GREEN CARD APPLICATION SERVICES - REQUIREMENTS
-Last updated: 2026-07-31
+Last updated: 2026-08-02
 
 Purpose
 -------
@@ -55,6 +55,8 @@ Implemented public pages:
    green-card-lottery-kazakhstan.html
    green-card-lottery-kyrgyzstan.html
    green-card-lottery-tajikistan.html
+13. DV dates and official status-check resource:
+   dv-lottery-dates-status.html
 
 Implemented frontend features:
 1. Responsive static site with mobile menu and sticky mobile CTA.
@@ -142,12 +144,14 @@ Security and privacy:
 11. Current no-cors form submissions confirm only that the browser dispatched the request; they do not provide authoritative proof that Google Apps Script stored it.
 
 SEO and localization:
-1. English baseline is expanded, but no translated route exists yet.
-2. No hreflang tags yet because translated pages do not exist.
-3. First country-specific English landing pages are built for Uzbekistan, Kazakhstan, Kyrgyzstan, and Tajikistan.
-4. Remaining priority countries/languages still need final business input from owner.
-5. Browser auto-translation is not enough for controlled legal/payment/service wording.
-6. The language switcher should later point to real language routes such as /ru/, /uz/, /ky/, /kk/, and /tg/ after those translations are built.
+1. English baseline includes page-specific titles, descriptions, canonical URLs, Open Graph metadata, Twitter metadata, Organization/WebSite JSON-LD on the homepage, robots.txt, and sitemap.xml.
+2. The sitemap covers every public canonical page and robots.txt advertises its production URL. CI fails when required metadata or sitemap coverage is missing.
+3. A dedicated DV Lottery dates and Entrant Status Check resource maps informational searches to official government links without implying this private service determines results.
+4. GOOGLE_ADS_KEYWORDS.md defines service, photo/error-checking, date/status, country, negative-keyword, conversion, and launch guidance for Google Ads. Campaign keywords must be configured in Google Ads; a meta-keywords tag is intentionally not used.
+5. English country-specific landing pages are built for Uzbekistan, Kazakhstan, Kyrgyzstan, and Tajikistan.
+6. No translated route or hreflang annotation exists yet. Russian, Kazakh, Kyrgyz, Uzbek, and Tajik keywords must not be stuffed into English pages.
+7. Browser auto-translation is not enough for controlled legal, payment, government-affiliation, or service wording.
+8. The language switcher should point to real routes such as /ru/, /uz/, /ky/, /kk/, and /tg/ only after visible copy is translated and human reviewed.
 
 Testing strategy and release checklist
 --------------------------------------
