@@ -1,5 +1,5 @@
 GREEN CARD APPLICATION SERVICES - REQUIREMENTS
-Last updated: 2026-08-02
+Last updated: 2026-08-04
 
 Purpose
 -------
@@ -1224,8 +1224,8 @@ Legal and service policies - August 3, 2026
 1. Publish one complete Legal & Service Policies page at /policies with visible sections for Terms of Service, Privacy Policy, Refund Policy, Cookie Policy, Government and Legal Disclaimer, and Contact and Privacy Requests.
 2. Add Policies after Requirements in desktop and mobile navigation on every page.
 3. Keep the footer compact and link to Legal & Policies, Cookie Preferences, FAQ, Requirements, and Support.
-4. Require a separate, unchecked agreement to the Terms of Service, Privacy Policy, and Refund Policy before an application can continue to payment. Record the agreement time, policy version, customer email, package, and checkout reference with the intake record.
-5. Require separate operational-contact authorization for application-related email, phone, SMS, and WhatsApp messages. Keep optional marketing consent separate and unchecked.
+4. Require one unchecked checkout agreement covering the Terms of Service, Privacy Policy, Refund Policy, operational contact authorization, and the request to begin service after payment. Record the agreement time, policy version, customer email, package, and checkout reference with the intake record.
+5. Keep optional marketing consent out of checkout. Offer it separately and unchecked in the registration-alert form.
 6. Default nonessential analytics and advertising storage to denied until a visitor accepts or customizes cookie preferences.
 7. Offer Accept all, Reject nonessential, and Customize controls, and allow visitors to reopen Cookie Preferences from the footer.
 8. Publish the finalized service-provider, 12-month retention, refund, and five-business-day response terms without displaying a legal entity name, street address, or unconfirmed website-hosting provider.

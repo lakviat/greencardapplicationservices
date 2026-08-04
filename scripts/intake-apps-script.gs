@@ -102,17 +102,8 @@ function validateAndNormalizeRequest(body) {
   if (formAge < 1000 || formAge > MAX_FORM_AGE_MS) {
     throw new Error("Form timing is invalid.");
   }
-  if (body.consent !== true) {
-    throw new Error("Consent is required.");
-  }
-  if (body.serviceDisclaimer !== true) {
-    throw new Error("Service disclaimer acknowledgement is required.");
-  }
-  if (body.contactAuthorization !== true) {
-    throw new Error("Operational contact authorization is required.");
-  }
-  if (body.policyConsent !== true) {
-    throw new Error("Policy agreement is required.");
+  if (body.consent !== true || body.checkoutConsent !== true) {
+    throw new Error("Checkout agreement is required.");
   }
 
   const policyAgreedAt = validRecentDate(body.policyAgreedAt, "Policy agreement time");
@@ -158,9 +149,9 @@ function validateAndNormalizeRequest(body) {
     phone: primary.phone,
     countryOfBirth: primary.countryOfBirth,
     applicants: applicants,
+    checkoutConsent: true,
     serviceDisclaimer: true,
     contactAuthorization: true,
-    marketingConsent: body.marketingConsent === true,
     policyConsent: true,
     policyAgreedAt: policyAgreedAt,
     policyVersion: policyVersion,
@@ -265,9 +256,9 @@ function createCustomerRecord(folder, payload) {
     packageLabel: payload.packageLabel,
     applicantCount: payload.applicantCount,
     customerEmail: payload.email,
+    checkoutConsent: payload.checkoutConsent,
     serviceDisclaimer: payload.serviceDisclaimer,
     contactAuthorization: payload.contactAuthorization,
-    marketingConsent: payload.marketingConsent,
     policyConsent: payload.policyConsent,
     policyAgreedAt: payload.policyAgreedAt,
     policyVersion: payload.policyVersion,

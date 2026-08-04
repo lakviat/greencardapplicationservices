@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cache_version="20260803-policy-final-v1"
+cache_version="20260804-checkout-consent-v1"
 
 html_files=()
 while IFS= read -r html_file; do
@@ -54,19 +54,19 @@ if git grep -nE '\[INSERT|pending confirmation|pending final business approval' 
   exit 1
 fi
 
-if ! grep -q 'name="policyConsent" type="checkbox" required' index.html; then
-  echo "The required policy agreement checkbox is missing." >&2
+if ! grep -q 'name="checkoutConsent" type="checkbox" required' index.html; then
+  echo "The single required checkout agreement is missing." >&2
   exit 1
 fi
 
-if ! grep -q 'name="contactAuthorization" type="checkbox" required' index.html; then
-  echo "The required operational-contact authorization is missing." >&2
+if grep -qE 'name="(serviceDisclaimer|contactAuthorization|policyConsent)"' index.html; then
+  echo "Legacy checkout consent checkboxes must not be rendered." >&2
   exit 1
 fi
 
-if ! grep -q 'name="marketingConsent" type="checkbox"' index.html ||
-  grep -q 'name="marketingConsent" type="checkbox" required' index.html; then
-  echo "Marketing consent must be present, optional, and unchecked." >&2
+if ! grep -q 'name="notifyMarketingConsent" type="checkbox"' index.html ||
+  grep -q 'name="notifyMarketingConsent" type="checkbox" required' index.html; then
+  echo "Marketing consent must be separate from checkout, optional, and unchecked." >&2
   exit 1
 fi
 

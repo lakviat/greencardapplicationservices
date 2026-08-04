@@ -656,6 +656,8 @@ if (form && message) {
         phone: cleanText(formData.get(`applicant${number}Phone`), 32),
       }));
 
+    const checkoutConsent = formData.get("checkoutConsent") === "on";
+
     return {
       secret: appsScriptCompatibilityToken,
       submissionId,
@@ -663,13 +665,14 @@ if (form && message) {
       formStartedAt: form.dataset.startedAt || "",
       website: window.location.hostname,
       companyWebsite: cleanText(honeypotField?.value, 100),
-      consent: formData.get("serviceDisclaimer") === "on",
-      serviceDisclaimer: formData.get("serviceDisclaimer") === "on",
-      contactAuthorization: formData.get("contactAuthorization") === "on",
-      marketingConsent: formData.get("marketingConsent") === "on",
-      policyConsent: formData.get("policyConsent") === "on",
+      consent: checkoutConsent,
+      checkoutConsent,
+      // Keep these derived fields until the deployed Apps Script is upgraded.
+      serviceDisclaimer: checkoutConsent,
+      contactAuthorization: checkoutConsent,
+      policyConsent: checkoutConsent,
       policyAgreedAt,
-      policyVersion: "2026-08-03",
+      policyVersion: "2026-08-04",
       paymentReference: submissionId,
       stripeClientReferenceId: submissionId,
       package: selectedPackage?.value || "single",
@@ -870,7 +873,7 @@ if (notifyForm && notifyMessage) {
     return `gcas-notify-${random}`;
   };
 
-  const sendNotificationToDrive = async ({ email, phone }) => {
+  const sendNotificationToDrive = async ({ email, phone, marketingConsent }) => {
     if (!googleScriptNotifyUrl) {
       throw new Error(
         "Notification collection is not connected yet. Please contact support or try again later.",
@@ -894,7 +897,8 @@ if (notifyForm && notifyMessage) {
         phone,
         notifyCompanyWebsite: cleanText(notifyHoneypotField?.value, 100),
         consent:
-          "I agree to be contacted about DV registration updates and application support.",
+          "I agree to receive the requested DV registration opening notification by email or WhatsApp.",
+        marketingConsent,
       }),
     });
   };
@@ -931,7 +935,12 @@ if (notifyForm && notifyMessage) {
     );
 
     try {
-      await sendNotificationToDrive({ email, phone });
+      await sendNotificationToDrive({
+        email,
+        phone,
+        marketingConsent:
+          formData.get("notifyMarketingConsent") === "on",
+      });
 
       setNotifyState("submitted");
       setNotifyMessage(
