@@ -54,23 +54,23 @@ const countryCombobox = document.querySelector("[data-country-combobox]");
 const stripePackages = {
   single: {
     label: "Single",
-    amount: 39,
-    paymentLink: "https://buy.stripe.com/14A3cx3BAgBp4pF4uo0Ny01",
+    amount: 24,
+    paymentLink: "https://buy.stripe.com/9B614p5JI4SH6xNd0U0Ny05",
   },
   couple: {
     label: "Couple",
-    amount: 69,
-    paymentLink: "https://buy.stripe.com/eVq9AV2xw70PcWbgd60Ny02",
+    amount: 44,
+    paymentLink: "https://buy.stripe.com/28E28t5JI4SH1dt1ic0Ny06",
   },
   family: {
     label: "Family",
-    amount: 99,
-    paymentLink: "https://buy.stripe.com/cNi7sN4FE5WL7BR8KE0Ny03",
+    amount: 64,
+    paymentLink: "https://buy.stripe.com/eVqbJ34FE98X6xN6Cw0Ny07",
   },
   premium: {
     label: "Premium",
-    amount: 149,
-    paymentLink: "https://buy.stripe.com/cNieVf1tsbh509p2mg0Ny04",
+    amount: 94,
+    paymentLink: "https://buy.stripe.com/cNiaEZ2xw1Gv4pFd0U0Ny08",
   },
 };
 
