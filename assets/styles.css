@@ -1704,6 +1704,8 @@ small {
 }
 
 .checkout-consent {
+  --consent-checkbox-size: 18px;
+  --consent-column-gap: 10px;
   display: grid;
   min-width: 0;
   gap: 8px;
@@ -1731,11 +1733,22 @@ small {
 
 .checkout-consent .policy-consent {
   display: grid;
+  grid-template-columns: var(--consent-checkbox-size) minmax(0, 1fr);
+  column-gap: var(--consent-column-gap);
   margin: 0;
 }
 
+.checkout-consent .policy-consent input {
+  width: var(--consent-checkbox-size);
+  height: var(--consent-checkbox-size);
+  min-height: var(--consent-checkbox-size);
+  margin: 3px 0 0;
+}
+
 .checkout-consent-helper {
-  padding-left: 28px;
+  padding-left: calc(
+    var(--consent-checkbox-size) + var(--consent-column-gap)
+  );
   color: var(--muted);
   font-size: 0.76rem;
   font-weight: 650;
@@ -3276,6 +3289,7 @@ body.cookie-dialog-open {
   }
 
   .checkout-consent {
+    --consent-column-gap: 9px;
     gap: 7px;
   }
 
@@ -3287,10 +3301,6 @@ body.cookie-dialog-open {
     gap: 9px;
     font-size: 0.84rem;
     line-height: 1.4;
-  }
-
-  .checkout-consent-helper {
-    padding-left: 27px;
   }
 
   .brand {
