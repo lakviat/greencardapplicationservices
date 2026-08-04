@@ -1,11 +1,33 @@
+# OS
 .DS_Store
+Thumbs.db
+
+# IDE — JetBrains
+.idea/
+*.iml
+
+# IDE — VS Code (keep shared settings, ignore personal)
+.vscode/settings.json
+.vscode/launch.json
+
+# Secrets / env
 .claude/
 .env
 .env.*
 !.env.example
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Node
 node_modules/
 coverage/
 dist/
+
+# Build / logs / certs
 *.log
 *.key
 *.pem
