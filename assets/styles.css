@@ -2479,6 +2479,190 @@ small {
   display: none;
 }
 
+.support-widget {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 45;
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+
+.support-panel[hidden] {
+  display: none;
+}
+
+.support-panel {
+  width: min(330px, calc(100vw - 28px));
+  padding: 12px;
+  color: #fff;
+  background: rgba(16, 33, 61, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 8px;
+  box-shadow: 0 18px 48px rgba(7, 20, 40, 0.28);
+  backdrop-filter: blur(18px) saturate(125%);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  transform-origin: bottom right;
+  animation: supportPanelIn 180ms ease-out;
+}
+
+.support-panel-header {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.support-brand-mark {
+  width: 22px;
+  height: 28px;
+  background: url("favicon.png?v=20260730-user-logo") center / auto 100%
+    no-repeat;
+}
+
+.support-panel-header strong {
+  font-size: 1rem;
+  letter-spacing: 0;
+}
+
+.support-close,
+.support-trigger {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: #fff;
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.support-close {
+  width: 30px;
+  min-height: 30px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  box-shadow: none;
+}
+
+.support-trigger {
+  width: 52px;
+  min-height: 52px;
+  background: rgba(16, 33, 61, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  box-shadow: 0 12px 30px rgba(7, 20, 40, 0.3);
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease;
+}
+
+.support-trigger:hover,
+.support-widget.is-open .support-trigger {
+  background: rgba(23, 78, 166, 0.94);
+  transform: translateY(-1px);
+}
+
+.support-panel svg,
+.support-trigger svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.support-close svg {
+  width: 17px;
+  height: 17px;
+}
+
+.support-trigger svg {
+  width: 25px;
+  height: 25px;
+}
+
+.support-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.support-action {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  min-width: 0;
+  min-height: 82px;
+  padding: 8px 5px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.11);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 7px;
+  font: inherit;
+  font-weight: 800;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    transform 150ms ease,
+    background-color 150ms ease;
+}
+
+.support-action:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.support-action:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
+.support-action-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+}
+
+.support-action-icon svg {
+  width: 23px;
+  height: 23px;
+}
+
+.support-action-label {
+  font-size: 0.7rem;
+  line-height: 1.15;
+}
+
+.support-action small {
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 0.57rem;
+  line-height: 1;
+}
+
+.support-close:focus-visible,
+.support-trigger:focus-visible,
+.support-action:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.92);
+  outline-offset: 2px;
+}
+
+@keyframes supportPanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(7px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .camera-active .mobile-cta,
 .requirements-page .mobile-cta {
   display: none;
@@ -3527,6 +3711,40 @@ body.cookie-dialog-open {
     pointer-events: none;
   }
 
+  .support-widget {
+    right: 12px;
+    bottom: 14px;
+    gap: 8px;
+  }
+
+  .has-scrolled:not(.hero-visible):not(.apply-visible):not(.footer-visible)
+    .support-widget {
+    bottom: 84px;
+  }
+
+  .support-panel {
+    width: min(304px, calc(100vw - 24px));
+    padding: 10px;
+  }
+
+  .support-panel-header {
+    margin-bottom: 8px;
+  }
+
+  .support-actions {
+    gap: 6px;
+  }
+
+  .support-action {
+    min-height: 72px;
+    padding: 6px 4px;
+  }
+
+  .support-trigger {
+    width: 48px;
+    min-height: 48px;
+  }
+
 }
 
 @media (max-width: 360px) {
@@ -4258,6 +4476,15 @@ body.cookie-dialog-open {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .support-panel {
+    animation: none;
+  }
+
+  .support-trigger,
+  .support-action {
+    transition: none;
+  }
+
   .hero-photo-slide,
   .hero-carousel-dots span {
     animation: none;

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cache_version="20260804-consent-alignment-v1"
+cache_version="20260805-support-widget-v1"
 
 html_files=()
 while IFS= read -r html_file; do

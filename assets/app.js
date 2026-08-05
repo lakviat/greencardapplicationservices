@@ -958,6 +958,156 @@ if (notifyForm && notifyMessage) {
   });
 }
 
+const initializeSupportWidget = () => {
+  if (document.querySelector(".support-widget")) return;
+
+  const createIcon = (name) => {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+
+    const iconPaths = {
+      message: [
+        ["path", { d: "M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" }],
+        ["path", { d: "M8 10h.01M12 10h.01M16 10h.01" }],
+      ],
+      mail: [
+        ["rect", { x: "3", y: "5", width: "18", height: "14", rx: "2" }],
+        ["path", { d: "m3 7 9 6 9-6" }],
+      ],
+      whatsapp: [
+        ["path", { d: "M20.5 11.7a8.5 8.5 0 0 1-12.6 7.4L3 20.5l1.4-4.7A8.5 8.5 0 1 1 20.5 11.7Z" }],
+        ["path", { d: "M8.2 7.7c.2-.5.4-.5.8-.5h.4c.2 0 .4.1.5.4l.9 2.1c.1.3.1.5-.1.7l-.7.9c-.2.2-.1.4 0 .6.7 1.2 1.7 2.2 3 2.8.2.1.4.1.6-.1l.9-1.1c.2-.2.4-.3.7-.2l2.1 1c.3.1.4.3.4.6 0 .4-.2 1.4-1 2-.7.6-1.7.8-2.7.5-1.2-.3-3.2-1.1-5-2.8-1.5-1.4-2.5-3.2-2.8-4.4-.3-1.1 0-1.9.3-2.5Z" }],
+      ],
+      help: [
+        ["circle", { cx: "12", cy: "12", r: "9" }],
+        ["path", { d: "M9.7 9a2.4 2.4 0 1 1 3.5 2.1c-.8.4-1.2.9-1.2 1.9" }],
+        ["path", { d: "M12 17h.01" }],
+      ],
+      close: [
+        ["path", { d: "m7 7 10 10M17 7 7 17" }],
+      ],
+    };
+
+    iconPaths[name].forEach(([tagName, attributes]) => {
+      const element = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        tagName,
+      );
+      Object.entries(attributes).forEach(([key, value]) => {
+        element.setAttribute(key, value);
+      });
+      svg.append(element);
+    });
+
+    return svg;
+  };
+
+  const widget = document.createElement("div");
+  widget.className = "support-widget";
+
+  const panel = document.createElement("section");
+  panel.className = "support-panel";
+  panel.id = "supportPanel";
+  panel.hidden = true;
+  panel.setAttribute("aria-labelledby", "supportPanelTitle");
+
+  const panelHeader = document.createElement("div");
+  panelHeader.className = "support-panel-header";
+  const brandMark = document.createElement("span");
+  brandMark.className = "support-brand-mark";
+  brandMark.setAttribute("aria-hidden", "true");
+  const panelTitle = document.createElement("strong");
+  panelTitle.id = "supportPanelTitle";
+  panelTitle.textContent = "Support";
+  const closeButton = document.createElement("button");
+  closeButton.className = "support-close";
+  closeButton.type = "button";
+  closeButton.setAttribute("aria-label", "Close support panel");
+  closeButton.append(createIcon("close"));
+  panelHeader.append(brandMark, panelTitle, closeButton);
+
+  const actions = document.createElement("div");
+  actions.className = "support-actions";
+
+  const createAction = ({ label, icon, href, disabled = false }) => {
+    const action = disabled
+      ? document.createElement("button")
+      : document.createElement("a");
+    action.className = "support-action";
+    if (disabled) {
+      action.type = "button";
+      action.disabled = true;
+      action.setAttribute("aria-label", `${label}, coming soon`);
+    } else {
+      action.href = href;
+    }
+
+    const iconWrap = document.createElement("span");
+    iconWrap.className = "support-action-icon";
+    iconWrap.append(createIcon(icon));
+    const labelWrap = document.createElement("span");
+    labelWrap.className = "support-action-label";
+    labelWrap.textContent = label;
+    action.append(iconWrap, labelWrap);
+
+    if (disabled) {
+      const status = document.createElement("small");
+      status.textContent = "Coming soon";
+      action.append(status);
+    }
+
+    return action;
+  };
+
+  actions.append(
+    createAction({
+      label: "Email support",
+      icon: "mail",
+      href: "mailto:greencardapplicationservices@gmail.com?subject=Website%20support%20request",
+    }),
+    createAction({ label: "WhatsApp", icon: "whatsapp", disabled: true }),
+    createAction({ label: "View FAQ", icon: "help", href: "/faq.html" }),
+  );
+  panel.append(panelHeader, actions);
+
+  const trigger = document.createElement("button");
+  trigger.className = "support-trigger";
+  trigger.type = "button";
+  trigger.setAttribute("aria-label", "Open support");
+  trigger.setAttribute("aria-expanded", "false");
+  trigger.setAttribute("aria-controls", panel.id);
+  trigger.append(createIcon("message"));
+  widget.append(panel, trigger);
+  document.body.append(widget);
+
+  const setOpen = (isOpen) => {
+    panel.hidden = !isOpen;
+    trigger.setAttribute("aria-expanded", String(isOpen));
+    trigger.setAttribute("aria-label", isOpen ? "Hide support" : "Open support");
+    widget.classList.toggle("is-open", isOpen);
+    if (isOpen) closeButton.focus();
+  };
+
+  trigger.addEventListener("click", () => {
+    setOpen(panel.hidden);
+  });
+  closeButton.addEventListener("click", () => {
+    setOpen(false);
+    trigger.focus();
+  });
+  document.addEventListener("click", (event) => {
+    if (!panel.hidden && !widget.contains(event.target)) setOpen(false);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !panel.hidden) {
+      setOpen(false);
+      trigger.focus();
+    }
+  });
+};
+
 const initializeCookiePreferences = () => {
   const consentApi = window.gcasConsent;
   if (!consentApi) return;
@@ -1151,4 +1301,5 @@ const initializeCookiePreferences = () => {
   if (consentApi.get()) hideBanner();
 };
 
+initializeSupportWidget();
 initializeCookiePreferences();
