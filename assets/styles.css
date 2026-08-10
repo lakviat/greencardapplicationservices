@@ -1708,22 +1708,9 @@ small {
   --consent-column-gap: 10px;
   display: grid;
   min-width: 0;
-  gap: 8px;
   padding: 2px 0;
 }
 
-.checkout-consent p {
-  margin: 0;
-}
-
-.checkout-consent-notice {
-  color: var(--ink);
-  font-size: 0.84rem;
-  font-weight: 750;
-  line-height: 1.45;
-}
-
-.checkout-consent-notice a,
 .policy-consent a {
   color: var(--blue);
   font-weight: 850;
@@ -1743,23 +1730,6 @@ small {
   height: var(--consent-checkbox-size);
   min-height: var(--consent-checkbox-size);
   margin: 3px 0 0;
-}
-
-.checkout-consent-helper {
-  padding-left: calc(
-    var(--consent-checkbox-size) + var(--consent-column-gap)
-  );
-  color: var(--muted);
-  font-size: 0.76rem;
-  font-weight: 650;
-  line-height: 1.4;
-}
-
-.checkout-payment-note {
-  color: var(--muted);
-  font-size: 0.8rem;
-  font-weight: 750;
-  line-height: 1.4;
 }
 
 .button-form {
@@ -3474,11 +3444,6 @@ body.cookie-dialog-open {
 
   .checkout-consent {
     --consent-column-gap: 9px;
-    gap: 7px;
-  }
-
-  .checkout-consent-notice {
-    font-size: 0.8rem;
   }
 
   .checkout-consent .consent {
