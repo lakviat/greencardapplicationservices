@@ -15,6 +15,9 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+credentials.json
+token.json
+applicants_export.xlsx
 
 # Python
 venv/
