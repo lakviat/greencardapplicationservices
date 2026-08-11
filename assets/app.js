@@ -1067,7 +1067,11 @@ const initializeSupportWidget = () => {
       icon: "mail",
       href: "mailto:greencardapplicationservices@gmail.com?subject=Website%20support%20request",
     }),
-    createAction({ label: "WhatsApp", icon: "whatsapp", disabled: true }),
+    createAction({
+      label: "WhatsApp",
+      icon: "whatsapp",
+      href: "https://wa.me/17547037991?text=Hello%20Green%20Card%20Application%20Services%2C%20I%20need%20support.",
+    }),
     createAction({ label: "View FAQ", icon: "help", href: "/faq.html" }),
   );
   panel.append(panelHeader, actions);
