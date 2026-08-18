@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cache_version="20260810-whatsapp-support-v1"
+cache_version="20260818-three-step-process-v2"
 
 html_files=()
 while IFS= read -r html_file; do
