@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cache_version="20260818-three-step-process-v2"
+cache_version="20260820-remove-check-section-v1"
 
 html_files=()
 while IFS= read -r html_file; do
