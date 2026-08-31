@@ -2844,6 +2844,30 @@ body.is-embedded::before {
   cursor: pointer;
 }
 
+.footer-links .footer-social-link {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.footer-social-link img {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+}
+
+.footer-social-link span {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.footer-social-link:hover span,
+.footer-social-link:focus-visible span {
+  text-decoration-thickness: 2px;
+}
+
 .footer-bottom {
   grid-column: 1 / -1;
   padding-top: 13px;
