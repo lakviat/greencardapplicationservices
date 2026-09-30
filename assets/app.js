@@ -74,6 +74,30 @@ const stripePackages = {
   },
 };
 
+// Send only fixed event metadata, never applicant fields or checkout URLs.
+// Analytics failures must not interrupt an application or payment redirect.
+const trackSalesFunnel = (eventName, parameters = {}) => {
+  try {
+    if (!window.gcasConsent?.get()?.analytics || !window.gtag) return false;
+    window.gtag("event", eventName, {
+      ...parameters,
+      send_to: "G-9P726CYPGF",
+      transport_type: "beacon",
+    });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+if (form) {
+  let applicationStartTracked = false;
+  form.addEventListener("input", (event) => {
+    if (event.target === honeypotField || applicationStartTracked) return;
+    applicationStartTracked = trackSalesFunnel("application_start");
+  });
+}
+
 if (applicationGuide) {
   const applicationGuideMobile = window.matchMedia("(max-width: 1000px)");
   const syncApplicationGuide = ({ matches }) => {
@@ -815,6 +839,18 @@ if (form && message) {
     try {
       await sendApplicationToDrive();
 
+      // no-cors only proves dispatch; this is not a confirmed application.
+      trackSalesFunnel("application_request_sent");
+      trackSalesFunnel("begin_checkout", {
+        currency: "USD",
+        value: checkout.stripePackage.amount,
+        items: [{
+          item_name: checkout.stripePackage.label,
+          price: checkout.stripePackage.amount,
+          quantity: 1,
+        }],
+      });
+
       setSubmitState("redirecting");
       setFormMessage(
         `Application sent. Opening secure Stripe checkout for the ${checkout.stripePackage.label} package.`,
@@ -941,6 +977,9 @@ if (notifyForm && notifyMessage) {
         marketingConsent:
           formData.get("notifyMarketingConsent") === "on",
       });
+
+      // Do not report generate_lead without authoritative server confirmation.
+      trackSalesFunnel("notification_request_sent");
 
       setNotifyState("submitted");
       setNotifyMessage(
