@@ -20,6 +20,7 @@ const notifyCloseButtons = document.querySelectorAll("[data-notify-close]");
 const mobileMenus = document.querySelectorAll(".mobile-menu");
 const applySection = document.querySelector("#apply");
 const heroSection = document.querySelector(".hero-dashboard");
+const heroPauseButton = document.querySelector("[data-hero-pause]");
 const siteFooter = document.querySelector(".site-footer");
 const honeypotField = document.querySelector("#companyWebsite");
 const notifyHoneypotField = document.querySelector("#notifyCompanyWebsite");
@@ -73,6 +74,42 @@ const stripePackages = {
     paymentLink: "https://buy.stripe.com/cNieVf1tsbh509p2mg0Ny04",
   },
 };
+
+const trackConversion = (event, metadata = {}) =>
+  window.gcasAnalytics?.track(event, metadata);
+
+const trackFormInteraction = (targetForm, formId) => {
+  if (!targetForm) return;
+  const start = () => trackConversion("form_start", { form: formId });
+  targetForm.addEventListener("input", start);
+  targetForm.addEventListener("change", start);
+  targetForm.addEventListener("submit", start);
+  targetForm.addEventListener("invalid", (event) => {
+    const validity = event.target.validity;
+    trackConversion("validation_error", {
+      form: formId,
+      category: validity?.valueMissing
+        ? "required"
+        : validity?.typeMismatch || validity?.patternMismatch
+          ? "format"
+          : "constraint",
+    });
+  }, true);
+};
+
+trackFormInteraction(form, "application");
+trackFormInteraction(notifyForm, "notification");
+
+if (heroSection && heroPauseButton) {
+  let heroPaused = false;
+  heroPauseButton.setAttribute("aria-pressed", "false");
+  heroPauseButton.addEventListener("click", () => {
+    heroPaused = !heroPaused;
+    heroSection.classList.toggle("is-paused", heroPaused);
+    heroPauseButton.setAttribute("aria-pressed", String(heroPaused));
+    heroPauseButton.textContent = heroPaused ? "Resume photos" : "Pause photos";
+  });
+}
 
 if (applicationGuide) {
   const applicationGuideMobile = window.matchMedia("(max-width: 1000px)");
@@ -499,6 +536,14 @@ if (siteFooter && "IntersectionObserver" in window) {
 
 if (form && message) {
   form.dataset.startedAt = new Date().toISOString();
+  let applicationPending = false;
+  let committedSelection = null;
+  let lastRequestSnapshot = null;
+  let lastRequestResolved = false;
+  let retryAllowedAt = 0;
+  const retryCooldownMs = 125000;
+  const packageControls = [...packageOptions, premiumApplicantCount].filter(Boolean);
+  const previousDisabledStates = new Map();
 
   const getSelectedPackage = () =>
     document.querySelector('input[name="package"]:checked');
@@ -515,7 +560,9 @@ if (form && message) {
 
   const getSelectedStripePackage = () => {
     const packageKey = getSelectedPackage()?.value || "single";
-    return stripePackages[packageKey] || stripePackages.single;
+    return Object.hasOwn(stripePackages, packageKey)
+      ? stripePackages[packageKey]
+      : stripePackages.single;
   };
 
   const setFormMessage = (text, state = "info") => {
@@ -571,7 +618,7 @@ if (form && message) {
     submitButton.disabled = state === "submitting" || state === "redirecting";
 
     if (state === "submitting") {
-      submitButton.textContent = "Submitting application...";
+      submitButton.textContent = "Sending your preparation request...";
     } else if (state === "redirecting") {
       submitButton.textContent = "Opening secure checkout...";
     } else {
@@ -622,22 +669,26 @@ if (form && message) {
     );
 
     if (uploadedFiles.length > maxFiles) {
+      trackConversion("validation_error", { form: "application", category: "upload" });
       throw new Error(`Upload up to ${maxFiles} files at a time.`);
     }
 
     if (uploadedFiles.some((file) => file.size > maxFileSize)) {
+      trackConversion("validation_error", { form: "application", category: "upload" });
       throw new Error(
         "One of the selected files is too large. Please keep each file under 15 MB.",
       );
     }
 
     if (totalUploadSize > maxTotalUploadSize) {
+      trackConversion("validation_error", { form: "application", category: "upload" });
       throw new Error(
         "The selected files are too large together. Please keep the total upload under 35 MB.",
       );
     }
 
     if (uploadedFiles.some((file) => !isAllowedUpload(file))) {
+      trackConversion("validation_error", { form: "application", category: "upload" });
       throw new Error(
         "Upload PDF, JPEG, PNG, HEIC, or HEIF documents only.",
       );
@@ -669,7 +720,7 @@ if (form && message) {
       marketingConsent: formData.get("marketingConsent") === "on",
       policyConsent: formData.get("policyConsent") === "on",
       policyAgreedAt,
-      policyVersion: "2026-08-03",
+      policyVersion: "2026-09-30",
       paymentReference: submissionId,
       stripeClientReferenceId: submissionId,
       package: selectedPackage?.value || "single",
@@ -699,10 +750,18 @@ if (form && message) {
     };
   };
 
-  const sendApplicationToDrive = async () => {
-    const payload = await buildApplicationPayload();
+  const requestSnapshot = (payload) => {
+    const stable = { ...payload };
+    for (const key of [
+      "secret", "submissionId", "submittedAt", "formStartedAt", "policyAgreedAt",
+      "paymentReference", "stripeClientReferenceId", "paymentStatus",
+    ]) delete stable[key];
+    // Comparison stays in this page's memory; no applicant data enters storage or analytics.
+    return JSON.stringify(stable);
+  };
 
-    await fetch(googleScriptIntakeUrl, {
+  const sendApplicationToDrive = async (payload, snapshot) => {
+    const request = fetch(googleScriptIntakeUrl, {
       method: "POST",
       mode: "no-cors",
       headers: {
@@ -710,13 +769,108 @@ if (form && message) {
       },
       body: JSON.stringify(payload),
     });
+    lastRequestSnapshot = snapshot;
+    lastRequestResolved = false;
+    retryAllowedAt = Date.now() + retryCooldownMs;
+    trackConversion("request_dispatch", { form: "application" });
+    try {
+      await request;
+      lastRequestResolved = true;
+    } finally {
+      // Start after settlement as server receipt can be later than browser dispatch.
+      retryAllowedAt = Date.now() + retryCooldownMs;
+    }
   };
 
   const updateSubmitLabel = () => {
-    if (!submitButton) return;
+    if (!submitButton || applicationPending) return;
 
-    submitButton.textContent = "Submit & Continue to Payment";
+    submitButton.textContent = "Send request & continue to Stripe";
   };
+
+  const updatePackageSummary = () => {
+    const selected = getSelectedStripePackage();
+    const selectedKey = getSelectedPackage()?.value || "single";
+    document.querySelectorAll("[data-package-select]").forEach((element) => {
+      const isSelected = element.dataset.packageSelect === selectedKey;
+      element.classList.toggle("is-selected", isSelected);
+      element.setAttribute("aria-current", String(isSelected));
+    });
+    document.querySelectorAll("[data-package-name]").forEach((element) => {
+      element.textContent = selected.label;
+    });
+    document.querySelectorAll("[data-package-price]").forEach((element) => {
+      element.textContent = `$${selected.amount}`;
+    });
+  };
+
+  const selectPackage = (packageKey, { focus = false, measure = true } = {}) => {
+    if (applicationPending) return false;
+    if (typeof packageKey !== "string" || !Object.hasOwn(stripePackages, packageKey)) return false;
+    const option = Array.from(packageOptions).find((radio) => radio.value === packageKey);
+    if (!option || option.disabled) return false;
+    option.checked = true;
+    updateApplicantSections();
+    updatePackageSummary();
+    updateSubmitLabel();
+    if (measure) trackConversion("select_item", { package: packageKey });
+    if (focus) {
+      const focusTarget = document.querySelector("#applicationFormTitle") ||
+        form.querySelector('input:not([type="hidden"]):not([disabled])');
+      focusTarget?.focus({ preventScroll: true });
+      (applySection || form).scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+        block: "start",
+      });
+    }
+    return true;
+  };
+
+  const lockPackageSelection = (locked) => {
+    if (locked) {
+      committedSelection = {
+        package: getSelectedPackage()?.value || "single",
+        premiumCount: premiumApplicantCount?.value,
+      };
+      packageControls.forEach((control) => {
+        previousDisabledStates.set(control, control.disabled);
+        control.disabled = true;
+      });
+    } else {
+      packageControls.forEach((control) => {
+        if (previousDisabledStates.has(control)) control.disabled = previousDisabledStates.get(control);
+      });
+      previousDisabledStates.clear();
+      committedSelection = null;
+    }
+    document.querySelectorAll("[data-package-select]").forEach((card) => {
+      card.setAttribute("aria-disabled", String(locked));
+    });
+  };
+
+  const restoreCommittedSelection = () => {
+    if (!committedSelection) return;
+    packageOptions.forEach((option) => {
+      option.checked = option.value === committedSelection.package;
+    });
+    if (premiumApplicantCount) premiumApplicantCount.value = committedSelection.premiumCount;
+    updateApplicantSections();
+    updatePackageSummary();
+  };
+
+  window.addEventListener("pageshow", (event) => {
+    if (!event.persisted) return;
+    applicationPending = false;
+    lockPackageSelection(false);
+    if (paymentStatus) paymentStatus.value = "pending";
+    updateApplicantSections();
+    updatePackageSummary();
+    setSubmitState("idle");
+    setFormMessage(
+      "Your details are still here. Receipt and payment are not confirmed on this page. Check your Stripe receipt or contact support before paying again. Revised requests require a short cooldown; unchanged details can reopen Stripe without sending another request.",
+      "info",
+    );
+  });
 
   const updateFileUploadSelection = () => {
     if (!identityDocumentInput || !fileUploadSelection) return;
@@ -754,28 +908,51 @@ if (form && message) {
     checkoutUrl.searchParams.set("prefilled_email", email);
     checkoutUrl.searchParams.set("client_reference_id", getSubmissionId());
 
-    return { checkoutUrl, stripePackage };
+    return { checkoutUrl, stripePackage, packageKey: getSelectedPackage()?.value || "single" };
   };
 
   form.addEventListener("input", updateSubmitLabel);
   form.addEventListener("change", updateSubmitLabel);
   packageOptions.forEach((option) => {
     option.addEventListener("change", () => {
+      if (applicationPending) {
+        restoreCommittedSelection();
+        return;
+      }
       updateApplicantSections();
+      updatePackageSummary();
       updateSubmitLabel();
+      trackConversion("select_item", { package: option.value });
     });
   });
   premiumApplicantCount?.addEventListener("change", () => {
+    if (applicationPending) {
+      restoreCommittedSelection();
+      return;
+    }
     updateApplicantSections();
     updateSubmitLabel();
   });
   identityDocumentInput?.addEventListener("change", updateFileUploadSelection);
   updateApplicantSections();
+  updatePackageSummary();
   updateSubmitLabel();
   updateFileUploadSelection();
 
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest?.("[data-package-select]");
+    if (!link) return;
+    event.preventDefault();
+    selectPackage(link.dataset.packageSelect, { focus: true });
+  });
+  if (["/", "/index", "/index.html"].includes(window.location.pathname)) {
+    const packageKey = new URLSearchParams(window.location.search).get("package");
+    if (packageKey) selectPackage(packageKey, { focus: true, measure: false });
+  }
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (applicationPending) return;
 
     if (!form.checkValidity()) {
       form.reportValidity();
@@ -804,28 +981,57 @@ if (form && message) {
     }
 
     setSubmitState("submitting");
+    applicationPending = true;
     setFormMessage(
-      "Submitting your application before secure checkout. Please keep this page open.",
+      "Sending your preparation request before secure checkout. Please keep this page open.",
       "info",
     );
 
     try {
-      await sendApplicationToDrive();
+      const payloadPromise = buildApplicationPayload();
+      // FormData is captured synchronously before package controls are disabled.
+      lockPackageSelection(true);
+      const payload = await payloadPromise;
+      const snapshot = requestSnapshot(payload);
+      const revised = lastRequestSnapshot !== null && snapshot !== lastRequestSnapshot;
+      const needsDispatch = revised || !lastRequestResolved;
+      if (needsDispatch && lastRequestSnapshot !== null && Date.now() < retryAllowedAt) {
+        const seconds = Math.ceil((retryAllowedAt - Date.now()) / 1000);
+        throw new Error(
+          `Please wait ${seconds} seconds before sending another request. Receipt and payment are uncertain; check your Stripe receipt or contact support before paying again. Your details are still here.`,
+        );
+      }
+      if (revised) {
+        delete form.dataset.submissionId;
+        const reference = getSubmissionId();
+        payload.submissionId = reference;
+        payload.paymentReference = reference;
+        payload.stripeClientReferenceId = reference;
+        checkout.checkoutUrl.searchParams.set("client_reference_id", reference);
+      }
+      if (needsDispatch) await sendApplicationToDrive(payload, snapshot);
 
       setSubmitState("redirecting");
       setFormMessage(
-        `Application sent. Opening secure Stripe checkout for the ${checkout.stripePackage.label} package.`,
+        needsDispatch
+          ? `Preparation request sent, but receipt is unconfirmed. Opening secure Stripe checkout for the ${checkout.stripePackage.label} package.`
+          : "Reopening Stripe without resending your unchanged request. Payment is unconfirmed here; do not pay again if you already have a Stripe receipt.",
         "info",
       );
+      if (window.gcasAnalytics?.beginCheckout) {
+        await window.gcasAnalytics.beginCheckout(checkout.packageKey);
+      }
       window.location.assign(checkout.checkoutUrl.toString());
     } catch (error) {
+      applicationPending = false;
+      lockPackageSelection(false);
       if (paymentStatus) {
         paymentStatus.value = "pending";
       }
       setSubmitState("idle");
       setFormMessage(
         error.message ||
-          "We could not submit the application, so payment was not opened. Please try again or contact support.",
+          "We could not send your preparation request, so payment was not opened. Please try again or contact support.",
         "error",
       );
     }
@@ -855,7 +1061,7 @@ if (notifyForm && notifyMessage) {
     if (state === "submitting") {
       notifySubmitButton.textContent = "Submitting...";
     } else if (state === "submitted") {
-      notifySubmitButton.textContent = "Submitted";
+      notifySubmitButton.textContent = "Request sent";
     } else {
       notifySubmitButton.textContent = "Notify Me";
     }
@@ -877,7 +1083,7 @@ if (notifyForm && notifyMessage) {
       );
     }
 
-    await fetch(googleScriptNotifyUrl, {
+    const request = fetch(googleScriptNotifyUrl, {
       method: "POST",
       mode: "no-cors",
       headers: {
@@ -897,10 +1103,14 @@ if (notifyForm && notifyMessage) {
           "I agree to be contacted about DV registration updates and application support.",
       }),
     });
+    trackConversion("request_dispatch", { form: "notification" });
+    await request;
   };
 
+  let notificationPending = false;
   notifyForm.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (notificationPending) return;
 
     const formData = new FormData(notifyForm);
     const email = cleanText(formData.get("notifyEmail"), 254);
@@ -912,6 +1122,7 @@ if (notifyForm && notifyMessage) {
     }
 
     if (!email && !phone) {
+      trackConversion("validation_error", { form: "notification", category: "contact_required" });
       setNotifyMessage(
         "Enter an email or WhatsApp number so we can notify you.",
         "error",
@@ -925,6 +1136,7 @@ if (notifyForm && notifyMessage) {
     }
 
     setNotifyState("submitting");
+    notificationPending = true;
     setNotifyMessage(
       "Submitting your notification request. Please keep this window open.",
       "info",
@@ -935,10 +1147,11 @@ if (notifyForm && notifyMessage) {
 
       setNotifyState("submitted");
       setNotifyMessage(
-        "Thank you for staying up to date with Green Card Application Services. We will contact you when DV registration opens.",
+        "Your notification request was sent. Delivery cannot be confirmed here; contact support if you need help.",
         "success",
       );
     } catch (error) {
+      notificationPending = false;
       setNotifyState("idle");
       setNotifyMessage(
         error.message ||

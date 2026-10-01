@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cache_version="20260803-policy-final-v1"
+cache_version="20260930-conversion-v2"
+styles_version="20260930-conversion-v2"
 
 html_files=()
 while IFS= read -r html_file; do
@@ -16,6 +17,7 @@ done < <(
 node --check assets/app.js
 node --check assets/requirements.js
 node --check assets/site-metrics.js
+node scripts/check-conversion-flow.mjs
 node scripts/check-local-references.mjs
 
 if command -v xmllint >/dev/null 2>&1; then
@@ -70,7 +72,7 @@ if ! grep -q 'name="marketingConsent" type="checkbox"' index.html ||
   exit 1
 fi
 
-styles_count="$(grep -l "assets/styles\.css?v=${cache_version}" -- "${html_files[@]}" | wc -l | tr -d ' ')"
+styles_count="$(grep -l "assets/styles\.css?v=${styles_version}" -- "${html_files[@]}" | wc -l | tr -d ' ')"
 if [[ "$html_count" != "$styles_count" ]]; then
   echo "Every HTML page must use the current stylesheet cache version." >&2
   exit 1

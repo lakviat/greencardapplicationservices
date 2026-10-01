@@ -98,6 +98,11 @@ The public website is a dependency-free static site. Run it locally with
 `python3 -m http.server 8080`, then run the repository checks with
 `bash scripts/check-static-site.sh` before deployment.
 
+All public pages share `assets/styles.css`. Its root variables define the palette,
+card radius, shadows, and maximum-width page gutters. When changing shared
+styles, update the stylesheet query version in every HTML page and
+`styles_version` in `scripts/check-static-site.sh`; script versions are separate.
+
 Stripe checkout is hosted by Stripe; card data must never be added to the site,
 Apps Script, Google Drive records, logs, or this repository. The secure Apps
 Script templates in `scripts/` require `ROOT_FOLDER_ID` and `ALLOWED_WEBSITES`
@@ -105,11 +110,92 @@ to be configured in each Apps Script project's Script properties before a new
 version is deployed. See `SECURITY.md` for architecture boundaries and private
 vulnerability reporting.
 
+## Conversion Measurement and Campaigns
+
+Pricing cards select the corresponding form package and Stripe Payment Link.
+Links such as `/?package=couple#apply` preselect a package without submitting
+anything. The four prices remain $39, $69, $99, and $149 USD.
+
+Returning from Stripe restores editable details. An unchanged request can reopen
+checkout without dispatching a duplicate; revised information gets a fresh intake
+reference after a 125-second cooldown following the previous request's settlement.
+This only protects retries in the same page session, not across tabs or reloads.
+The page cannot establish payment status: check the Stripe receipt or contact
+support before paying again.
+
+With analytics consent, `assets/site-metrics.js` records the following GA4 funnel:
+
+| Event | Meaning |
+| --- | --- |
+| `view_item_list` | The pricing section became visible. |
+| `select_item` | A visitor selected a preparation package. |
+| `form_view` / `form_start` | The request form was seen / interacted with. |
+| `validation_error` | A required, format, constraint, or upload check failed; no field values are sent. |
+| `request_dispatch` | An application or notification request was dispatched, not confirmed received. |
+| `begin_checkout` | A validated application request resolved and Stripe navigation was initiated, not a payment. |
+| `cta_click` | A tagged call to action was clicked, with an allowlisted location. |
+
+No `purchase` or confirmed-lead event is emitted by this static site. Count actual
+sales in Stripe, not by form submissions, redirects, or a browser return URL.
+Before optimizing ads for purchases, connect a trusted backend to verified Stripe
+payment events, deduplicate by transaction ID, and reconcile the existing
+`client_reference_id` against the intake record. That backend and account setup
+are not part of this static repository. Apps Script currently uses opaque
+`no-cors` responses; a resolved request does not prove that intake was stored.
+Verify intake delivery and payment matching operationally before buying traffic.
+
+In GA4, create a funnel exploration using the events above. **Disable Enhanced
+Measurement form interactions and automatic history-based page views in the web
+stream**, and review other automatic measurement for unexpected fields. Client
+flags alone do not replace these account settings. Verify events in DebugView or
+Realtime after deploying; configure custom dimensions for `cta_location`,
+`cta_id`, and `error_category` if needed. Rejection or withdrawal of analytics
+consent stops this site's custom events. No names, emails, phone numbers, country
+selections, file details, raw referrers, or query strings are added to them.
+
+Campaign attribution accepts only complete, exact triples:
+
+| Parameter | Allowed values |
+| --- | --- |
+| `utm_source` | `newsletter`, `google`, `facebook`, `instagram` |
+| `utm_medium` | `email`, `cpc`, `social` |
+| `utm_campaign` | `dv-preparation`, `photo-checklist`, `family-guide` |
+
+Example opt-in email campaign link:
+`https://greencardapplicationservices.com/?utm_source=newsletter&utm_medium=email&utm_campaign=dv-preparation#pricing`.
+Unknown or partial campaign values are dropped. Campaign values are not persisted
+across pages, and click IDs are not forwarded; this is privacy-limited attribution,
+not complete Google Ads conversion attribution. Adjust account-side attribution
+only with the appropriate consent and purchase-verification infrastructure.
+
+The costs article, photo requirements, and family guide provide useful landing
+pages for educational campaigns. Send only to contacts with appropriate marketing
+permission, include sender identification and a working unsubscribe mechanism,
+and use the government dates rather than manufactured urgency. This change does
+not send email or launch paid campaigns. Check advertising-platform restrictions
+for government-document/immigration assistance before launching ads.
+
+After deployment, submit the updated sitemap in Search Console and monitor
+indexing, landing-page engagement, package selection, checkout starts, and
+Stripe-confirmed purchases separately. Search rankings and sales improvements
+are not guaranteed by metadata or visual changes.
+
+## Official Fees and Dates
+
+The State Department's [September 16, 2025 final rule](https://www.federalregister.gov/documents/2025/09/16/2025-17851/schedule-of-fees-for-consular-services-department-of-state-and-overseas-embassies-and)
+established a $1 electronic DV registration fee, effective that day. Do not
+describe current official entry as universally free. Government fees are separate
+from the site's preparation prices; consult the active-year instructions.
+The homepage intentionally does not show a countdown to an estimated opening.
+
 ## DV-2026 Eligible Countries
 
-This list is based on the currently published U.S. Department of State DV-2026 instructions and matches the country dropdown used on the website. Refresh this list when DV-2027 instructions are published.
+This historical list is based on the U.S. Department of State DV-2026 instructions
+and matches the country dropdown used on the website. It is not confirmation of
+current-year eligibility. Refresh the dropdown and this list against the active
+DV instructions before using them for current-year targeting.
 
-Copyable Google Ads country list, one country per line:
+Historical country reference, one country per line:
 
 ```text
 Afghanistan
