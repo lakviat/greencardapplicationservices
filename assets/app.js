@@ -865,7 +865,7 @@ if (form && message) {
     });
   };
 
-  const selectPackage = (packageKey, { focus = false, measure = true } = {}) => {
+  const selectPackage = (packageKey, { focus = false, measure = true, keyboard = false } = {}) => {
     if (applicationPending) return false;
     if (typeof packageKey !== "string" || !Object.hasOwn(stripePackages, packageKey)) return false;
     const option = Array.from(packageOptions).find((radio) => radio.value === packageKey);
@@ -878,8 +878,10 @@ if (form && message) {
     if (focus) {
       const focusTarget = document.querySelector("#applicationFormTitle") ||
         form.querySelector('input:not([type="hidden"]):not([disabled])');
+      // Keep the reading position accessible without outlining a heading after a tap.
+      focusTarget?.classList.toggle("is-pointer-focus", !keyboard);
       focusTarget?.focus({ preventScroll: true });
-      (applySection || form).scrollIntoView({
+      form.scrollIntoView({
         behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
         block: "start",
       });
@@ -1004,7 +1006,15 @@ if (form && message) {
     const link = event.target.closest?.("[data-package-select]");
     if (!link) return;
     event.preventDefault();
-    selectPackage(link.dataset.packageSelect, { focus: true });
+    selectPackage(link.dataset.packageSelect, { focus: true, keyboard: event.detail === 0 });
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" || event.repeat) return;
+    const link = event.target.closest?.("[data-package-select]");
+    if (!link) return;
+    // Keyboard-generated click details differ between browser engines.
+    event.preventDefault();
+    selectPackage(link.dataset.packageSelect, { focus: true, keyboard: true });
   });
   if (["/", "/index", "/index.html"].includes(window.location.pathname)) {
     const packageKey = new URLSearchParams(window.location.search).get("package");

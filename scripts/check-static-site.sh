@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cache_version="20260930-feedback-v3"
-styles_version="20260930-feedback-v3"
+cache_version="20261001-mobile-v1"
+styles_version="20261001-mobile-v1"
 
 html_files=()
 while IFS= read -r html_file; do

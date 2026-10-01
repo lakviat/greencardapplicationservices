@@ -110,6 +110,33 @@ to be configured in each Apps Script project's Script properties before a new
 version is deployed. See `SECURITY.md` for architecture boundaries and private
 vulnerability reporting.
 
+## Mobile Browser Regression
+
+The homepage places photos before the introduction at widths up to 860px and
+keeps the desktop two-column layout. Package links select the requested package
+and scroll directly to the form. The heading receives focus for assistive
+technology, but only keyboard navigation shows its focus outline.
+
+Run `bash scripts/check-static-site.sh` for deterministic checks. With the existing
+Playwright installation and Chromium, WebKit, and Firefox available, run:
+
+```sh
+MOBILE_BASE_URL=https://127.0.0.1:8443 node scripts/check-mobile-layout.cjs
+```
+
+Serve the repository on local HTTPS for cross-browser checks. WebKit upgrades
+HTTP subresources under the production `upgrade-insecure-requests` CSP; an HTTP-only
+preview can therefore appear unstyled even when Chromium loads it. Do not disable
+the production CSP to work around this. The runner permits a self-signed
+certificate only for loopback previews, intercepts external requests, and never
+sends real applications or payments. If Playwright is installed globally, set
+`NODE_PATH` to that installation's `node_modules` directory.
+
+Browser emulation covers responsive layout and interactions, not every physical
+device behavior. Review the local version on a real phone before deployment,
+especially browser toolbar changes, the software keyboard, camera permissions,
+and file selection.
+
 ## Conversion Measurement and Campaigns
 
 Pricing cards select the corresponding form package and Stripe Payment Link.

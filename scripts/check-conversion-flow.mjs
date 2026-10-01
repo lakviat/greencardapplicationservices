@@ -473,7 +473,8 @@ test("pricing clicks select all packages, preserve applicant rules, focus and re
       assert.equal(card.attributes.get("aria-current"), String(selected));
     });
     assert.deepEqual(plain(env.heading.focusOptions), { preventScroll: true });
-    assert.equal(env.elements.get("#apply").scrollOptions.behavior, "instant");
+    assert.equal(env.appForm.scrollOptions.behavior, "instant");
+    assert.equal(env.heading.classes.has("is-pointer-focus"), true);
     assert.equal(env.premiumField.hidden, key !== "premium");
     env.sections.forEach((section, index) => {
       assert.equal(section.hidden, index + 2 > count);
@@ -488,6 +489,27 @@ test("pricing clicks select all packages, preserve applicant rules, focus and re
   assert.equal(env.summaryName.textContent, "Premium");
   assert.equal(env.window.redirects.length, 0);
   assert.equal(env.requests.length, 0);
+});
+
+test("package navigation suppresses pointer heading outlines but preserves keyboard orientation", async () => {
+  const env = loadApp();
+  const target = { closest: () => env.cards[0] };
+  await env.document.emit("click", { target, detail: 1 });
+  assert.equal(env.heading.classes.has("is-pointer-focus"), true);
+  assert.deepEqual(plain(env.heading.focusOptions), { preventScroll: true });
+  assert.equal(env.appForm.scrollOptions.block, "start");
+  assert.equal(env.elements.get("#apply").scrollOptions, undefined);
+  await env.document.emit("click", { target, detail: 0 });
+  assert.equal(env.heading.classes.has("is-pointer-focus"), false);
+  assert.deepEqual(plain(env.heading.focusOptions), { preventScroll: true });
+  await env.document.emit("click", { target, detail: 1 });
+  assert.equal(env.heading.classes.has("is-pointer-focus"), true);
+  await env.document.emit("keydown", { target, key: "Enter" });
+  assert.equal(env.heading.classes.has("is-pointer-focus"), false);
+  const selections = env.events.length;
+  await env.document.emit("keydown", { target, key: "Enter", repeat: true });
+  await env.document.emit("keydown", { target, key: "ArrowDown" });
+  assert.equal(env.events.length, selections);
 });
 
 test("pause excludes unloaded images and reduced motion does not start an animation", async () => {
@@ -600,7 +622,8 @@ test("package deep links are allowlisted, initialize summary, and never produce 
     const env = loadApp({ pathname: path, search: "?package=couple&email=private@example.com" });
     assert.equal(env.summaryName.textContent, "Couple");
     assert.equal(env.events.length, 0);
-    assert.equal(env.elements.get("#apply").scrollOptions.behavior, "smooth");
+    assert.equal(env.appForm.scrollOptions.behavior, "smooth");
+    assert.equal(env.heading.classes.has("is-pointer-focus"), true);
     env.radios[2].checked = true;
     await env.radios[2].emit("change");
     assert.equal(env.summaryPrice.textContent, "$64");
