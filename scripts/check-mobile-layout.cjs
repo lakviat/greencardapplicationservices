@@ -349,7 +349,13 @@ async function carousel(page, touch) {
     }
     const fades = await page.evaluate(async () => {
       const slides = [...document.querySelectorAll(".hero-photo-slide")];
-      slides.forEach((slide) => slide.getAnimations().forEach((item) => { item.currentTime = 24500; }));
+      slides.forEach((slide) => {
+        const animation = slide.getAnimations()[0];
+        if (!animation) throw new Error("Carousel animation is missing");
+        const timing = animation.effect.getTiming();
+        animation.pause();
+        animation.currentTime = Number(timing.delay) + Number(timing.duration) * 0.225;
+      });
       await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       return slides.map((slide) => Number(getComputedStyle(slide).opacity));
     });
