@@ -5,10 +5,10 @@
   const advertisingId = "AW-17948229197";
   const consentStorageKey = "gcas_cookie_preferences_v1";
   const packages = Object.freeze({
-    single: { item_id: "single", item_name: "Single", price: 39 },
-    couple: { item_id: "couple", item_name: "Couple", price: 69 },
-    family: { item_id: "family", item_name: "Family", price: 99 },
-    premium: { item_id: "premium", item_name: "Premium", price: 149 },
+    single: { item_id: "single", item_name: "Single", price: 24 },
+    couple: { item_id: "couple", item_name: "Couple", price: 44 },
+    family: { item_id: "family", item_name: "Family", price: 64 },
+    premium: { item_id: "premium", item_name: "Premium", price: 94 },
   });
   const locations = new Set(["hero", "header", "article", "pricing", "footer", "process"]);
   const ctas = new Set(["navigation", "apply", "notify", "package", "compare-packages", "start-single"]);
@@ -63,6 +63,12 @@
   const sanitize = (event, metadata) => {
     if (!metadata || typeof metadata !== "object") return null;
     switch (event) {
+      case "support_open":
+        return {};
+      case "support_action":
+        return ["email", "whatsapp", "faq", "instagram"].includes(metadata.channel)
+          ? { support_channel: metadata.channel }
+          : null;
       case "page_view":
       case "view_item_list":
         return event === "view_item_list"

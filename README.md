@@ -114,7 +114,14 @@ vulnerability reporting.
 
 Pricing cards select the corresponding form package and Stripe Payment Link.
 Links such as `/?package=couple#apply` preselect a package without submitting
-anything. The four prices remain $39, $69, $99, and $149 USD.
+anything. Production prices are $24, $44, $64, and $94 USD, respectively.
+
+Checkout uses one required agreement covering private paid support, linked terms,
+privacy and refunds, beginning service after payment, and necessary application
+contact. The payload derives the legacy consent flags from this single checkbox
+for compatibility with deployed intake scripts. It does not grant marketing
+permission. Registration alerts have their own required permission and a separate,
+optional, initially unchecked marketing opt-in.
 
 Returning from Stripe restores editable details. An unchanged request can reopen
 checkout without dispatching a duplicate; revised information gets a fresh intake
@@ -186,7 +193,11 @@ The State Department's [September 16, 2025 final rule](https://www.federalregist
 established a $1 electronic DV registration fee, effective that day. Do not
 describe current official entry as universally free. Government fees are separate
 from the site's preparation prices; consult the active-year instructions.
-The homepage intentionally does not show a countdown to an estimated opening.
+The homepage countdown targets **October 7, 2026 at noon Eastern**, explicitly
+labeled a planning estimate, not an official opening or payment deadline.
+Expired or invalid targets show a source-checking message rather than claiming
+registration has opened. Change the target only after reviewing official sources;
+never silently roll the estimate forward.
 
 ## DV-2026 Eligible Countries
 

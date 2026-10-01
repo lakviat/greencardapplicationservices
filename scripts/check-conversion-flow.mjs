@@ -6,16 +6,16 @@ import vm from "node:vm";
 const metricsSource = readFileSync(new URL("../assets/site-metrics.js", import.meta.url), "utf8");
 const appSource = readFileSync(new URL("../assets/app.js", import.meta.url), "utf8");
 const packageData = {
-  single: ["Single", 39, 1, "https://buy.stripe.com/14A3cx3BAgBp4pF4uo0Ny01"],
-  couple: ["Couple", 69, 2, "https://buy.stripe.com/eVq9AV2xw70PcWbgd60Ny02"],
-  family: ["Family", 99, 3, "https://buy.stripe.com/cNi7sN4FE5WL7BR8KE0Ny03"],
-  premium: ["Premium", 149, 1, "https://buy.stripe.com/cNieVf1tsbh509p2mg0Ny04"],
+  single: ["Single", 24, 1, "https://buy.stripe.com/9B614p5JI4SH6xNd0U0Ny05"],
+  couple: ["Couple", 44, 2, "https://buy.stripe.com/28E28t5JI4SH1dt1ic0Ny06"],
+  family: ["Family", 64, 3, "https://buy.stripe.com/eVqbJ34FE98X6xN6Cw0Ny07"],
+  premium: ["Premium", 94, 1, "https://buy.stripe.com/cNiaEZ2xw1Gv4pFd0U0Ny08"],
 };
 
 class Element {
   constructor(properties = {}) {
     Object.assign(this, {
-      dataset: {}, listeners: new Map(), value: "", hidden: false,
+      dataset: {}, listeners: new Map(), children: [], value: "", hidden: false,
       textContent: "", disabled: false, required: false,
       rect: { top: 10, bottom: 110, left: 10, right: 310, width: 300, height: 100 },
     }, properties);
@@ -38,6 +38,8 @@ class Element {
   }
   querySelector() { return null; }
   querySelectorAll() { return []; }
+  append(...children) { this.children.push(...children); }
+  contains(element) { return this === element || this.children.some((child) => child.contains(element)); }
   setAttribute(name, value) { this.attributes.set(name, value); }
   getBoundingClientRect() { return this.rect; }
   getClientRects() { return this.hidden ? [] : [this.rect]; }
@@ -52,10 +54,13 @@ const plain = (value) => JSON.parse(JSON.stringify(value));
 function environment({ saved = null, storageFails = false, pathname = "/", search = "?email=private@example.com", reducedMotion = false } = {}) {
   const document = new Element({ readyState: "complete", visibilityState: "visible", body: new Element() });
   const elements = new Map();
+  document.createElement = () => new Element();
+  document.createElementNS = () => new Element();
   document.querySelector = (selector) => elements.get(selector) || null;
   const history = [];
   const storageWrites = [];
   const timers = new Map();
+  const intervals = new Map();
   let timerId = 0;
   let referenceId = 0;
   const clock = { now: Date.now() };
@@ -73,7 +78,11 @@ function environment({ saved = null, storageFails = false, pathname = "/", searc
     location: { origin: "https://example.test", pathname, search, hash: "#private-hash", hostname: "example.test", assign(url) { window.redirects.push(url); } },
     innerHeight: 800, innerWidth: 1200, scrollY: 0, redirects: [],
     matchMedia: () => ({ matches: reducedMotion, addEventListener() {} }),
-    requestIdleCallback() {}, clearInterval() {}, setInterval() {},
+    Image: class { complete = true; naturalWidth = 1200; },
+    getComputedStyle: (element) => element.computedStyle,
+    requestIdleCallback() {},
+    clearInterval(id) { intervals.delete(id); },
+    setInterval(callback, delay) { intervals.set(++timerId, { callback, delay }); return timerId; },
     setTimeout(callback, delay) { timers.set(++timerId, { callback, delay }); return timerId; },
     clearTimeout(id) { timers.delete(id); },
     crypto: { randomUUID: () => `test-reference-${++referenceId}` },
@@ -97,7 +106,7 @@ function environment({ saved = null, storageFails = false, pathname = "/", searc
     window, document, IntersectionObserver, URL, URLSearchParams, console, Date: ClockDate,
     fetch() { throw new Error("Unexpected network request"); },
   });
-  return { window, document, context, history, dataLayer, elements, observers, storageWrites, timers, clock };
+  return { window, document, context, history, dataLayer, elements, observers, storageWrites, timers, intervals, clock };
 }
 
 function loadMetrics(options = {}) {
@@ -169,6 +178,21 @@ test("strict event and item allowlists discard arbitrary metadata and personal v
   assert.equal(config.form_interactions, false);
   assert.equal(config.enhanced_measurement, false);
   assert.equal(env.history.find(([command]) => command === "set")[1].url_passthrough, false);
+});
+
+test("support events use consent-gated fixed channels without URLs or contact details", () => {
+  const env = loadMetrics();
+  assert.equal(env.window.gcasAnalytics.track("support_open"), false);
+  env.window.gcasConsent.save({ analytics: true });
+  assert.equal(env.window.gcasAnalytics.track("support_action", { channel: "private@example.com" }), false);
+  for (const channel of ["email", "whatsapp", "faq", "instagram"]) {
+    assert.equal(env.window.gcasAnalytics.track("support_action", {
+      channel, url: "https://private.test", phone: "+12345678",
+    }), true);
+    assert.equal(env.events().at(-1)[2].support_channel, channel);
+  }
+  assert.doesNotMatch(JSON.stringify(env.history), /private|12345678/);
+  assert.equal(env.window.gcasAnalytics.track("application_start"), false);
 });
 
 test("page locations are absolute origin/path only, with no query, fragment or referrer", () => {
@@ -337,6 +361,17 @@ function loadApp(options = {}) {
   const cards = Object.keys(packageData).map((packageSelect) =>
     new Element({ dataset: { packageSelect } }));
   const hero = new Element();
+  const slides = [0.4, 0.6, 0, 0].map((opacity, index) => {
+    const animation = {
+      currentTime: 24700,
+      effect: { getTiming: () => ({ delay: index * 5000, duration: 20000 }) },
+    };
+    return new Element({
+      computedStyle: { opacity: String(opacity), backgroundImage: `url("photo-${index}.jpg")` },
+      getAnimations: () => [animation],
+    });
+  });
+  hero.querySelectorAll = () => slides;
   const heroPause = new Element({ textContent: "Pause photos" });
   const sections = [2, 3].map((number) => {
     const section = new Element({ dataset: { applicantSection: String(number) } });
@@ -399,7 +434,7 @@ function loadApp(options = {}) {
   };
   const values = {
     email: "private@example.com", firstName: "Private", lastName: "Person",
-    serviceDisclaimer: "on", policyConsent: "on", contactAuthorization: "on",
+    checkoutConsent: "on",
     notifyEmail: "private@example.com",
   };
   const snapshots = [];
@@ -417,9 +452,10 @@ function loadApp(options = {}) {
     requests.push(request);
     return new Promise((resolve, reject) => Object.assign(request, { resolve, reject }));
   };
+  options.setup?.(env);
   vm.runInContext(appSource, context);
   return { ...env, appForm, notificationForm, heading, summaryName, summaryPrice, premiumCount,
-    premiumField, sections, radios, cards, hero, heroPause, events, requests, values, snapshots };
+    premiumField, sections, radios, cards, hero, slides, heroPause, events, requests, values, snapshots };
 }
 
 test("pricing clicks select all packages, preserve applicant rules, focus and respect reduced motion", async () => {
@@ -454,6 +490,95 @@ test("pricing clicks select all packages, preserve applicant rules, focus and re
   assert.equal(env.requests.length, 0);
 });
 
+test("pause excludes unloaded images and reduced motion does not start an animation", async () => {
+  const env = loadApp();
+  env.slides[1].computedStyle.opacity = "0.9";
+  vm.runInContext("heroImages.get(heroSection.querySelectorAll('.hero-photo-slide')[1]).naturalWidth = 0", env.context);
+  await env.heroPause.emit("click");
+  assert.equal(env.slides[0].classes.has("is-paused-frame"), true);
+  assert.equal(env.slides[1].classes.has("is-paused-frame"), false);
+  const reduced = loadApp({ reducedMotion: true });
+  await reduced.heroPause.emit("click");
+  assert.equal(reduced.hero.classes.has("is-paused"), false);
+  assert.equal(reduced.slides.every((slide) => slide.getAnimations()[0].currentTime === 24700), true);
+});
+
+test("countdown shows three values at a known clock and expires without claiming registration is open", () => {
+  const heading = new Element();
+  const description = new Element();
+  const values = Object.fromEntries(["days", "hours", "minutes"].map((unit) => [unit, new Element()]));
+  const panel = new Element({
+    dataset: { countdownDate: "2026-10-07T12:00:00-04:00", countdownStatus: "estimated" },
+  });
+  panel.querySelector = (selector) => {
+    if (selector === "[data-countdown-heading]") return heading;
+    if (selector === "[data-countdown-description]") return description;
+    return values[selector.match(/data-countdown-(.*?)\]/)?.[1]];
+  };
+  const env = loadApp({ setup(env) {
+    env.clock.now = Date.parse("2026-09-30T12:34:00-04:00");
+    env.elements.set("[data-dv-countdown]", panel);
+  } });
+  assert.equal(heading.textContent, "Until the planning estimate");
+  assert.deepEqual(Object.values(values).map((value) => value.textContent), ["06", "23", "26"]);
+  const timer = [...env.intervals.values()][0];
+  assert.equal(timer.delay, 60000);
+  env.clock.now += 60000;
+  timer.callback();
+  assert.equal(values.minutes.textContent, "25");
+  env.clock.now = Date.parse("2026-10-07T12:00:00-04:00");
+  timer.callback();
+  assert.deepEqual(Object.values(values).map((value) => value.textContent), ["00", "00", "00"]);
+  assert.equal(heading.textContent, "Estimated date reached");
+  assert.match(description.textContent, /does not confirm.*Check the official/);
+  assert.equal(env.intervals.size, 0);
+  env.clock.now += 365 * 86400000;
+  timer.callback();
+  assert.equal(heading.textContent, "Estimated date reached");
+  const expired = loadApp({ setup(env) {
+    env.clock.now = Date.parse("2026-10-08T12:00:00-04:00");
+    env.elements.set("[data-dv-countdown]", panel);
+  } });
+  assert.equal(heading.textContent, "Estimated date reached");
+  assert.equal(expired.intervals.size, 0);
+});
+
+test("missing and invalid countdown dates visibly show unavailable rather than stale values", () => {
+  for (const countdownDate of ["", "invalid-date"]) {
+    const heading = new Element();
+    const description = new Element();
+    const values = [new Element(), new Element(), new Element()];
+    const panel = new Element({ dataset: { countdownDate, countdownStatus: "estimated" } });
+    panel.querySelector = (selector) =>
+      selector === "[data-countdown-heading]" ? heading :
+        selector === "[data-countdown-description]" ? description :
+          values[["days", "hours", "minutes"].findIndex((unit) => selector.includes(unit))];
+    const env = loadApp({ setup(env) { env.elements.set("[data-dv-countdown]", panel); } });
+    assert.equal(heading.textContent, "Countdown unavailable");
+    assert.deepEqual(values.map((value) => value.textContent), ["—", "—", "—"]);
+    assert.equal(env.intervals.size, 0);
+  }
+});
+
+test("support widget opens, routes fixed events, closes on Escape and preserves focus", async () => {
+  const env = loadApp();
+  const widget = env.document.body.children.find((element) => element.className === "support-widget");
+  assert.ok(widget);
+  const [panel, trigger] = widget.children;
+  await trigger.emit("click");
+  assert.equal(panel.hidden, false);
+  assert.deepEqual(env.events.at(-1), { event: "support_open" });
+  const actions = panel.children[1].children;
+  for (const [index, channel] of ["email", "whatsapp", "faq"].entries()) {
+    await actions[index].emit("click");
+    assert.deepEqual(env.events.at(-1), { event: "support_action", channel });
+  }
+  await env.document.emit("keydown", { key: "Escape" });
+  assert.equal(panel.hidden, true);
+  assert.equal(trigger.attributes.get("aria-expanded"), "false");
+  assert.doesNotMatch(JSON.stringify(env.events), /https:|mailto:|1754/);
+});
+
 test("hero photos can pause and resume with an accessible toggle state", async () => {
   const env = loadApp();
   assert.equal(env.heroPause.attributes.get("aria-pressed"), "false");
@@ -461,10 +586,13 @@ test("hero photos can pause and resume with an accessible toggle state", async (
   assert.equal(env.heroPause.textContent, "Resume photos");
   assert.equal(env.heroPause.attributes.get("aria-pressed"), "true");
   assert.equal(env.hero.classes.has("is-paused"), true);
+  assert.deepEqual(env.slides.map((slide) => slide.classes.has("is-paused-frame")), [false, true, false, false]);
   await env.heroPause.emit("click");
   assert.equal(env.heroPause.textContent, "Pause photos");
   assert.equal(env.heroPause.attributes.get("aria-pressed"), "false");
   assert.equal(env.hero.classes.has("is-paused"), false);
+  assert.equal(env.slides.every((slide) => !slide.classes.has("is-paused-frame")), true);
+  assert.equal(env.slides.every((slide) => slide.getAnimations()[0].currentTime === 26000), true);
 });
 
 test("package deep links are allowlisted, initialize summary, and never produce interaction events", async () => {
@@ -475,7 +603,7 @@ test("package deep links are allowlisted, initialize summary, and never produce 
     assert.equal(env.elements.get("#apply").scrollOptions.behavior, "smooth");
     env.radios[2].checked = true;
     await env.radios[2].emit("change");
-    assert.equal(env.summaryPrice.textContent, "$99");
+    assert.equal(env.summaryPrice.textContent, "$64");
     assert.deepEqual(env.events.at(-1), { event: "select_item", package: "family" });
   }
   for (const packageKey of ["__proto__", "constructor", "unknown"]) {
@@ -509,12 +637,45 @@ test("dispatch is not a confirmed lead; checkout waits for fetch, uses unchanged
     assert.equal(env.requests.length, 1);
     env.requests[0].resolve({ type: "opaque" });
     await submission;
+    assert.equal(env.events.filter(({ event }) => event === "begin_checkout").length, 1);
     assert.deepEqual(env.events.at(-1), { event: "begin_checkout", package: packageKey });
     const checkout = new URL(env.window.redirects[0]);
     assert.equal(`${checkout.origin}${checkout.pathname}`, paymentLink);
     assert.equal(checkout.searchParams.get("prefilled_email"), "private@example.com");
     assert.equal(checkout.searchParams.get("client_reference_id"), payload.submissionId);
     assert.doesNotMatch(JSON.stringify(env.events), /private|gcas-test|purchase|generate_lead/);
+  }
+});
+
+test("one checkout checkbox alone maps every required consent field and never inherits marketing", async () => {
+  for (const checkoutConsent of ["on", "", "true"]) {
+    const env = loadApp();
+    Object.assign(env.values, {
+      checkoutConsent, consent: "on", serviceDisclaimer: "on", policyConsent: "on",
+      contactAuthorization: "on", marketingConsent: "on", notifyMarketingConsent: "on",
+    });
+    const submission = env.appForm.emit("submit");
+    await tick();
+    const payload = JSON.parse(env.requests[0].options.body);
+    for (const field of ["consent", "checkoutConsent", "serviceDisclaimer", "contactAuthorization", "policyConsent"]) {
+      assert.equal(payload[field], checkoutConsent === "on", field);
+    }
+    assert.equal(payload.marketingConsent, false);
+    env.requests[0].resolve({ type: "opaque" });
+    await submission;
+  }
+});
+
+test("notification marketing is optional and derives only from its own checkbox", async () => {
+  for (const notifyMarketingConsent of ["", "on"]) {
+    const env = loadApp();
+    Object.assign(env.values, { notifyMarketingConsent, marketingConsent: "on", checkoutConsent: "on" });
+    const submission = env.notificationForm.emit("submit");
+    await tick();
+    const payload = JSON.parse(env.requests[0].options.body);
+    assert.equal(payload.marketingConsent, notifyMarketingConsent === "on");
+    env.requests[0].resolve({ type: "opaque" });
+    await submission;
   }
 });
 
@@ -628,6 +789,8 @@ test("unchanged bfcache retry preserves reference and reopens Stripe without dup
   const reference = env.appForm.dataset.submissionId;
   await env.window.emit("pageshow", { persisted: true });
   assert.match(env.elements.get("#formMessage").textContent, /before paying again/);
+  env.values.notifyMarketingConsent = "on";
+  env.values.marketingConsent = "on";
   await env.appForm.emit("submit");
   assert.equal(env.requests.length, 1);
   assert.equal(env.window.redirects.length, 2);
@@ -636,11 +799,10 @@ test("unchanged bfcache retry preserves reference and reopens Stripe without dup
   assert.match(env.elements.get("#formMessage").textContent, /without resending/);
 });
 
-test("applicant, consent and upload content revisions receive new references after cooldown", async () => {
+test("applicant and upload content revisions receive new references after cooldown", async () => {
   const changes = [
     (env) => { env.values.firstName = "Revised"; },
     (env) => { env.values.applicant2LastName = "Revised"; },
-    (env) => { env.values.marketingConsent = "on"; },
     (env) => { env.values.identityDocument = [new env.context.File("other")]; },
   ];
   for (const revise of changes) {

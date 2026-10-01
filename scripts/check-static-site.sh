@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cache_version="20260930-conversion-v2"
-styles_version="20260930-conversion-v2"
+cache_version="20260930-feedback-v3"
+styles_version="20260930-feedback-v3"
 
 html_files=()
 while IFS= read -r html_file; do
@@ -56,21 +56,39 @@ if git grep -nE '\[INSERT|pending confirmation|pending final business approval' 
   exit 1
 fi
 
-if ! grep -q 'name="policyConsent" type="checkbox" required' index.html; then
-  echo "The required policy agreement checkbox is missing." >&2
+if ! grep -q 'name="checkoutConsent" type="checkbox" required' index.html; then
+  echo "The single required checkout agreement is missing." >&2
   exit 1
 fi
 
-if ! grep -q 'name="contactAuthorization" type="checkbox" required' index.html; then
-  echo "The required operational-contact authorization is missing." >&2
+if grep -qE 'name="(consent|serviceDisclaimer|contactAuthorization|policyConsent|marketingConsent)"' index.html; then
+  echo "Legacy checkout consent checkboxes must not be rendered." >&2
   exit 1
 fi
 
-if ! grep -q 'name="marketingConsent" type="checkbox"' index.html ||
-  grep -q 'name="marketingConsent" type="checkbox" required' index.html; then
-  echo "Marketing consent must be present, optional, and unchecked." >&2
+if ! grep -q 'name="notifyMarketingConsent" type="checkbox"' index.html ||
+  grep -qE 'name="notifyMarketingConsent"[^>]*(required|checked)' index.html; then
+  echo "Marketing consent must be separate from checkout, optional, and unchecked." >&2
   exit 1
 fi
+
+node --input-type=module <<'NODE'
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+const html = readFileSync("index.html", "utf8");
+const form = (id) => html.match(new RegExp(`<form\\b[^>]*id="${id}"[^>]*>([\\s\\S]*?)</form>`))?.[1] || "";
+const intake = form("intakeForm");
+const notification = form("notifyForm");
+assert.equal((intake.match(/name="checkoutConsent"/g) || []).length, 1,
+  "Intake must have exactly one checkout consent control.");
+assert.doesNotMatch(intake, /name="(?:notifyMarketingConsent|marketingConsent)"/,
+  "Marketing opt-in belongs only in the notification form.");
+assert.match(notification, /name="notifyMarketingConsent"/,
+  "Notification form must offer its separate optional marketing opt-in.");
+for (const control of html.matchAll(/<input\b[^>]*name="(?:checkoutConsent|notifyMarketingConsent)"[^>]*>/g)) {
+  assert.doesNotMatch(control[0], /\schecked(?:\s|=|\/?>)/, "Consent must never be prechecked.");
+}
+NODE
 
 styles_count="$(grep -l "assets/styles\.css?v=${styles_version}" -- "${html_files[@]}" | wc -l | tr -d ' ')"
 if [[ "$html_count" != "$styles_count" ]]; then

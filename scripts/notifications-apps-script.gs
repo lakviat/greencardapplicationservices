@@ -47,6 +47,7 @@ function doPost(e) {
             email: payload.email,
             phone: payload.phone,
             consent: payload.consent,
+            marketingConsent: payload.marketingConsent,
           },
           null,
           2,
@@ -137,6 +138,7 @@ function validateAndNormalizeRequest(body) {
     email: email,
     phone: phone,
     consent: consent,
+    marketingConsent: body.marketingConsent === true,
   };
 }
 

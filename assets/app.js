@@ -55,28 +55,34 @@ const countryCombobox = document.querySelector("[data-country-combobox]");
 const stripePackages = {
   single: {
     label: "Single",
-    amount: 39,
-    paymentLink: "https://buy.stripe.com/14A3cx3BAgBp4pF4uo0Ny01",
+    amount: 24,
+    paymentLink: "https://buy.stripe.com/9B614p5JI4SH6xNd0U0Ny05",
   },
   couple: {
     label: "Couple",
-    amount: 69,
-    paymentLink: "https://buy.stripe.com/eVq9AV2xw70PcWbgd60Ny02",
+    amount: 44,
+    paymentLink: "https://buy.stripe.com/28E28t5JI4SH1dt1ic0Ny06",
   },
   family: {
     label: "Family",
-    amount: 99,
-    paymentLink: "https://buy.stripe.com/cNi7sN4FE5WL7BR8KE0Ny03",
+    amount: 64,
+    paymentLink: "https://buy.stripe.com/eVqbJ34FE98X6xN6Cw0Ny07",
   },
   premium: {
     label: "Premium",
-    amount: 149,
-    paymentLink: "https://buy.stripe.com/cNieVf1tsbh509p2mg0Ny04",
+    amount: 94,
+    paymentLink: "https://buy.stripe.com/cNiaEZ2xw1Gv4pFd0U0Ny08",
   },
 };
 
-const trackConversion = (event, metadata = {}) =>
-  window.gcasAnalytics?.track(event, metadata);
+const trackConversion = (event, metadata = {}) => {
+  try {
+    return window.gcasAnalytics?.track(event, metadata);
+  } catch {
+    // Optional measurement must never interrupt a form or support action.
+    return false;
+  }
+};
 
 const trackFormInteraction = (targetForm, formId) => {
   if (!targetForm) return;
@@ -100,10 +106,51 @@ const trackFormInteraction = (targetForm, formId) => {
 trackFormInteraction(form, "application");
 trackFormInteraction(notifyForm, "notification");
 
+const heroImages = new Map();
+const prepareHeroImages = () => {
+  heroSection?.querySelectorAll(".hero-photo-slide").forEach((slide) => {
+    const background = window.getComputedStyle(slide).backgroundImage;
+    const source = background.match(/^url\(["']?(.*?)["']?\)$/)?.[1];
+    if (!source || heroImages.has(slide)) return;
+    const image = new window.Image();
+    image.src = source;
+    heroImages.set(slide, image);
+  });
+};
+
 if (heroSection && heroPauseButton) {
   let heroPaused = false;
+  let pausedFrame = null;
+  const slides = Array.from(heroSection.querySelectorAll(".hero-photo-slide"));
+  const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+  prepareHeroImages();
   heroPauseButton.setAttribute("aria-pressed", "false");
   heroPauseButton.addEventListener("click", () => {
+    if (motionPreference.matches) return;
+    if (!heroPaused) {
+      prepareHeroImages();
+      const loaded = slides.filter((slide) => {
+        const image = heroImages.get(slide);
+        return image?.complete && image.naturalWidth > 0;
+      });
+      pausedFrame = loaded.reduce((best, slide) =>
+        !best || Number(window.getComputedStyle(slide).opacity) >
+          Number(window.getComputedStyle(best).opacity) ? slide : best, null);
+      if (!pausedFrame) return;
+      pausedFrame.classList.add("is-paused-frame");
+    } else {
+      // Resume from the selected photo's opaque hold, not the interrupted blend.
+      const animation = pausedFrame?.getAnimations?.()[0];
+      if (animation) {
+        const timing = animation.effect.getTiming();
+        const time = timing.delay + Number(timing.duration) + 1000;
+        heroSection.querySelectorAll(".hero-photo-slide, .hero-carousel-dots span")
+          .forEach((element) => element.getAnimations().forEach((item) => {
+            item.currentTime = time;
+          }));
+      }
+      slides.forEach((slide) => slide.classList.remove("is-paused-frame"));
+    }
     heroPaused = !heroPaused;
     heroSection.classList.toggle("is-paused", heroPaused);
     heroPauseButton.setAttribute("aria-pressed", String(heroPaused));
@@ -350,6 +397,7 @@ const loadDeferredHeroImages = () => {
     const imageClass = cleanText(slide.dataset.heroImage, 40);
     if (imageClass) slide.classList.add(imageClass);
   });
+  prepareHeroImages();
 };
 
 if ("requestIdleCallback" in window) {
@@ -367,18 +415,19 @@ if (countdownPanel) {
     "[data-countdown-description]",
   );
   const values = {
-    days: countdownPanel.querySelector('[data-countdown-value="days"]'),
-    hours: countdownPanel.querySelector('[data-countdown-value="hours"]'),
+    days: countdownPanel.querySelector("[data-countdown-days]"),
+    hours: countdownPanel.querySelector("[data-countdown-hours]"),
+    minutes: countdownPanel.querySelector("[data-countdown-minutes]"),
   };
 
   if (targetDate && !Number.isNaN(targetDate.getTime())) {
     countdownPanel.classList.add("is-active");
     heading.textContent = isEstimated
-      ? "Estimated registration opening in:"
-      : "Registration opens in:";
+      ? "Until the planning estimate"
+      : "Until the published date";
     description.textContent = isEstimated
-      ? "Planning estimate: Wednesday, October 7, 2026 at 12:00 PM Eastern. The Department of State has not announced the official DV-2027 registration dates yet."
-      : "The countdown uses the official Department of State opening time.";
+      ? "Planning estimate only, not a confirmed opening or payment deadline. Check the official Department of State website for current dates."
+      : "Verify the current registration schedule with the Department of State.";
     let countdownTimer;
 
     const updateCountdown = () => {
@@ -391,20 +440,28 @@ if (countdownPanel) {
       values.hours.textContent = String(
         Math.floor((totalSeconds % 86400) / 3600),
       ).padStart(2, "0");
+      values.minutes.textContent = String(
+        Math.floor((totalSeconds % 3600) / 60),
+      ).padStart(2, "0");
 
       if (remaining === 0) {
         heading.textContent = isEstimated
-          ? "The estimated opening time has arrived."
-          : "The official opening time has arrived.";
-        description.textContent = isEstimated
-          ? "Check the official Department of State website before submitting an entry."
-          : "The official DV registration period is scheduled to be open.";
+          ? "Estimated date reached"
+          : "Published date reached";
+        description.textContent =
+          "This timer does not confirm that registration is open. Check the official Department of State website for current dates before submitting an entry.";
         window.clearInterval(countdownTimer);
       }
     };
 
     countdownTimer = window.setInterval(updateCountdown, 60000);
     updateCountdown();
+  } else {
+    countdownPanel.classList.remove("is-active");
+    heading.textContent = "Countdown unavailable";
+    description.textContent =
+      "A valid planning date is unavailable. Check the official Department of State website for current registration dates.";
+    Object.values(values).forEach((value) => { if (value) value.textContent = "—"; });
   }
 }
 
@@ -707,6 +764,8 @@ if (form && message) {
         phone: cleanText(formData.get(`applicant${number}Phone`), 32),
       }));
 
+    const checkoutConsent = formData.get("checkoutConsent") === "on";
+
     return {
       secret: appsScriptCompatibilityToken,
       submissionId,
@@ -714,11 +773,13 @@ if (form && message) {
       formStartedAt: form.dataset.startedAt || "",
       website: window.location.hostname,
       companyWebsite: cleanText(honeypotField?.value, 100),
-      consent: formData.get("serviceDisclaimer") === "on",
-      serviceDisclaimer: formData.get("serviceDisclaimer") === "on",
-      contactAuthorization: formData.get("contactAuthorization") === "on",
-      marketingConsent: formData.get("marketingConsent") === "on",
-      policyConsent: formData.get("policyConsent") === "on",
+      consent: checkoutConsent,
+      checkoutConsent,
+      // Keep these derived fields until the deployed Apps Script is upgraded.
+      serviceDisclaimer: checkoutConsent,
+      contactAuthorization: checkoutConsent,
+      policyConsent: checkoutConsent,
+      marketingConsent: false,
       policyAgreedAt,
       policyVersion: "2026-09-30",
       paymentReference: submissionId,
@@ -1076,7 +1137,7 @@ if (notifyForm && notifyMessage) {
     return `gcas-notify-${random}`;
   };
 
-  const sendNotificationToDrive = async ({ email, phone }) => {
+  const sendNotificationToDrive = async ({ email, phone, marketingConsent }) => {
     if (!googleScriptNotifyUrl) {
       throw new Error(
         "Notification collection is not connected yet. Please contact support or try again later.",
@@ -1100,7 +1161,8 @@ if (notifyForm && notifyMessage) {
         phone,
         notifyCompanyWebsite: cleanText(notifyHoneypotField?.value, 100),
         consent:
-          "I agree to be contacted about DV registration updates and application support.",
+          "I agree to receive the requested DV registration opening notification by email or WhatsApp.",
+        marketingConsent,
       }),
     });
     trackConversion("request_dispatch", { form: "notification" });
@@ -1143,7 +1205,12 @@ if (notifyForm && notifyMessage) {
     );
 
     try {
-      await sendNotificationToDrive({ email, phone });
+      await sendNotificationToDrive({
+        email,
+        phone,
+        marketingConsent:
+          formData.get("notifyMarketingConsent") === "on",
+      });
 
       setNotifyState("submitted");
       setNotifyMessage(
@@ -1161,6 +1228,165 @@ if (notifyForm && notifyMessage) {
     }
   });
 }
+
+const initializeSupportWidget = () => {
+  if (document.querySelector(".support-widget")) return;
+
+  const createIcon = (name) => {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+
+    const iconPaths = {
+      message: [
+        ["path", { d: "M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" }],
+        ["path", { d: "M8 10h.01M12 10h.01M16 10h.01" }],
+      ],
+      mail: [
+        ["rect", { x: "3", y: "5", width: "18", height: "14", rx: "2" }],
+        ["path", { d: "m3 7 9 6 9-6" }],
+      ],
+      whatsapp: [
+        ["path", { d: "M20.5 11.7a8.5 8.5 0 0 1-12.6 7.4L3 20.5l1.4-4.7A8.5 8.5 0 1 1 20.5 11.7Z" }],
+        ["path", { d: "M8.2 7.7c.2-.5.4-.5.8-.5h.4c.2 0 .4.1.5.4l.9 2.1c.1.3.1.5-.1.7l-.7.9c-.2.2-.1.4 0 .6.7 1.2 1.7 2.2 3 2.8.2.1.4.1.6-.1l.9-1.1c.2-.2.4-.3.7-.2l2.1 1c.3.1.4.3.4.6 0 .4-.2 1.4-1 2-.7.6-1.7.8-2.7.5-1.2-.3-3.2-1.1-5-2.8-1.5-1.4-2.5-3.2-2.8-4.4-.3-1.1 0-1.9.3-2.5Z" }],
+      ],
+      help: [
+        ["circle", { cx: "12", cy: "12", r: "9" }],
+        ["path", { d: "M9.7 9a2.4 2.4 0 1 1 3.5 2.1c-.8.4-1.2.9-1.2 1.9" }],
+        ["path", { d: "M12 17h.01" }],
+      ],
+      close: [
+        ["path", { d: "m7 7 10 10M17 7 7 17" }],
+      ],
+    };
+
+    iconPaths[name].forEach(([tagName, attributes]) => {
+      const element = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        tagName,
+      );
+      Object.entries(attributes).forEach(([key, value]) => {
+        element.setAttribute(key, value);
+      });
+      svg.append(element);
+    });
+
+    return svg;
+  };
+
+  const widget = document.createElement("div");
+  widget.className = "support-widget";
+
+  const panel = document.createElement("section");
+  panel.className = "support-panel";
+  panel.id = "supportPanel";
+  panel.hidden = true;
+  panel.setAttribute("aria-labelledby", "supportPanelTitle");
+
+  const panelHeader = document.createElement("div");
+  panelHeader.className = "support-panel-header";
+  const brandMark = document.createElement("span");
+  brandMark.className = "support-brand-mark";
+  brandMark.setAttribute("aria-hidden", "true");
+  const panelTitle = document.createElement("strong");
+  panelTitle.id = "supportPanelTitle";
+  panelTitle.textContent = "Support";
+  const closeButton = document.createElement("button");
+  closeButton.className = "support-close";
+  closeButton.type = "button";
+  closeButton.setAttribute("aria-label", "Close support panel");
+  closeButton.append(createIcon("close"));
+  panelHeader.append(brandMark, panelTitle, closeButton);
+
+  const actions = document.createElement("div");
+  actions.className = "support-actions";
+
+  const createAction = ({ label, icon, href, channel, disabled = false }) => {
+    const action = disabled
+      ? document.createElement("button")
+      : document.createElement("a");
+    action.className = "support-action";
+    if (disabled) {
+      action.type = "button";
+      action.disabled = true;
+      action.setAttribute("aria-label", `${label}, coming soon`);
+    } else {
+      action.href = href;
+      action.addEventListener("click", () =>
+        trackConversion("support_action", { channel }));
+    }
+
+    const iconWrap = document.createElement("span");
+    iconWrap.className = "support-action-icon";
+    iconWrap.append(createIcon(icon));
+    const labelWrap = document.createElement("span");
+    labelWrap.className = "support-action-label";
+    labelWrap.textContent = label;
+    action.append(iconWrap, labelWrap);
+
+    if (disabled) {
+      const status = document.createElement("small");
+      status.textContent = "Coming soon";
+      action.append(status);
+    }
+
+    return action;
+  };
+
+  actions.append(
+    createAction({
+      label: "Email support",
+      icon: "mail",
+      channel: "email",
+      href: "mailto:greencardapplicationservices@gmail.com?subject=Website%20support%20request",
+    }),
+    createAction({
+      label: "WhatsApp",
+      icon: "whatsapp",
+      channel: "whatsapp",
+      href: "https://wa.me/17547037991?text=Hello%20Green%20Card%20Application%20Services%2C%20I%20need%20support.",
+    }),
+    createAction({ label: "View FAQ", icon: "help", href: "/faq.html", channel: "faq" }),
+  );
+  panel.append(panelHeader, actions);
+
+  const trigger = document.createElement("button");
+  trigger.className = "support-trigger";
+  trigger.type = "button";
+  trigger.setAttribute("aria-label", "Open support");
+  trigger.setAttribute("aria-expanded", "false");
+  trigger.setAttribute("aria-controls", panel.id);
+  trigger.append(createIcon("message"));
+  widget.append(panel, trigger);
+  document.body.append(widget);
+
+  const setOpen = (isOpen) => {
+    panel.hidden = !isOpen;
+    trigger.setAttribute("aria-expanded", String(isOpen));
+    trigger.setAttribute("aria-label", isOpen ? "Hide support" : "Open support");
+    widget.classList.toggle("is-open", isOpen);
+    if (isOpen) closeButton.focus();
+  };
+
+  trigger.addEventListener("click", () => {
+    if (panel.hidden) trackConversion("support_open");
+    setOpen(panel.hidden);
+  });
+  closeButton.addEventListener("click", () => {
+    setOpen(false);
+    trigger.focus();
+  });
+  document.addEventListener("click", (event) => {
+    if (!panel.hidden && !widget.contains(event.target)) setOpen(false);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !panel.hidden) {
+      setOpen(false);
+      trigger.focus();
+    }
+  });
+};
 
 const initializeCookiePreferences = () => {
   const consentApi = window.gcasConsent;
@@ -1355,4 +1581,5 @@ const initializeCookiePreferences = () => {
   if (consentApi.get()) hideBanner();
 };
 
+initializeSupportWidget();
 initializeCookiePreferences();
