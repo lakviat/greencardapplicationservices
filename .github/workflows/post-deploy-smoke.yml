@@ -1,0 +1,37 @@
+name: Post-deploy smoke test
+
+on:
+  workflow_run:
+    workflows: ["pages build and deployment"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Optional deployed-site URL override
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    # Auto-run only after a successful main deployment; workflow_dispatch can run on demand.
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Check out triggering revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Run smoke test
+        env:
+          SMOKE_BASE_URL: ${{ github.event.inputs.base_url || 'https://greencardapplicationservices.com' }}
+        run: |
+          set -euo pipefail
+          # Use an environment variable instead of direct shell interpolation for the URL input.
+          node scripts/check-live-site.mjs "$SMOKE_BASE_URL" --attempts 12 --delay 30

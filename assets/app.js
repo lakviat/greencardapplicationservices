@@ -580,6 +580,21 @@ if (heroSection && "IntersectionObserver" in window) {
   heroObserver.observe(heroSection);
 }
 
+const stickyCta = document.querySelector(".mobile-cta-bar");
+const heroCta = document.querySelector(".hero-actions .button-large");
+if (stickyCta && heroCta && "IntersectionObserver" in window) {
+  // Offer the bar from the first screen, but not while the hero's own button is clear of it.
+  const ctaObserver = new IntersectionObserver(
+    ([entry]) => {
+      document.body.classList.toggle("hero-cta-visible", entry.isIntersecting);
+      document.body.classList.add("sticky-cta-ready");
+    },
+    { rootMargin: "0px 0px -80px 0px", threshold: 0.5 },
+  );
+
+  ctaObserver.observe(heroCta);
+}
+
 if (siteFooter && "IntersectionObserver" in window) {
   const footerObserver = new IntersectionObserver(
     ([entry]) => {
@@ -856,6 +871,10 @@ if (form && message) {
       const isSelected = element.dataset.packageSelect === selectedKey;
       element.classList.toggle("is-selected", isSelected);
       element.setAttribute("aria-current", String(isSelected));
+    });
+    // Mirrors :has(input:checked) for browsers that do not support it yet.
+    packageOptions.forEach((radio) => {
+      radio.closest?.("label")?.classList?.toggle("is-checked", radio.checked);
     });
     document.querySelectorAll("[data-package-name]").forEach((element) => {
       element.textContent = selected.label;

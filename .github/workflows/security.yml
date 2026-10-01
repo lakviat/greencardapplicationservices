@@ -22,3 +22,45 @@ jobs:
 
       - name: Run static security checks
         run: bash scripts/check-static-site.sh
+
+  browser-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit, firefox]
+    env:
+      MOBILE_BASE_URL: https://127.0.0.1:8443
+      MOBILE_ENGINES: ${{ matrix.engine }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Playwright package
+        run: npm install --no-save --no-package-lock playwright@1.50.1
+
+      - name: Install ${{ matrix.engine }} browser
+        run: npx playwright install --with-deps ${{ matrix.engine }}
+
+      - name: Run ${{ matrix.engine }} browser regression
+        run: |
+          set -euo pipefail
+          # WebKit needs HTTPS because the site CSP includes upgrade-insecure-requests.
+          node scripts/serve-local-https.cjs &
+          SERVER_PID=$!
+          cleanup() {
+            kill "$SERVER_PID" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+          for attempt in $(seq 1 30); do
+            if curl --silent --show-error --fail --insecure https://127.0.0.1:8443/ >/dev/null; then
+              node scripts/check-mobile-layout.cjs
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Local HTTPS server did not become ready on https://127.0.0.1:8443/" >&2
+          exit 1

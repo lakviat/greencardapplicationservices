@@ -110,32 +110,59 @@ to be configured in each Apps Script project's Script properties before a new
 version is deployed. See `SECURITY.md` for architecture boundaries and private
 vulnerability reporting.
 
-## Mobile Browser Regression
+## Quality Checks and Deployment Pipeline
 
-The homepage places photos before the introduction at widths up to 860px and
-keeps the desktop two-column layout. Package links select the requested package
-and scroll directly to the form. The heading receives focus for assistive
-technology, but only keyboard navigation shows its focus outline.
+The site is static and deployed by GitHub Pages from `main`. Three layers guard it.
 
-Run `bash scripts/check-static-site.sh` for deterministic checks. With the existing
-Playwright installation and Chromium, WebKit, and Firefox available, run:
+**1. Fast static checks** (`bash scripts/check-static-site.sh`, runs on every push and pull request):
+JavaScript syntax, deterministic conversion/consent regressions, local links and
+anchors, Content Security Policy rules, shared asset cache versions, and
+`scripts/check-seo.mjs`. The SEO check enforces unique titles and descriptions
+within search-result length limits, one `h1`, canonical URLs that match the sitemap,
+social preview metadata, image `alt` text, structured-data syntax, stale-price and
+Stripe-link guards, and performance budgets (hero images, stylesheet, script, and a
+social preview of 300 KB or less so WhatsApp and Facebook render link previews).
+It also keeps each page's primary keyword in its title/heading or opening copy.
+
+**2. Cross-browser regression** (`scripts/check-mobile-layout.cjs`, runs in CI for
+Chromium, WebKit, and Firefox on every pull request). It covers 18 pages across
+phone, tablet, and desktop widths, the first-screen call to action, touch-target
+sizes, package selection with touch and keyboard, form validation, all four
+package-to-Stripe journeys with every external request mocked, menus, FAQ,
+notification and cookie dialogs, support widget, and the photo carousel.
 
 ```sh
-MOBILE_BASE_URL=https://127.0.0.1:8443 node scripts/check-mobile-layout.cjs
+node scripts/serve-local-https.cjs &            # serves the repo at https://127.0.0.1:8443
+node scripts/check-mobile-layout.cjs            # all three engines; MOBILE_ENGINES=webkit to narrow
 ```
 
-Serve the repository on local HTTPS for cross-browser checks. WebKit upgrades
-HTTP subresources under the production `upgrade-insecure-requests` CSP; an HTTP-only
-preview can therefore appear unstyled even when Chromium loads it. Do not disable
-the production CSP to work around this. The runner permits a self-signed
-certificate only for loopback previews, intercepts external requests, and never
-sends real applications or payments. If Playwright is installed globally, set
-`NODE_PATH` to that installation's `node_modules` directory.
+Playwright must be installed (`npm install --no-save playwright`, then
+`npx playwright install`); set `NODE_PATH=$(npm root -g)` for a global install.
+The local server must use HTTPS: WebKit upgrades HTTP subresources under the
+production `upgrade-insecure-requests` CSP, so an HTTP-only preview can look
+unstyled even when Chromium loads it. Do not disable the CSP to work around this.
+The runner accepts a self-signed certificate only for loopback, intercepts external
+requests, and never sends real applications or payments.
 
-Browser emulation covers responsive layout and interactions, not every physical
-device behavior. Review the local version on a real phone before deployment,
-especially browser toolbar changes, the software keyboard, camera permissions,
-and file selection.
+**3. Post-deploy smoke test** (`.github/workflows/post-deploy-smoke.yml`): after the
+Pages deployment succeeds, `scripts/check-live-site.mjs` makes read-only requests to
+the live site and fails if the deployed asset versions differ from the commit,
+prices or payment links are missing, the sitemap or social image is broken, or key
+pages stop returning 200. It can also be started manually (`workflow_dispatch`) or
+run locally: `node scripts/check-live-site.mjs https://greencardapplicationservices.com`.
+The workflow trigger depends on the built-in Pages workflow name; confirm it fires
+after the next deployment, and use `workflow_dispatch` until then.
+
+Browser emulation covers layout and interaction, not every physical-device
+behavior. Review significant changes on a real phone before relying on them,
+especially browser toolbar tinting, the software keyboard, camera permissions, and
+the native file picker.
+
+### Images
+
+Hero photos are WebP (about 55 KB each). Keep new hero images at 150 KB or less. The
+social preview (`assets/images/social-preview-v6.jpg`) must stay at 300 KB or less;
+change its filename when replacing it so social platforms refetch it.
 
 ## Conversion Measurement and Campaigns
 
