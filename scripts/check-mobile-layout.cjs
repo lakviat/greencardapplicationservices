@@ -195,6 +195,47 @@ async function heroLayout(page, profile) {
   }
 }
 
+// A phone visitor must always see a way to start on the first screen: the hero button
+// itself, or the sticky bar. A hidden bar must also be unreachable by keyboard and AT.
+async function firstScreenCta(page, profile) {
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
+  await settle(page);
+  await page.locator("body.sticky-cta-ready").waitFor({ state: "attached" });
+  const state = await page.evaluate(() => {
+    const hero = document.querySelector(".hero-actions .button-large").getBoundingClientRect();
+    const bar = document.querySelector(".mobile-cta-bar");
+    const style = getComputedStyle(bar);
+    const rect = bar.getBoundingClientRect();
+    const present = style.display !== "none";
+    return {
+      present,
+      height: innerHeight,
+      heroVisible: hero.top >= 0 && hero.bottom <= innerHeight - (present ? rect.height : 0),
+      barVisible: style.visibility === "visible" && Number(style.opacity) === 1 && rect.top < innerHeight,
+      barHidden: style.visibility === "hidden",
+      barBackground: style.backgroundColor,
+    };
+  });
+  assert(state.heroVisible || state.barVisible,
+    `${profile.name}: no call to action on the first screen: ${JSON.stringify(state)}`);
+  if (!state.present) return; // Tablet widths use the hero button; the bar is a phone pattern.
+  assert(!(state.heroVisible && state.barVisible), `${profile.name}: duplicate calls to action on the first screen`);
+  assert(state.barBackground.startsWith("rgba(255, 255, 255"),
+    "The fixed bar must be neutral so mobile browser toolbars are not tinted red");
+  if (state.barHidden) {
+    assert.equal(await page.locator(".mobile-cta").evaluate((link) => getComputedStyle(link).visibility), "hidden",
+      "A hidden sticky CTA must not be focusable");
+  }
+}
+
+async function touchTargets(page, profile) {
+  const small = await page.evaluate(() => [...document.querySelectorAll(
+    ".footer-links a, .footer-links button, .content-hero nav[aria-label='Breadcrumb'] a, .policy-back-top, .countdown-source",
+  )].filter((element) => element.getClientRects().length && element.getBoundingClientRect().height < 43.5)
+    .map((element) => `${element.textContent.trim()} ${Math.round(element.getBoundingClientRect().height)}px`));
+  assert.deepEqual(small, [], `${profile.name}: touch targets under 44px`);
+}
+
 async function landing(page, pointer, radiosVisible = true) {
   await settle(page);
   const result = await page.evaluate(() => {
@@ -234,6 +275,11 @@ async function selection(page, key) {
   assert.equal((await page.locator("[data-package-price]").first().textContent()).trim(), `$${expected.price}`);
   if (key === "premium") await page.locator("#premiumApplicantCount").selectOption("3");
   assert.equal(await page.locator("[data-applicant-section]:visible").count(), expected.count - 1);
+  // The checked-state class backs up :has(input:checked) for older browsers.
+  assert.deepEqual(
+    await page.locator(".package-selector label.is-checked input").evaluateAll((inputs) => inputs.map((input) => input.value)),
+    [key],
+  );
 }
 
 async function packageInteractions(page, touch, engine) {
@@ -542,6 +588,10 @@ async function main() {
           await load(page);
           await dismissCookies(page, touch);
           await heroLayout(page, profile);
+          if (profile.width <= 860) {
+            await firstScreenCta(page, profile);
+            await touchTargets(page, profile);
+          }
           if (profile.name.startsWith("iphone-15-pro-max")) await screenshots(page, engine, profile);
           if (profile.name === "iphone-15-pro-max") {
             assertionContext = `${engine} package focus and landing`;

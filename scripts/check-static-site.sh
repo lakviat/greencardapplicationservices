@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cache_version="20261001-mobile-v1"
-styles_version="20261001-mobile-v1"
+cache_version="20261001-quality-v1"
+styles_version="20261001-quality-v1"
 
 html_files=()
 while IFS= read -r html_file; do
@@ -19,6 +19,7 @@ node --check assets/requirements.js
 node --check assets/site-metrics.js
 node scripts/check-conversion-flow.mjs
 node scripts/check-local-references.mjs
+node scripts/check-seo.mjs
 
 if command -v xmllint >/dev/null 2>&1; then
   xmllint --noout sitemap.xml
