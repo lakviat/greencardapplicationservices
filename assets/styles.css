@@ -1379,6 +1379,15 @@ h3 {
   font-size: clamp(1.55rem, 2.6vw, 2.1rem);
 }
 
+.application-form-heading h2:focus {
+  outline: 3px solid var(--blue);
+  outline-offset: 4px;
+}
+
+.application-form-heading h2.is-pointer-focus:focus {
+  outline: none;
+}
+
 .application-support {
   display: grid;
   gap: 8px;
@@ -3826,6 +3835,7 @@ body.cookie-dialog-open {
   .site-header {
     grid-template-columns: minmax(0, 1fr) auto auto auto;
     align-items: center;
+    background: #fff;
   }
 
   .site-nav {
@@ -4445,7 +4455,7 @@ body.cookie-dialog-open {
   width: fit-content;
   gap: 9px;
   align-items: center;
-  margin-top: 16px;
+  margin: 16px auto 0;
 }
 
 .hero-carousel-dots span {
@@ -4968,11 +4978,14 @@ body.cookie-dialog-open {
   }
 
   .hero-dashboard {
-    gap: 32px;
+    gap: 24px;
+    justify-items: center;
   }
 
   .hero-dashboard .hero-content {
+    grid-row: 2;
     max-width: 640px;
+    width: 100%;
   }
 
   .hero-dashboard h1 {
@@ -4981,8 +4994,9 @@ body.cookie-dialog-open {
 
   .hero-visual {
     grid-column: 1;
-    grid-row: 2;
+    grid-row: 1;
     width: min(100%, 640px);
+    padding-bottom: 0;
   }
 
   .registration-note,
@@ -5007,9 +5021,8 @@ body.cookie-dialog-open {
   }
 
   .hero-photo-carousel {
-    grid-column: 1;
-    grid-row: 2;
-    height: clamp(260px, 62vw, 420px);
+    height: auto;
+    aspect-ratio: 4 / 3;
   }
 
   .hero-photo-carousel::after {
@@ -5017,7 +5030,7 @@ body.cookie-dialog-open {
   }
 
   .hero-photo-slide {
-    background-position: center 40%;
+    background-position: center 18%;
   }
 
   .toc {
@@ -5040,11 +5053,11 @@ body.cookie-dialog-open {
 
 @media (max-width: 620px) {
   .hero-dashboard {
-    padding: 36px 20px 40px;
+    padding: 20px 20px 36px;
   }
 
   .hero-dashboard h1 {
-    font-size: clamp(2.1rem, 9vw, 3rem);
+    font-size: clamp(1.85rem, 8vw, 2.6rem);
   }
 
   .hero-photo-carousel {
@@ -5052,13 +5065,29 @@ body.cookie-dialog-open {
   }
 
   .hero-photo-caption {
-    width: calc(100% - 24px);
-    margin-top: -24px;
-    padding: 16px;
+    width: 100%;
+    margin-top: 12px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
   }
 
   .hero-photo-caption span {
     font-size: 0.9rem;
+  }
+
+  .hero-pause {
+    top: 12px;
+    right: 12px;
+  }
+
+  .hero-dashboard .hero-copy {
+    line-height: 1.6;
+  }
+
+  .hero-price {
+    margin-top: 18px;
   }
 
   .assurance-strip {
