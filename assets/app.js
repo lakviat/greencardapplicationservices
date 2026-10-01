@@ -20,6 +20,7 @@ const notifyCloseButtons = document.querySelectorAll("[data-notify-close]");
 const mobileMenus = document.querySelectorAll(".mobile-menu");
 const applySection = document.querySelector("#apply");
 const heroSection = document.querySelector(".hero-dashboard");
+const heroPauseButton = document.querySelector("[data-hero-pause]");
 const siteFooter = document.querySelector(".site-footer");
 const honeypotField = document.querySelector("#companyWebsite");
 const notifyHoneypotField = document.querySelector("#notifyCompanyWebsite");
@@ -74,27 +75,86 @@ const stripePackages = {
   },
 };
 
-// Send only fixed event metadata, never applicant fields or checkout URLs.
-// Analytics failures must not interrupt an application or payment redirect.
-const trackSalesFunnel = (eventName, parameters = {}) => {
+const trackConversion = (event, metadata = {}) => {
   try {
-    if (!window.gcasConsent?.get()?.analytics || !window.gtag) return false;
-    window.gtag("event", eventName, {
-      ...parameters,
-      send_to: "G-9P726CYPGF",
-      transport_type: "beacon",
-    });
-    return true;
+    return window.gcasAnalytics?.track(event, metadata);
   } catch {
+    // Optional measurement must never interrupt a form or support action.
     return false;
   }
 };
 
-if (form) {
-  let applicationStartTracked = false;
-  form.addEventListener("input", (event) => {
-    if (event.target === honeypotField || applicationStartTracked) return;
-    applicationStartTracked = trackSalesFunnel("application_start");
+const trackFormInteraction = (targetForm, formId) => {
+  if (!targetForm) return;
+  const start = () => trackConversion("form_start", { form: formId });
+  targetForm.addEventListener("input", start);
+  targetForm.addEventListener("change", start);
+  targetForm.addEventListener("submit", start);
+  targetForm.addEventListener("invalid", (event) => {
+    const validity = event.target.validity;
+    trackConversion("validation_error", {
+      form: formId,
+      category: validity?.valueMissing
+        ? "required"
+        : validity?.typeMismatch || validity?.patternMismatch
+          ? "format"
+          : "constraint",
+    });
+  }, true);
+};
+
+trackFormInteraction(form, "application");
+trackFormInteraction(notifyForm, "notification");
+
+const heroImages = new Map();
+const prepareHeroImages = () => {
+  heroSection?.querySelectorAll(".hero-photo-slide").forEach((slide) => {
+    const background = window.getComputedStyle(slide).backgroundImage;
+    const source = background.match(/^url\(["']?(.*?)["']?\)$/)?.[1];
+    if (!source || heroImages.has(slide)) return;
+    const image = new window.Image();
+    image.src = source;
+    heroImages.set(slide, image);
+  });
+};
+
+if (heroSection && heroPauseButton) {
+  let heroPaused = false;
+  let pausedFrame = null;
+  const slides = Array.from(heroSection.querySelectorAll(".hero-photo-slide"));
+  const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+  prepareHeroImages();
+  heroPauseButton.setAttribute("aria-pressed", "false");
+  heroPauseButton.addEventListener("click", () => {
+    if (motionPreference.matches) return;
+    if (!heroPaused) {
+      prepareHeroImages();
+      const loaded = slides.filter((slide) => {
+        const image = heroImages.get(slide);
+        return image?.complete && image.naturalWidth > 0;
+      });
+      pausedFrame = loaded.reduce((best, slide) =>
+        !best || Number(window.getComputedStyle(slide).opacity) >
+          Number(window.getComputedStyle(best).opacity) ? slide : best, null);
+      if (!pausedFrame) return;
+      pausedFrame.classList.add("is-paused-frame");
+    } else {
+      // Resume from the selected photo's opaque hold, not the interrupted blend.
+      const animation = pausedFrame?.getAnimations?.()[0];
+      if (animation) {
+        const timing = animation.effect.getTiming();
+        const time = timing.delay + Number(timing.duration) + 1000;
+        heroSection.querySelectorAll(".hero-photo-slide, .hero-carousel-dots span")
+          .forEach((element) => element.getAnimations().forEach((item) => {
+            item.currentTime = time;
+          }));
+      }
+      slides.forEach((slide) => slide.classList.remove("is-paused-frame"));
+    }
+    heroPaused = !heroPaused;
+    heroSection.classList.toggle("is-paused", heroPaused);
+    heroPauseButton.setAttribute("aria-pressed", String(heroPaused));
+    heroPauseButton.textContent = heroPaused ? "Resume photos" : "Pause photos";
   });
 }
 
@@ -337,6 +397,7 @@ const loadDeferredHeroImages = () => {
     const imageClass = cleanText(slide.dataset.heroImage, 40);
     if (imageClass) slide.classList.add(imageClass);
   });
+  prepareHeroImages();
 };
 
 if ("requestIdleCallback" in window) {
@@ -354,18 +415,19 @@ if (countdownPanel) {
     "[data-countdown-description]",
   );
   const values = {
-    days: countdownPanel.querySelector('[data-countdown-value="days"]'),
-    hours: countdownPanel.querySelector('[data-countdown-value="hours"]'),
+    days: countdownPanel.querySelector("[data-countdown-days]"),
+    hours: countdownPanel.querySelector("[data-countdown-hours]"),
+    minutes: countdownPanel.querySelector("[data-countdown-minutes]"),
   };
 
   if (targetDate && !Number.isNaN(targetDate.getTime())) {
     countdownPanel.classList.add("is-active");
     heading.textContent = isEstimated
-      ? "Estimated registration opening in:"
-      : "Registration opens in:";
+      ? "Until the planning estimate"
+      : "Until the published date";
     description.textContent = isEstimated
-      ? "Planning estimate: Wednesday, October 7, 2026 at 12:00 PM Eastern. The Department of State has not announced the official DV-2027 registration dates yet."
-      : "The countdown uses the official Department of State opening time.";
+      ? "Planning estimate only, not a confirmed opening or payment deadline. Check the official Department of State website for current dates."
+      : "Verify the current registration schedule with the Department of State.";
     let countdownTimer;
 
     const updateCountdown = () => {
@@ -378,20 +440,28 @@ if (countdownPanel) {
       values.hours.textContent = String(
         Math.floor((totalSeconds % 86400) / 3600),
       ).padStart(2, "0");
+      values.minutes.textContent = String(
+        Math.floor((totalSeconds % 3600) / 60),
+      ).padStart(2, "0");
 
       if (remaining === 0) {
         heading.textContent = isEstimated
-          ? "The estimated opening time has arrived."
-          : "The official opening time has arrived.";
-        description.textContent = isEstimated
-          ? "Check the official Department of State website before submitting an entry."
-          : "The official DV registration period is scheduled to be open.";
+          ? "Estimated date reached"
+          : "Published date reached";
+        description.textContent =
+          "This timer does not confirm that registration is open. Check the official Department of State website for current dates before submitting an entry.";
         window.clearInterval(countdownTimer);
       }
     };
 
     countdownTimer = window.setInterval(updateCountdown, 60000);
     updateCountdown();
+  } else {
+    countdownPanel.classList.remove("is-active");
+    heading.textContent = "Countdown unavailable";
+    description.textContent =
+      "A valid planning date is unavailable. Check the official Department of State website for current registration dates.";
+    Object.values(values).forEach((value) => { if (value) value.textContent = "—"; });
   }
 }
 
@@ -523,6 +593,14 @@ if (siteFooter && "IntersectionObserver" in window) {
 
 if (form && message) {
   form.dataset.startedAt = new Date().toISOString();
+  let applicationPending = false;
+  let committedSelection = null;
+  let lastRequestSnapshot = null;
+  let lastRequestResolved = false;
+  let retryAllowedAt = 0;
+  const retryCooldownMs = 125000;
+  const packageControls = [...packageOptions, premiumApplicantCount].filter(Boolean);
+  const previousDisabledStates = new Map();
 
   const getSelectedPackage = () =>
     document.querySelector('input[name="package"]:checked');
@@ -539,7 +617,9 @@ if (form && message) {
 
   const getSelectedStripePackage = () => {
     const packageKey = getSelectedPackage()?.value || "single";
-    return stripePackages[packageKey] || stripePackages.single;
+    return Object.hasOwn(stripePackages, packageKey)
+      ? stripePackages[packageKey]
+      : stripePackages.single;
   };
 
   const setFormMessage = (text, state = "info") => {
@@ -595,7 +675,7 @@ if (form && message) {
     submitButton.disabled = state === "submitting" || state === "redirecting";
 
     if (state === "submitting") {
-      submitButton.textContent = "Submitting application...";
+      submitButton.textContent = "Sending your preparation request...";
     } else if (state === "redirecting") {
       submitButton.textContent = "Opening secure checkout...";
     } else {
@@ -646,22 +726,26 @@ if (form && message) {
     );
 
     if (uploadedFiles.length > maxFiles) {
+      trackConversion("validation_error", { form: "application", category: "upload" });
       throw new Error(`Upload up to ${maxFiles} files at a time.`);
     }
 
     if (uploadedFiles.some((file) => file.size > maxFileSize)) {
+      trackConversion("validation_error", { form: "application", category: "upload" });
       throw new Error(
         "One of the selected files is too large. Please keep each file under 15 MB.",
       );
     }
 
     if (totalUploadSize > maxTotalUploadSize) {
+      trackConversion("validation_error", { form: "application", category: "upload" });
       throw new Error(
         "The selected files are too large together. Please keep the total upload under 35 MB.",
       );
     }
 
     if (uploadedFiles.some((file) => !isAllowedUpload(file))) {
+      trackConversion("validation_error", { form: "application", category: "upload" });
       throw new Error(
         "Upload PDF, JPEG, PNG, HEIC, or HEIF documents only.",
       );
@@ -695,8 +779,9 @@ if (form && message) {
       serviceDisclaimer: checkoutConsent,
       contactAuthorization: checkoutConsent,
       policyConsent: checkoutConsent,
+      marketingConsent: false,
       policyAgreedAt,
-      policyVersion: "2026-08-04",
+      policyVersion: "2026-09-30",
       paymentReference: submissionId,
       stripeClientReferenceId: submissionId,
       package: selectedPackage?.value || "single",
@@ -726,10 +811,18 @@ if (form && message) {
     };
   };
 
-  const sendApplicationToDrive = async () => {
-    const payload = await buildApplicationPayload();
+  const requestSnapshot = (payload) => {
+    const stable = { ...payload };
+    for (const key of [
+      "secret", "submissionId", "submittedAt", "formStartedAt", "policyAgreedAt",
+      "paymentReference", "stripeClientReferenceId", "paymentStatus",
+    ]) delete stable[key];
+    // Comparison stays in this page's memory; no applicant data enters storage or analytics.
+    return JSON.stringify(stable);
+  };
 
-    await fetch(googleScriptIntakeUrl, {
+  const sendApplicationToDrive = async (payload, snapshot) => {
+    const request = fetch(googleScriptIntakeUrl, {
       method: "POST",
       mode: "no-cors",
       headers: {
@@ -737,13 +830,108 @@ if (form && message) {
       },
       body: JSON.stringify(payload),
     });
+    lastRequestSnapshot = snapshot;
+    lastRequestResolved = false;
+    retryAllowedAt = Date.now() + retryCooldownMs;
+    trackConversion("request_dispatch", { form: "application" });
+    try {
+      await request;
+      lastRequestResolved = true;
+    } finally {
+      // Start after settlement as server receipt can be later than browser dispatch.
+      retryAllowedAt = Date.now() + retryCooldownMs;
+    }
   };
 
   const updateSubmitLabel = () => {
-    if (!submitButton) return;
+    if (!submitButton || applicationPending) return;
 
-    submitButton.textContent = "Submit & Continue to Payment";
+    submitButton.textContent = "Send request & continue to Stripe";
   };
+
+  const updatePackageSummary = () => {
+    const selected = getSelectedStripePackage();
+    const selectedKey = getSelectedPackage()?.value || "single";
+    document.querySelectorAll("[data-package-select]").forEach((element) => {
+      const isSelected = element.dataset.packageSelect === selectedKey;
+      element.classList.toggle("is-selected", isSelected);
+      element.setAttribute("aria-current", String(isSelected));
+    });
+    document.querySelectorAll("[data-package-name]").forEach((element) => {
+      element.textContent = selected.label;
+    });
+    document.querySelectorAll("[data-package-price]").forEach((element) => {
+      element.textContent = `$${selected.amount}`;
+    });
+  };
+
+  const selectPackage = (packageKey, { focus = false, measure = true } = {}) => {
+    if (applicationPending) return false;
+    if (typeof packageKey !== "string" || !Object.hasOwn(stripePackages, packageKey)) return false;
+    const option = Array.from(packageOptions).find((radio) => radio.value === packageKey);
+    if (!option || option.disabled) return false;
+    option.checked = true;
+    updateApplicantSections();
+    updatePackageSummary();
+    updateSubmitLabel();
+    if (measure) trackConversion("select_item", { package: packageKey });
+    if (focus) {
+      const focusTarget = document.querySelector("#applicationFormTitle") ||
+        form.querySelector('input:not([type="hidden"]):not([disabled])');
+      focusTarget?.focus({ preventScroll: true });
+      (applySection || form).scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth",
+        block: "start",
+      });
+    }
+    return true;
+  };
+
+  const lockPackageSelection = (locked) => {
+    if (locked) {
+      committedSelection = {
+        package: getSelectedPackage()?.value || "single",
+        premiumCount: premiumApplicantCount?.value,
+      };
+      packageControls.forEach((control) => {
+        previousDisabledStates.set(control, control.disabled);
+        control.disabled = true;
+      });
+    } else {
+      packageControls.forEach((control) => {
+        if (previousDisabledStates.has(control)) control.disabled = previousDisabledStates.get(control);
+      });
+      previousDisabledStates.clear();
+      committedSelection = null;
+    }
+    document.querySelectorAll("[data-package-select]").forEach((card) => {
+      card.setAttribute("aria-disabled", String(locked));
+    });
+  };
+
+  const restoreCommittedSelection = () => {
+    if (!committedSelection) return;
+    packageOptions.forEach((option) => {
+      option.checked = option.value === committedSelection.package;
+    });
+    if (premiumApplicantCount) premiumApplicantCount.value = committedSelection.premiumCount;
+    updateApplicantSections();
+    updatePackageSummary();
+  };
+
+  window.addEventListener("pageshow", (event) => {
+    if (!event.persisted) return;
+    applicationPending = false;
+    lockPackageSelection(false);
+    if (paymentStatus) paymentStatus.value = "pending";
+    updateApplicantSections();
+    updatePackageSummary();
+    setSubmitState("idle");
+    setFormMessage(
+      "Your details are still here. Receipt and payment are not confirmed on this page. Check your Stripe receipt or contact support before paying again. Revised requests require a short cooldown; unchanged details can reopen Stripe without sending another request.",
+      "info",
+    );
+  });
 
   const updateFileUploadSelection = () => {
     if (!identityDocumentInput || !fileUploadSelection) return;
@@ -781,28 +969,51 @@ if (form && message) {
     checkoutUrl.searchParams.set("prefilled_email", email);
     checkoutUrl.searchParams.set("client_reference_id", getSubmissionId());
 
-    return { checkoutUrl, stripePackage };
+    return { checkoutUrl, stripePackage, packageKey: getSelectedPackage()?.value || "single" };
   };
 
   form.addEventListener("input", updateSubmitLabel);
   form.addEventListener("change", updateSubmitLabel);
   packageOptions.forEach((option) => {
     option.addEventListener("change", () => {
+      if (applicationPending) {
+        restoreCommittedSelection();
+        return;
+      }
       updateApplicantSections();
+      updatePackageSummary();
       updateSubmitLabel();
+      trackConversion("select_item", { package: option.value });
     });
   });
   premiumApplicantCount?.addEventListener("change", () => {
+    if (applicationPending) {
+      restoreCommittedSelection();
+      return;
+    }
     updateApplicantSections();
     updateSubmitLabel();
   });
   identityDocumentInput?.addEventListener("change", updateFileUploadSelection);
   updateApplicantSections();
+  updatePackageSummary();
   updateSubmitLabel();
   updateFileUploadSelection();
 
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest?.("[data-package-select]");
+    if (!link) return;
+    event.preventDefault();
+    selectPackage(link.dataset.packageSelect, { focus: true });
+  });
+  if (["/", "/index", "/index.html"].includes(window.location.pathname)) {
+    const packageKey = new URLSearchParams(window.location.search).get("package");
+    if (packageKey) selectPackage(packageKey, { focus: true, measure: false });
+  }
+
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (applicationPending) return;
 
     if (!form.checkValidity()) {
       form.reportValidity();
@@ -831,40 +1042,57 @@ if (form && message) {
     }
 
     setSubmitState("submitting");
+    applicationPending = true;
     setFormMessage(
-      "Submitting your application before secure checkout. Please keep this page open.",
+      "Sending your preparation request before secure checkout. Please keep this page open.",
       "info",
     );
 
     try {
-      await sendApplicationToDrive();
-
-      // no-cors only proves dispatch; this is not a confirmed application.
-      trackSalesFunnel("application_request_sent");
-      trackSalesFunnel("begin_checkout", {
-        currency: "USD",
-        value: checkout.stripePackage.amount,
-        items: [{
-          item_name: checkout.stripePackage.label,
-          price: checkout.stripePackage.amount,
-          quantity: 1,
-        }],
-      });
+      const payloadPromise = buildApplicationPayload();
+      // FormData is captured synchronously before package controls are disabled.
+      lockPackageSelection(true);
+      const payload = await payloadPromise;
+      const snapshot = requestSnapshot(payload);
+      const revised = lastRequestSnapshot !== null && snapshot !== lastRequestSnapshot;
+      const needsDispatch = revised || !lastRequestResolved;
+      if (needsDispatch && lastRequestSnapshot !== null && Date.now() < retryAllowedAt) {
+        const seconds = Math.ceil((retryAllowedAt - Date.now()) / 1000);
+        throw new Error(
+          `Please wait ${seconds} seconds before sending another request. Receipt and payment are uncertain; check your Stripe receipt or contact support before paying again. Your details are still here.`,
+        );
+      }
+      if (revised) {
+        delete form.dataset.submissionId;
+        const reference = getSubmissionId();
+        payload.submissionId = reference;
+        payload.paymentReference = reference;
+        payload.stripeClientReferenceId = reference;
+        checkout.checkoutUrl.searchParams.set("client_reference_id", reference);
+      }
+      if (needsDispatch) await sendApplicationToDrive(payload, snapshot);
 
       setSubmitState("redirecting");
       setFormMessage(
-        `Application sent. Opening secure Stripe checkout for the ${checkout.stripePackage.label} package.`,
+        needsDispatch
+          ? `Preparation request sent, but receipt is unconfirmed. Opening secure Stripe checkout for the ${checkout.stripePackage.label} package.`
+          : "Reopening Stripe without resending your unchanged request. Payment is unconfirmed here; do not pay again if you already have a Stripe receipt.",
         "info",
       );
+      if (window.gcasAnalytics?.beginCheckout) {
+        await window.gcasAnalytics.beginCheckout(checkout.packageKey);
+      }
       window.location.assign(checkout.checkoutUrl.toString());
     } catch (error) {
+      applicationPending = false;
+      lockPackageSelection(false);
       if (paymentStatus) {
         paymentStatus.value = "pending";
       }
       setSubmitState("idle");
       setFormMessage(
         error.message ||
-          "We could not submit the application, so payment was not opened. Please try again or contact support.",
+          "We could not send your preparation request, so payment was not opened. Please try again or contact support.",
         "error",
       );
     }
@@ -894,7 +1122,7 @@ if (notifyForm && notifyMessage) {
     if (state === "submitting") {
       notifySubmitButton.textContent = "Submitting...";
     } else if (state === "submitted") {
-      notifySubmitButton.textContent = "Submitted";
+      notifySubmitButton.textContent = "Request sent";
     } else {
       notifySubmitButton.textContent = "Notify Me";
     }
@@ -916,7 +1144,7 @@ if (notifyForm && notifyMessage) {
       );
     }
 
-    await fetch(googleScriptNotifyUrl, {
+    const request = fetch(googleScriptNotifyUrl, {
       method: "POST",
       mode: "no-cors",
       headers: {
@@ -937,10 +1165,14 @@ if (notifyForm && notifyMessage) {
         marketingConsent,
       }),
     });
+    trackConversion("request_dispatch", { form: "notification" });
+    await request;
   };
 
+  let notificationPending = false;
   notifyForm.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (notificationPending) return;
 
     const formData = new FormData(notifyForm);
     const email = cleanText(formData.get("notifyEmail"), 254);
@@ -952,6 +1184,7 @@ if (notifyForm && notifyMessage) {
     }
 
     if (!email && !phone) {
+      trackConversion("validation_error", { form: "notification", category: "contact_required" });
       setNotifyMessage(
         "Enter an email or WhatsApp number so we can notify you.",
         "error",
@@ -965,6 +1198,7 @@ if (notifyForm && notifyMessage) {
     }
 
     setNotifyState("submitting");
+    notificationPending = true;
     setNotifyMessage(
       "Submitting your notification request. Please keep this window open.",
       "info",
@@ -978,15 +1212,13 @@ if (notifyForm && notifyMessage) {
           formData.get("notifyMarketingConsent") === "on",
       });
 
-      // Do not report generate_lead without authoritative server confirmation.
-      trackSalesFunnel("notification_request_sent");
-
       setNotifyState("submitted");
       setNotifyMessage(
-        "Thank you for staying up to date with Green Card Application Services. We will contact you when DV registration opens.",
+        "Your notification request was sent. Delivery cannot be confirmed here; contact support if you need help.",
         "success",
       );
     } catch (error) {
+      notificationPending = false;
       setNotifyState("idle");
       setNotifyMessage(
         error.message ||
@@ -1070,7 +1302,7 @@ const initializeSupportWidget = () => {
   const actions = document.createElement("div");
   actions.className = "support-actions";
 
-  const createAction = ({ label, icon, href, disabled = false }) => {
+  const createAction = ({ label, icon, href, channel, disabled = false }) => {
     const action = disabled
       ? document.createElement("button")
       : document.createElement("a");
@@ -1081,6 +1313,8 @@ const initializeSupportWidget = () => {
       action.setAttribute("aria-label", `${label}, coming soon`);
     } else {
       action.href = href;
+      action.addEventListener("click", () =>
+        trackConversion("support_action", { channel }));
     }
 
     const iconWrap = document.createElement("span");
@@ -1104,14 +1338,16 @@ const initializeSupportWidget = () => {
     createAction({
       label: "Email support",
       icon: "mail",
+      channel: "email",
       href: "mailto:greencardapplicationservices@gmail.com?subject=Website%20support%20request",
     }),
     createAction({
       label: "WhatsApp",
       icon: "whatsapp",
+      channel: "whatsapp",
       href: "https://wa.me/17547037991?text=Hello%20Green%20Card%20Application%20Services%2C%20I%20need%20support.",
     }),
-    createAction({ label: "View FAQ", icon: "help", href: "/faq.html" }),
+    createAction({ label: "View FAQ", icon: "help", href: "/faq.html", channel: "faq" }),
   );
   panel.append(panelHeader, actions);
 
@@ -1134,6 +1370,7 @@ const initializeSupportWidget = () => {
   };
 
   trigger.addEventListener("click", () => {
+    if (panel.hidden) trackConversion("support_open");
     setOpen(panel.hidden);
   });
   closeButton.addEventListener("click", () => {

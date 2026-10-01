@@ -27,13 +27,17 @@ changes only. Keep unfinished user edits intact.
 
 ## Measurement
 
-- `application_start`: first input interaction per page after analytics consent.
-- `application_request_sent`: intake fetch resolved; server acceptance unknown.
+- `form_start`: first form interaction after analytics consent.
+- `request_dispatch`: application or notification request dispatched; acceptance
+  and storage remain unknown.
 - `begin_checkout`: Stripe redirect attempted, with listed package value; not revenue.
-- `notification_request_sent`: notification fetch resolved; storage unknown.
+- `view_item_list`, `select_item`, `form_view`, `validation_error`, and `cta_click`:
+  supporting discovery and friction signals, with allowlisted metadata only.
 - No frontend `purchase` or `generate_lead` event is emitted.
 
-Events are sent only with saved analytics consent, to GA4 only. Added event
+The shared `assets/site-metrics.js` owns these events; do not add a parallel app
+tracker that double-counts checkout. Events are sent only with analytics consent,
+to GA4 only. Added event
 parameters contain no contact information, form values, documents, or payment URLs.
 Existing GA4 automatic collection remains separate; audit enhanced measurement
 settings for automatic form events before interpreting a funnel.

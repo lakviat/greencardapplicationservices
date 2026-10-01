@@ -57,7 +57,7 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://www.googleadservices.com https://www.google.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.google.com https://pagead2.googlesyndication.com https://www.googleadservices.com https://google.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://www.google-analytics.com https://analytics.google.com https://*.google-analytics.com https://pagead2.googlesyndication.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://ad.doubleclick.net https://www.google.com https://google.com; font-src 'self'; frame-src https://www.googletagmanager.com; media-src 'self' blob:; object-src 'none'; worker-src 'none'; manifest-src 'self'; base-uri 'self'; form-action 'self' https://buy.stripe.com; upgrade-insecure-requests"
     />
-    <script src="assets/site-metrics.js?v=20260930-sales-funnel-v1"></script>
+    <script src="assets/site-metrics.js?v=20260930-feedback-v3"></script>
     <!-- Google tag (gtag.js) -->
     <script
       async
@@ -75,10 +75,11 @@
     />
     <link
       rel="stylesheet"
-      href="assets/styles.css?v=20260930-sales-funnel-v1"
+      href="assets/styles.css?v=20260930-feedback-v3"
     />
   </head>
   <body class="requirements-page">
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <header class="site-header">
       <a
         class="brand"
@@ -109,42 +110,34 @@
           <a href="faq.html">FAQ</a>
           <a href="requirements.html">Requirements</a>
         <a href="/policies">Policies</a>
-          <div class="mobile-language-list" aria-label="Language navigation">
-            <strong>Language</strong>
-            <a href="index.html">English <span>EN</span></a>
-            <a href="language-country-support.html#priority"
-              >Russian <span>RU</span></a
-            >
+          <div class="mobile-language-list" aria-label="Country guides">
+            <strong>Country guides</strong>
             <a href="green-card-lottery-uzbekistan.html"
-              >Uzbek <span>UZ</span></a
+              >Uzbekistan <span>UZ</span></a
             >
             <a href="green-card-lottery-kazakhstan.html"
-              >Kazakh <span>KK</span></a
+              >Kazakhstan <span>KZ</span></a
             >
             <a href="green-card-lottery-kyrgyzstan.html"
-              >Kyrgyz <span>KY</span></a
+              >Kyrgyzstan <span>KG</span></a
             >
             <a href="green-card-lottery-tajikistan.html"
-              >Tajik <span>TG</span></a
+              >Tajikistan <span>TJ</span></a
             >
           </div>
         </nav>
       </details>
       <details class="language-menu">
-        <summary aria-label="Change language">EN</summary>
-        <div class="language-menu-panel" aria-label="Language navigation">
-          <a href="index.html">English <span>EN</span></a>
-          <a href="language-country-support.html#priority"
-            >Russian <span>RU</span></a
-          >
-          <a href="green-card-lottery-uzbekistan.html">Uzbek <span>UZ</span></a>
+        <summary aria-label="Country guides">Countries</summary>
+        <div class="language-menu-panel" aria-label="Country guides">
+          <a href="green-card-lottery-uzbekistan.html">Uzbekistan <span>UZ</span></a>
           <a href="green-card-lottery-kazakhstan.html"
-            >Kazakh <span>KK</span></a
+            >Kazakhstan <span>KZ</span></a
           >
           <a href="green-card-lottery-kyrgyzstan.html"
-            >Kyrgyz <span>KY</span></a
+            >Kyrgyzstan <span>KG</span></a
           >
-          <a href="green-card-lottery-tajikistan.html">Tajik <span>TG</span></a>
+          <a href="green-card-lottery-tajikistan.html">Tajikistan <span>TJ</span></a>
         </div>
       </details>
       <a class="button button-small" href="index.html#apply"
@@ -152,7 +145,7 @@
       >
     </header>
 
-    <main>
+    <main id="main-content">
       <section class="requirements-hero">
         <p class="eyebrow">Application requirements</p>
         <h1>Prepare photos and documents before staff review.</h1>
@@ -166,7 +159,7 @@
       <section class="section requirement-flow">
         <div class="section-heading">
           <p class="eyebrow">Simple upload flow</p>
-          <h2>What applicants will provide during intake.</h2>
+          <h2>What to prepare for your review.</h2>
         </div>
         <div class="requirement-steps">
           <article data-step="1">
@@ -234,8 +227,11 @@
 
       <section class="section selfie-section">
         <div class="section-heading">
-          <p class="eyebrow">Selfie feature plan</p>
-          <h2>How we can simplify photos without risking rejection.</h2>
+          <p class="eyebrow">Try the photo preparation tool</p>
+          <h2>Prepare a photo, right in your browser.</h2>
+          <p>Capture or upload a photo, crop it to the technical DV format, and
+            download a copy. The tool runs locally; it does not upload your
+            photo to our team or certify government acceptance.</p>
         </div>
         <div class="selfie-layout">
           <div class="selfie-camera-widget">
@@ -286,43 +282,40 @@
                 Retake
               </button>
               <a class="button button-light" id="downloadSelfie" hidden
-                >Download test photo</a
+                >Download prepared photo</a
               >
             </div>
             <p class="selfie-status" id="selfieStatus" role="status">
-              Camera works on HTTPS production pages and localhost. iPhone,
-              Android, and desktop browsers may ask permission before opening
-              the camera.
+              Your browser will ask for camera permission. You can also upload
+              an existing photo. Nothing is sent to our team by this tool.
             </p>
           </div>
           <div>
             <p>
-              We can add a “Take a selfie” button in the application form, but
-              the app should guide applicants to stand in front of a real plain
-              white or off-white background. Background removal is risky because
-              official guidance does not allow digital alteration that changes
-              appearance, and edited-looking photos may be rejected.
+              Stand in front of a real plain white or off-white background.
+              Use even lighting and face the camera directly. Do not retouch
+              your face or digitally replace the background.
             </p>
             <ul class="requirements-list">
               <li>
-                Guide users to use a real white or off-white wall or sheet.
+                Use a real white or off-white wall or sheet.
               </li>
-              <li>Show a face-position guide before taking the photo.</li>
+              <li>Use the face-position guide before taking the photo.</li>
               <li>
-                Validate image dimensions, file type, and file size in the
-                browser.
+                Check image dimensions, file type, and file size in the browser.
               </li>
               <li>
                 Crop and resize to 600 x 600 pixels without retouching the
                 person.
               </li>
               <li>
-                Flag bad background, shadows, blur, or face position for staff
-                review.
+                Ask for staff review of shadows, blur, glasses, expression,
+                and face position. The automated checks cannot reliably assess
+                all of these.
               </li>
             </ul>
             <div class="camera-specs">
-              <strong>Planned camera output</strong>
+              <strong>Technical output, not an acceptance guarantee</strong>
               <span>Square 600 x 600 crop</span>
               <span>JPEG file</span>
               <span>Target 200 KB or less</span>
@@ -474,6 +467,16 @@
         </div>
       </section>
 
+      <section class="section">
+        <div class="conversion-callout">
+          <p class="eyebrow">Want a second look?</p>
+          <h2>Every package includes photo review.</h2>
+          <p>Our team checks your photos alongside your application details.
+            You can start a request now and provide documents during follow-up.</p>
+          <a class="button" href="index.html#pricing" data-track-cta data-cta-location="article">Compare preparation packages</a>
+        </div>
+      </section>
+
       <section class="section official-source-section">
         <div class="notice-box">
           <strong>Official source:</strong>
@@ -500,9 +503,10 @@
         <p>
           Green Card Application Services is a private paid Diversity Visa
           preparation service and is not affiliated with USCIS or the U.S.
-          Department of State. The official DV entry is free at
+          Department of State. You may apply directly at
           <a href="https://dvprogram.state.gov/">dvprogram.state.gov</a>.
-          Selection is random, and no result is guaranteed.
+          Check current government fees and instructions. Selection is random,
+          and no result is guaranteed.
         </p>
       </div>
       <nav class="footer-links" aria-label="Footer navigation">
@@ -521,7 +525,7 @@
         in Miami.
       </div>
     </footer>
-    <script src="assets/app.js?v=20260930-sales-funnel-v1"></script>
-    <script src="assets/requirements.js?v=20260930-sales-funnel-v1"></script>
+    <script src="assets/app.js?v=20260930-feedback-v3"></script>
+    <script src="assets/requirements.js?v=20260930-feedback-v3"></script>
   </body>
 </html>
