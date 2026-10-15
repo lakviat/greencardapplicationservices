@@ -10,6 +10,10 @@ test('TD3 names remain separate from issuing country and nationality', () => {
     firstName: 'JANE ANNA', lastName: 'TESTER', middleName: '', country: '',
   });
 });
+test('printed names take precedence over misread MRZ filler', () => {
+  const result = parse('SURNAME: TESTER\nGIVEN NAMES: JANE ANNA\nP<KGZTESTER<<JANE<ANNA<LLLLL<<<<<<<<<<<<<<<<<');
+  assert.equal(result.firstName, 'JANE ANNA');
+});
 test('explicit birth country may differ from passport nationality', () => {
   const result = parse('SURNAME: TESTER\nGIVEN NAMES: JANE\nNATIONALITY: KYRGYZSTAN\nPLACE OF BIRTH: ALMATY, KAZAKHSTAN');
   assert.equal(result.country, 'Kazakhstan');

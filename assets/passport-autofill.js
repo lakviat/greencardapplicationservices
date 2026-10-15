@@ -16,7 +16,9 @@
       // MRZ does not distinguish first and middle names. Keep all given names
       // together for review instead of guessing a split.
       firstName = cleanName(given.join(" "));
-    } else {
+    }
+    {
+      // Explicit printed names take precedence when MRZ filler is misread.
       const readLabel = (pattern) => {
         for (let i = 0; i < lines.length; i += 1) {
           const match = lines[i].match(pattern);
@@ -27,8 +29,8 @@
         }
         return "";
       };
-      lastName = readLabel(/^(?:SURNAME|LAST NAME|FAMILY NAME)\b\s*[:/\-]?\s*(.*)$/);
-      firstName = readLabel(/^(?:GIVEN NAMES?|FIRST NAME)\b\s*[:/\-]?\s*(.*)$/);
+      lastName = readLabel(/^(?:SURNAME|LAST NAME|FAMILY NAME)\b\s*[:/\-]?\s*(.*)$/) || lastName;
+      firstName = readLabel(/^(?:GIVEN NAMES?|FIRST NAME)\b\s*[:/\-]?\s*(.*)$/) || firstName;
       middleName = readLabel(/^MIDDLE NAME\b\s*[:/\-]?\s*(.*)$/);
     }
     const aliases = new Map(countries.map((country) => [normalize(country), country]));
