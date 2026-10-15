@@ -32,6 +32,31 @@ const applicationFiles = (manualFiles) => {
   if (passport && !files.some((file) => file.name === passport.name && file.size === passport.size && file.lastModified === passport.lastModified)) files.push(passport);
   return files;
 };
+// On phones, package links should reveal the actionable card, not just its introduction.
+document.querySelectorAll('a[href="#pricing"]').forEach((link) => {
+  link.addEventListener("click", (event) => {
+    if (!window.matchMedia("(max-width: 620px)").matches || event.defaultPrevented ||
+        event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const card = document.querySelector('.pricing-grid [data-package-select="single"]');
+    if (!card) return;
+    event.preventDefault();
+    mobileMenus.forEach((menu) => { menu.open = false; });
+    const viewport = window.visualViewport;
+    const viewportTop = viewport?.offsetTop || 0;
+    const viewportBottom = viewportTop + (viewport?.height || window.innerHeight);
+    const headerBottom = document.querySelector(".site-header")?.getBoundingClientRect().bottom || 0;
+    const bar = document.querySelector(".mobile-cta-bar");
+    const barTop = bar && getComputedStyle(bar).display !== "none"
+      ? viewportBottom - bar.getBoundingClientRect().height : viewportBottom;
+    const top = Math.max(viewportTop, headerBottom) + 12;
+    const bottom = Math.min(viewportBottom, barTop) - 12;
+    const rect = card.getBoundingClientRect();
+    // On short screens keep the card's beginning visible if it cannot fit in full.
+    const destination = window.scrollY + rect.top - top - Math.max(0, (bottom - top - rect.height) / 2);
+    if (window.location.hash !== "#pricing") window.history.pushState(null, "", "#pricing");
+    window.scrollTo({ top: destination, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+  });
+});
 const googleScriptIntakeUrl =
   "https://script.google.com/macros/s/AKfycbyZp6oqQoPsP6o2RwaFlflHgfF9QAfjtlp172XQZCqEUnV3g3YiwmBYoW0HoFIwN9kv/exec";
 const googleScriptNotifyUrl =
