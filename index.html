@@ -55,7 +55,7 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://www.googletagmanager.com https://www.googleadservices.com https://www.google.com https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.google.com https://pagead2.googlesyndication.com https://www.googleadservices.com https://google.com; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://www.google-analytics.com https://analytics.google.com https://*.google-analytics.com https://pagead2.googlesyndication.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://ad.doubleclick.net https://www.google.com https://google.com; font-src 'self'; frame-src https://www.googletagmanager.com; media-src 'self' blob:; object-src 'none'; worker-src 'self'; manifest-src 'self'; base-uri 'self'; form-action 'self' https://buy.stripe.com; upgrade-insecure-requests"
     />
-    <script src="assets/site-metrics.js?v=20261015-passport-v1"></script>
+    <script src="assets/site-metrics.js?v=20261015-passport-v3"></script>
     <!-- Google tag (gtag.js) -->
     <script
       async
@@ -126,14 +126,14 @@
     />
     <link
       rel="preload"
-      href="assets/images/hero/hero-family-v3.webp?v=20261015-passport-v1"
+      href="assets/images/hero/hero-family-v3.webp?v=20261015-passport-v3"
       as="image"
       type="image/webp"
       fetchpriority="high"
     />
     <link
       rel="stylesheet"
-      href="assets/styles.css?v=20261015-passport-v1"
+      href="assets/styles.css?v=20261015-passport-v3"
     />
   </head>
   <body>
@@ -698,14 +698,14 @@
               Autofill from passport <span>Optional</span>
             </button>
             <div class="passport-panel" id="passportPanel" data-passport-panel hidden>
-              <p>Snap or upload the passport photo page, including the two lines at the bottom. Read privately on your device; the scan is not uploaded or attached to your request.</p>
+              <p>Snap or upload the passport photo page, including the two lines at the bottom. Read on your device. Choose whether to attach the photo after reviewing your details. Attached photos are sent with your preparation request only when you submit it.</p>
               <div class="passport-actions">
                 <button type="button" data-passport-pick="passportCamera">Take photo</button>
                 <button type="button" data-passport-pick="passportUpload">Upload photo</button>
                 <button type="button" data-passport-cancel>Cancel</button>
               </div>
-              <input id="passportCamera" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" hidden aria-label="Take a passport photo" />
-              <input id="passportUpload" type="file" accept="image/jpeg,image/png,image/webp" hidden aria-label="Choose a passport photo" />
+              <input id="passportCamera" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" capture="environment" hidden aria-label="Take a passport photo" />
+              <input id="passportUpload" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" hidden aria-label="Choose a passport photo" />
               <div class="passport-review" data-passport-review hidden>
                 <p>Check against your passport. All given names may appear under First name; move any middle names to Middle name.</p>
                 <div class="passport-review-fields">
@@ -715,10 +715,12 @@
                   <label>Country of birth<select data-passport-field="country" aria-label="Review country of birth"><option value="">Confirm manually in application</option></select></label>
                 </div>
                 <p>Nationality and issuing country are not your country of birth. Email and phone must be entered manually.</p>
-                <div class="passport-actions"><button type="button" data-passport-apply>Use these details</button></div>
+                <div class="passport-actions"><button type="button" data-passport-apply>Use details &amp; attach photo</button><button type="button" data-passport-details-only>Use details only</button></div>
               </div>
             </div>
             <p class="passport-status" data-passport-status role="status" aria-live="polite"></p>
+            <p class="passport-status" data-passport-attachment hidden>Passport photo attached to your preparation request. Sent only when you submit.</p>
+            <div class="passport-actions"><button type="button" data-passport-remove hidden>Remove passport photo</button></div>
           </section>
           <div class="form-divider full">
             <span>Primary applicant</span>
@@ -1417,7 +1419,7 @@
       </div>
     </footer>
 
-    <script src="assets/app.js?v=20261015-passport-v1"></script>
-    <script src="assets/passport-autofill.js?v=20261015-passport-v2"></script>
+    <script src="assets/app.js?v=20261015-passport-v3"></script>
+    <script src="assets/passport-autofill.js?v=20261015-passport-v3"></script>
   </body>
 </html>

@@ -627,16 +627,26 @@ and English model live in `vendor/passport-ocr/` with upstream licenses. No OCR 
 or remote model CDN is used. The homepage CSP permits same-origin workers and
 WebAssembly compilation; other pages keep workers disabled.
 
-The selected photo is processed in browser memory and is not uploaded, persisted,
-or attached to the document-upload field. Detected fields appear in an editable
-review panel before the visitor applies them. MRZ given names stay together until
-review because MRZ does not reliably distinguish first and middle names. Country
-of birth is recognized only from an explicit printed birth-place/country label
-and a supported country name, never from nationality or issuing-country codes.
-Email and phone require manual entry. The existing country list does not establish
-current-year eligibility. A photo must be JPG, PNG or WebP, at most 15 MB.
+The selected photo is processed in browser memory, with a separate focused MRZ
+pass and label-position checks for multilingual and multi-column passports. Filler
+misreads are rejected or removed only when clearly separated from name tokens.
+MRZ given names remain together for review instead of guessing middle names.
+Country of birth is read from birth labels, never issuer or nationality codes.
+
+The review offers “Use details & attach photo” and “Use details only”. The first
+adds a metadata-free JPEG copy to the existing visible supporting-document field;
+it is uploaded and stored by the normal Apps Script intake only when the applicant
+submits the request. Removing it preserves other documents. Scanning, cancelling,
+and reviewing cause no submission. No OCR text or photo enters browser storage,
+analytics, or a remote OCR API. Email and phone remain manual fields.
+
+HEIC/HEIF photos use the same self-hosted CSP-compatible HEIC worker across
+browsers to keep color and orientation handling consistent. JPG, PNG and WebP are supported; files must be under
+15 MB. The source country list does not establish current-year eligibility.
 
 Check parser behavior with `node scripts/check-passport-autofill.mjs`; the normal
-static checks include this test. A real OCR/browser test should use a synthetic
-passport, verify review-before-apply, and confirm that no passport image or OCR
-text is sent over the network. Do not test with real customer identity documents.
+static checks include this test. `scripts/check-passport-browser.cjs` runs real
+OCR against an in-memory synthetic passport and intercepts delivery to a mocked
+intake endpoint. It verifies details-only, explicit attachment/removal, and the
+JPEG payload after submission; it sends no records to production services.
+Never commit real customer documents or their recognized text as test fixtures.

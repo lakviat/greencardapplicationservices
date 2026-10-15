@@ -1,0 +1,9 @@
+HEIC/HEIF decoder from heic-to 1.6.6 (LGPL-3.0), using libheif 1.23.6.
+https://github.com/hoppergee/heic-to
+https://github.com/strukturag/libheif/releases/tag/v1.23.6
+Source distribution: https://registry.npmjs.org/heic-to/-/heic-to-1.6.6.tgz
+worker.js is the unmodified CSP worker string extracted from dist/csp/heic-to.js.
+It is hosted as a standalone worker to avoid blob workers and unsafe-eval.
+The optional decoder runs on-device; no image is sent to a conversion service.
+See LICENSE.txt. Upstream source and build instructions are available at the
+links above; this separate library can be replaced independently of the site.

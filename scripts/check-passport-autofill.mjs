@@ -10,7 +10,7 @@ test('TD3 names remain separate from issuing country and nationality', () => {
     firstName: 'JANE ANNA', lastName: 'TESTER', middleName: '', country: '',
   });
 });
-test('printed names take precedence over misread MRZ filler', () => {
+test('printed labels corroborate names after MRZ filler cleanup', () => {
   const result = parse('SURNAME: TESTER\nGIVEN NAMES: JANE ANNA\nP<KGZTESTER<<JANE<ANNA<LLLLL<<<<<<<<<<<<<<<<<');
   assert.equal(result.firstName, 'JANE ANNA');
 });
@@ -34,4 +34,31 @@ test('all applicants display first, last, middle; scan controls never submit', (
     assert(positions[0] < positions[1] && positions[1] < positions[2]);
   }
   for (const button of html.matchAll(/<button[^>]*data-passport-[^>]*>/g)) assert.match(button[0], /type="button"/);
+});
+
+test('misread MRZ padding is excluded without truncating genuine name endings', () => {
+  assert.equal(parse('P<UTOEXAMPLE<<JANE<K<L<LLLLLLKLLLKLKL').firstName, 'JANE');
+  assert.equal(parse('P<UTOEXAMPLE<<MARK<LEE<<<<<<<<<<<<<<<<').firstName, 'MARK LEE');
+  assert.equal(parse('P<UTOEXAMPLE<<LILLY<KLARA<<<<<<<<<<<<').firstName, 'LILLY KLARA');
+  assert.equal(parse('P<UTOEXAMPLE<<JANEKLLLLLLLLLLLLLLLLLL').firstName, '');
+});
+test('multilingual labels can share a row with their values', () => {
+  const result = parse('FAMILIENNAME / SURNAME: EXAMPLE\nPRENOMS: JANE ANNA\nPLACE OF BIRTH: BERLIN, GERMANY');
+  assert.equal(result.firstName, 'JANE ANNA');
+  assert.equal(result.lastName, 'EXAMPLE');
+  assert.equal(result.country, 'Germany');
+});
+test('birth-country geometry excludes the adjacent nationality column and date-of-birth labels', () => {
+  const word = (text, x0, y0, width = 70) => ({text, bbox:{x0,y0,x1:x0+width,y1:y0+20}});
+  const line = words => ({words});
+  const country = window.gcasPassport.parsePassport('', ['Germany', 'Kazakhstan'], [{paragraphs:[{lines:[
+    line([word('Nationality',0,100), word('Pipe',300,100),word('of',380,100),word('hit',410,100)]),
+    line([word('Kazakhstan',0,128),word('Germany',300,128)]),
+  ]}]}]).country;
+  assert.equal(country,'Germany');
+  const notBirth = window.gcasPassport.parsePassport('', ['Germany'], [{paragraphs:[{lines:[
+    line([word('Date',300,100),word('of',380,100),word('birth',410,100)]),
+    line([word('Germany',300,128)]),
+  ]}]}]).country;
+  assert.equal(notBirth,'');
 });

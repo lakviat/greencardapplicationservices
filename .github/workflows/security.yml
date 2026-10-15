@@ -58,6 +58,7 @@ jobs:
           for attempt in $(seq 1 30); do
             if curl --silent --show-error --fail --insecure https://127.0.0.1:8443/ >/dev/null; then
               node scripts/check-mobile-layout.cjs
+              node scripts/check-passport-browser.cjs
               exit 0
             fi
             sleep 1
