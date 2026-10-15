@@ -38,6 +38,8 @@ test('all applicants display first, last, middle; scan controls never submit', (
 
 test('misread MRZ padding is excluded without truncating genuine name endings', () => {
   assert.equal(parse('P<UTOEXAMPLE<<JANE<K<L<LLLLLLKLLLKLKL').firstName, 'JANE');
+  assert.equal(parse('P<UTOEXAMPLE<<JANE<ANNA<L<L<L').firstName, 'JANE ANNA');
+  assert.equal(parse('P<UTOEXAMPLE<<JANE<ANNA<L<<<<<<').firstName, 'JANE ANNA L');
   assert.equal(parse('P<UTOEXAMPLE<<MARK<LEE<<<<<<<<<<<<<<<<').firstName, 'MARK LEE');
   assert.equal(parse('P<UTOEXAMPLE<<LILLY<KLARA<<<<<<<<<<<<').firstName, 'LILLY KLARA');
   assert.equal(parse('P<UTOEXAMPLE<<JANEKLLLLLLLLLLLLLLLLLL').firstName, '');

@@ -30,6 +30,11 @@
         // Isolated K/L between padding delimiters are common misread chevrons.
         while (given.length > 1 && /^[KL]$/.test(given.at(-1))) given.pop();
       }
+      // Some engines separate every misread chevron into its own K/L token.
+      // Keep genuine single initials; reject a run of three or more at the end.
+      let paddingStart = given.length;
+      while (paddingStart > 0 && /^[KL]$/.test(given[paddingStart - 1])) paddingStart -= 1;
+      if (given.length - paddingStart >= 3) given.splice(paddingStart);
       lastName = cleanName(mrz.slice(5, separator));
       firstName = cleanName(given.join(" "));
       // Do not guess where unseparated garbage ends and a real name begins.

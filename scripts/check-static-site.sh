@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cache_version="20261015-passport-v3"
-styles_version="20261015-passport-v3"
+cache_version="20261015-passport-v4"
+styles_version="20261015-passport-v4"
 
 html_files=()
 while IFS= read -r html_file; do
