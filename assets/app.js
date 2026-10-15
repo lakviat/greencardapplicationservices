@@ -24,6 +24,14 @@ const heroPauseButton = document.querySelector("[data-hero-pause]");
 const siteFooter = document.querySelector(".site-footer");
 const honeypotField = document.querySelector("#companyWebsite");
 const notifyHoneypotField = document.querySelector("#notifyCompanyWebsite");
+// Keep the scanner photo independent of the native file picker: choosing another
+// document replaces FileList on mobile. The payload and display share this list.
+const applicationFiles = (manualFiles) => {
+  const files = Array.from(manualFiles);
+  const passport = window.gcasPassport?.getAttachment?.();
+  if (passport && !files.some((file) => file.name === passport.name && file.size === passport.size && file.lastModified === passport.lastModified)) files.push(passport);
+  return files;
+};
 const googleScriptIntakeUrl =
   "https://script.google.com/macros/s/AKfycbyZp6oqQoPsP6o2RwaFlflHgfF9QAfjtlp172XQZCqEUnV3g3YiwmBYoW0HoFIwN9kv/exec";
 const googleScriptNotifyUrl =
@@ -732,9 +740,9 @@ if (form && message) {
         ?.querySelector("strong")
         ?.textContent?.trim() || "Single";
     const applicantCount = getApplicantCount();
-    const uploadedFiles = formData
+    const uploadedFiles = applicationFiles(formData
       .getAll("identityDocument")
-      .filter((file) => file instanceof File && file.size > 0);
+      .filter((file) => file instanceof File && file.size > 0));
     const totalUploadSize = uploadedFiles.reduce(
       (total, file) => total + file.size,
       0,
@@ -957,14 +965,14 @@ if (form && message) {
   const updateFileUploadSelection = () => {
     if (!identityDocumentInput || !fileUploadSelection) return;
 
-    const selectedFiles = Array.from(identityDocumentInput.files || []);
+    const selectedFiles = applicationFiles(identityDocumentInput.files || []);
 
     if (selectedFiles.length === 0) {
       fileUploadSelection.textContent = "No files selected";
     } else if (selectedFiles.length === 1) {
       fileUploadSelection.textContent = selectedFiles[0].name;
     } else {
-      fileUploadSelection.textContent = `${selectedFiles.length} files selected`;
+      fileUploadSelection.textContent = `${selectedFiles.length} files selected${window.gcasPassport?.getAttachment?.() ? " (including passport scan)" : ""}`;
     }
   };
 

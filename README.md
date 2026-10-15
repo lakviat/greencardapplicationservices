@@ -633,8 +633,10 @@ misreads are rejected or removed only when clearly separated from name tokens.
 MRZ given names remain together for review instead of guessing middle names.
 Country of birth is read from birth labels, never issuer or nationality codes.
 
-The review offers “Use details & attach photo” and “Use details only”. The first
-adds a metadata-free JPEG copy to the existing visible supporting-document field;
+The review action “Use details & attach photo” applies the fields and includes a
+metadata-free JPEG copy with the preparation request. The scanner retains that
+copy in page memory independently of the native file picker, so selecting another
+document cannot silently replace it. The document summary includes both sources;
 it is uploaded and stored by the normal Apps Script intake only when the applicant
 submits the request. Removing it preserves other documents. Scanning, cancelling,
 and reviewing cause no submission. No OCR text or photo enters browser storage,
@@ -647,6 +649,6 @@ browsers to keep color and orientation handling consistent. JPG, PNG and WebP ar
 Check parser behavior with `node scripts/check-passport-autofill.mjs`; the normal
 static checks include this test. `scripts/check-passport-browser.cjs` runs real
 OCR against an in-memory synthetic passport and intercepts delivery to a mocked
-intake endpoint. It verifies details-only, explicit attachment/removal, and the
+intake endpoint. It verifies automatic attachment when applying autofill, explicit removal, and the
 JPEG payload after submission; it sends no records to production services.
 Never commit real customer documents or their recognized text as test fixtures.

@@ -118,6 +118,7 @@
   let decoderReject = null;
   let pendingPhoto = null;
   let attachedPhoto = null;
+  window.gcasPassport.getAttachment = () => attachedPhoto;
   let libraryPromise;
   let operation = 0;
   const setStatus = (message) => { status.textContent = message; };
@@ -297,22 +298,18 @@
       if (current === operation) stop();
     }
   }));
-  const sameAttachment = (file) => attachedPhoto && file.name === attachedPhoto.name && file.lastModified === attachedPhoto.lastModified && file.size === attachedPhoto.size;
   const attachmentNotice = root.querySelector("[data-passport-attachment]");
   const removeAttachment = root.querySelector("[data-passport-remove]");
   const documents = form.querySelector("#identityDocuments");
   const updateAttachmentNotice = () => {
-    if (attachedPhoto && !Array.from(documents.files).some(sameAttachment)) attachedPhoto = null;
     attachmentNotice.hidden = !attachedPhoto; removeAttachment.hidden = !attachedPhoto;
   };
   const setAttachment = (photo) => {
-    const files = Array.from(documents.files).filter((file) => !sameAttachment(file));
+    const files = Array.from(documents.files);
     if (photo) files.push(photo);
     if (files.length > 8 || files.reduce((sum, file) => sum + file.size, 0) > 35 * 1024 * 1024) throw new Error("attachment limit");
-    const selection = new DataTransfer();
-    files.forEach((file) => selection.items.add(file));
-    documents.files = selection.files;
     attachedPhoto = photo;
+    // Notify the normal document summary without mutating the native FileList.
     documents.dispatchEvent(new Event("change", { bubbles: true }));
     updateAttachmentNotice();
   };
@@ -321,14 +318,14 @@
     try { setAttachment(null); setStatus("Passport photo removed. Your entered details are unchanged."); }
     catch { setStatus("Use the document upload field to replace or remove the selected files."); }
   });
-  const applyDetails = (includePhoto) => {
+  const applyDetails = () => {
     if (review.hidden || busy) return;
     if (!fields.firstName.value.trim() || !fields.lastName.value.trim()) {
       setStatus("Check the first and last names before using these details."); return;
     }
-    if (includePhoto && !pendingPhoto) { setStatus("Photo attachment is unavailable. Choose Use details only, or scan again."); return; }
-    try { if (includePhoto || attachedPhoto) setAttachment(includePhoto ? pendingPhoto : null); }
-    catch { setStatus("The photo could not be attached. Keep at most 8 files and 35 MB total, or choose Use details only."); return; }
+    if (!pendingPhoto) { setStatus("Photo attachment is unavailable. Scan again or enter your details manually."); return; }
+    try { setAttachment(pendingPhoto); }
+    catch { setStatus("The photo could not be attached. Keep at most 8 files and 35 MB total, then try again."); return; }
     for (const key of ["firstName", "lastName", "middleName"]) {
       const target = form.querySelector(`[name="${key}"]`);
       target.value = fields[key].value.trim().slice(0, 100);
@@ -341,10 +338,9 @@
       countrySelect.dispatchEvent(new Event("change", { bubbles: true }));
     }
     resetReview(); panel.hidden = true; toggle.setAttribute("aria-expanded", "false");
-    setStatus(includePhoto ? "Details applied and passport photo attached. It will be sent only when you submit your preparation request." : "Details applied without attaching the passport photo. Check all details before continuing.");
+    setStatus("Details applied and passport photo attached. It will be sent with your preparation request when you submit.");
     form.querySelector('[name="firstName"]').focus();
   };
-  root.querySelector("[data-passport-apply]").addEventListener("click", () => applyDetails(true));
-  root.querySelector("[data-passport-details-only]").addEventListener("click", () => applyDetails(false));
+  root.querySelector("[data-passport-apply]").addEventListener("click", applyDetails);
   window.addEventListener("pagehide", () => { stop(); resetReview(); });
 })();
