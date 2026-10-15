@@ -5510,3 +5510,26 @@ body.cookie-dialog-open {
     gap: 14px;
   }
 }
+
+/* A compact, optional scanner; its larger controls appear only on request. */
+.passport-autofill { min-width: 0; }
+.passport-autofill-toggle {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid #dbe4f0; border-radius: 8px; padding: 9px 12px;
+  background: #f7f9fc; color: #174aa0; font: inherit;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.passport-autofill-toggle span { color: #64748b; font-size: 10px; font-weight: 500; }
+.passport-autofill-toggle svg { flex-shrink: 0; }
+.passport-panel { margin-top: 10px; padding: 14px; border: 1px solid #dbe4f0; border-radius: 8px; background: #f7f9fc; }
+.passport-panel p, .passport-status { color: #475569; font-size: 12px; line-height: 1.5; }
+.passport-status:empty { display: none; }
+.passport-status { margin: 8px 0 0; }
+.passport-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.passport-actions button { min-height: 44px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 7px; background: white; color: #174aa0; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.passport-actions button:disabled { opacity: .55; cursor: wait; }
+.passport-review { margin-top: 14px; }
+.passport-review-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.passport-review-fields label { display: grid; gap: 4px; min-width: 0; color: #334155; font-size: 12px; font-weight: 600; }
+.passport-review-fields input, .passport-review-fields select { box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; color: #172238; background: white; font: inherit; font-size: 16px; }
+@media (max-width: 480px) { .passport-review-fields { grid-template-columns: minmax(0, 1fr); } }

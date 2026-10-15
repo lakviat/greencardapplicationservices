@@ -4,7 +4,7 @@ import path from "node:path";
 const root = process.cwd();
 const origin = "https://greencardapplicationservices.com";
 const ignoredDirectories = new Set([".git", "node_modules"]);
-const stalePricePattern = /\$(39|69|99|149)\b/g;
+const stalePricePattern = /\$(24|44|64|94|39|69|99|149)(?![\d.])/g;
 const expectedStripeUrls = [
   "https://buy.stripe.com/9B614p5JI4SH6xNd0U0Ny05",
   "https://buy.stripe.com/28E28t5JI4SH1dt1ic0Ny06",

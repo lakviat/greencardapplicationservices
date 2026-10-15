@@ -36,10 +36,10 @@ const pages = [
 ];
 assert.equal(pages.length, 18, "Update the page matrix when published HTML pages change.");
 const packages = {
-  single: { label: "Single", price: 24, count: 1, link: "9B614p5JI4SH6xNd0U0Ny05" },
-  couple: { label: "Couple", price: 44, count: 2, link: "28E28t5JI4SH1dt1ic0Ny06" },
-  family: { label: "Family", price: 64, count: 3, link: "eVqbJ34FE98X6xN6Cw0Ny07" },
-  premium: { label: "Premium", price: 94, count: 3, link: "cNiaEZ2xw1Gv4pFd0U0Ny08" },
+  single: { label: "Single", price: 9.99, count: 1, link: "9B614p5JI4SH6xNd0U0Ny05" },
+  couple: { label: "Couple", price: 19.99, count: 2, link: "28E28t5JI4SH1dt1ic0Ny06" },
+  family: { label: "Family", price: 29.99, count: 3, link: "eVqbJ34FE98X6xN6Cw0Ny07" },
+  premium: { label: "Premium", price: 39.99, count: 3, link: "cNiaEZ2xw1Gv4pFd0U0Ny08" },
 };
 const profiles = [
   { name: "iphone-15-pro-max", width: 430, height: 932, device: "iPhone 15 Pro Max" },

@@ -94,7 +94,7 @@ Official Diversity Visa information should always be verified at:
 
 ## Development and Security
 
-The public website is a dependency-free static site. Run it locally with
+The public website is a static site with no build step and an optional, self-hosted passport OCR library. Run it locally with
 `python3 -m http.server 8080`, then run the repository checks with
 `bash scripts/check-static-site.sh` before deployment.
 
@@ -168,7 +168,7 @@ change its filename when replacing it so social platforms refetch it.
 
 Pricing cards select the corresponding form package and Stripe Payment Link.
 Links such as `/?package=couple#apply` preselect a package without submitting
-anything. Production prices are $24, $44, $64, and $94 USD, respectively.
+anything. Production prices are $9.99, $19.99, $29.99, and $39.99 USD, respectively.
 
 Checkout uses one required agreement covering private paid support, linked terms,
 privacy and refunds, beginning service after payment, and necessary application
@@ -247,7 +247,7 @@ The State Department's [September 16, 2025 final rule](https://www.federalregist
 established a $1 electronic DV registration fee, effective that day. Do not
 describe current official entry as universally free. Government fees are separate
 from the site's preparation prices; consult the active-year instructions.
-The homepage countdown targets **October 7, 2026 at noon Eastern**, explicitly
+The homepage countdown targets **October 18, 2026 at noon Eastern**, explicitly
 labeled a planning estimate, not an official opening or payment deadline.
 Expired or invalid targets show a source-checking message rather than claiming
 registration has opened. Change the target only after reviewing official sources;
@@ -617,3 +617,26 @@ Readable list:
 - Yemen
 - Zambia
 - Zimbabwe
+
+## Optional passport autofill
+
+A compact control after package selection offers camera capture or a photo upload
+for the primary applicant. `assets/passport-autofill.js` loads the self-hosted
+Tesseract.js 6.0.1 scanner only after a photo is selected. Its worker, LSTM cores,
+and English model live in `vendor/passport-ocr/` with upstream licenses. No OCR API
+or remote model CDN is used. The homepage CSP permits same-origin workers and
+WebAssembly compilation; other pages keep workers disabled.
+
+The selected photo is processed in browser memory and is not uploaded, persisted,
+or attached to the document-upload field. Detected fields appear in an editable
+review panel before the visitor applies them. MRZ given names stay together until
+review because MRZ does not reliably distinguish first and middle names. Country
+of birth is recognized only from an explicit printed birth-place/country label
+and a supported country name, never from nationality or issuing-country codes.
+Email and phone require manual entry. The existing country list does not establish
+current-year eligibility. A photo must be JPG, PNG or WebP, at most 15 MB.
+
+Check parser behavior with `node scripts/check-passport-autofill.mjs`; the normal
+static checks include this test. A real OCR/browser test should use a synthetic
+passport, verify review-before-apply, and confirm that no passport image or OCR
+text is sent over the network. Do not test with real customer identity documents.

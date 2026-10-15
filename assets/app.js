@@ -55,22 +55,22 @@ const countryCombobox = document.querySelector("[data-country-combobox]");
 const stripePackages = {
   single: {
     label: "Single",
-    amount: 24,
+    amount: 9.99,
     paymentLink: "https://buy.stripe.com/9B614p5JI4SH6xNd0U0Ny05",
   },
   couple: {
     label: "Couple",
-    amount: 44,
+    amount: 19.99,
     paymentLink: "https://buy.stripe.com/28E28t5JI4SH1dt1ic0Ny06",
   },
   family: {
     label: "Family",
-    amount: 64,
+    amount: 29.99,
     paymentLink: "https://buy.stripe.com/eVqbJ34FE98X6xN6Cw0Ny07",
   },
   premium: {
     label: "Premium",
-    amount: 94,
+    amount: 39.99,
     paymentLink: "https://buy.stripe.com/cNiaEZ2xw1Gv4pFd0U0Ny08",
   },
 };

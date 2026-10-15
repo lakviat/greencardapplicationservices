@@ -6,10 +6,10 @@ import vm from "node:vm";
 const metricsSource = readFileSync(new URL("../assets/site-metrics.js", import.meta.url), "utf8");
 const appSource = readFileSync(new URL("../assets/app.js", import.meta.url), "utf8");
 const packageData = {
-  single: ["Single", 24, 1, "https://buy.stripe.com/9B614p5JI4SH6xNd0U0Ny05"],
-  couple: ["Couple", 44, 2, "https://buy.stripe.com/28E28t5JI4SH1dt1ic0Ny06"],
-  family: ["Family", 64, 3, "https://buy.stripe.com/eVqbJ34FE98X6xN6Cw0Ny07"],
-  premium: ["Premium", 94, 1, "https://buy.stripe.com/cNiaEZ2xw1Gv4pFd0U0Ny08"],
+  single: ["Single", 9.99, 1, "https://buy.stripe.com/9B614p5JI4SH6xNd0U0Ny05"],
+  couple: ["Couple", 19.99, 2, "https://buy.stripe.com/28E28t5JI4SH1dt1ic0Ny06"],
+  family: ["Family", 29.99, 3, "https://buy.stripe.com/eVqbJ34FE98X6xN6Cw0Ny07"],
+  premium: ["Premium", 39.99, 1, "https://buy.stripe.com/cNiaEZ2xw1Gv4pFd0U0Ny08"],
 };
 
 class Element {
@@ -530,7 +530,7 @@ test("countdown shows three values at a known clock and expires without claiming
   const description = new Element();
   const values = Object.fromEntries(["days", "hours", "minutes"].map((unit) => [unit, new Element()]));
   const panel = new Element({
-    dataset: { countdownDate: "2026-10-07T12:00:00-04:00", countdownStatus: "estimated" },
+    dataset: { countdownDate: "2026-10-18T12:00:00-04:00", countdownStatus: "estimated" },
   });
   panel.querySelector = (selector) => {
     if (selector === "[data-countdown-heading]") return heading;
@@ -542,13 +542,13 @@ test("countdown shows three values at a known clock and expires without claiming
     env.elements.set("[data-dv-countdown]", panel);
   } });
   assert.equal(heading.textContent, "Until the planning estimate");
-  assert.deepEqual(Object.values(values).map((value) => value.textContent), ["06", "23", "26"]);
+  assert.deepEqual(Object.values(values).map((value) => value.textContent), ["17", "23", "26"]);
   const timer = [...env.intervals.values()][0];
   assert.equal(timer.delay, 60000);
   env.clock.now += 60000;
   timer.callback();
   assert.equal(values.minutes.textContent, "25");
-  env.clock.now = Date.parse("2026-10-07T12:00:00-04:00");
+  env.clock.now = Date.parse("2026-10-18T12:00:00-04:00");
   timer.callback();
   assert.deepEqual(Object.values(values).map((value) => value.textContent), ["00", "00", "00"]);
   assert.equal(heading.textContent, "Estimated date reached");
@@ -558,7 +558,7 @@ test("countdown shows three values at a known clock and expires without claiming
   timer.callback();
   assert.equal(heading.textContent, "Estimated date reached");
   const expired = loadApp({ setup(env) {
-    env.clock.now = Date.parse("2026-10-08T12:00:00-04:00");
+    env.clock.now = Date.parse("2026-10-19T12:00:00-04:00");
     env.elements.set("[data-dv-countdown]", panel);
   } });
   assert.equal(heading.textContent, "Estimated date reached");
@@ -626,7 +626,7 @@ test("package deep links are allowlisted, initialize summary, and never produce 
     assert.equal(env.heading.classes.has("is-pointer-focus"), true);
     env.radios[2].checked = true;
     await env.radios[2].emit("change");
-    assert.equal(env.summaryPrice.textContent, "$64");
+    assert.equal(env.summaryPrice.textContent, "$29.99");
     assert.deepEqual(env.events.at(-1), { event: "select_item", package: "family" });
   }
   for (const packageKey of ["__proto__", "constructor", "unknown"]) {

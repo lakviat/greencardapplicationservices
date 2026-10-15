@@ -128,7 +128,7 @@ async function validateHome(baseUrl, localExpectations, attempts, delaySeconds, 
       if (liveH1 !== localExpectations.h1) {
         failures.push(`home page h1 mismatch: expected "${localExpectations.h1}", got "${liveH1 || "missing"}"`);
       }
-      for (const price of ["$24", "$44", "$64", "$94"]) {
+      for (const price of ["$9.99", "$19.99", "$29.99", "$39.99"]) {
         assertIncludes(lastHtml, price, `home page is missing ${price}`, failures);
       }
       if (!/<meta\s+http-equiv=["']Content-Security-Policy["']/i.test(lastHtml)) {

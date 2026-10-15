@@ -1,0 +1,9 @@
+Self-hosted optional passport OCR dependencies:
+- Tesseract.js 6.0.1, https://github.com/naptha/tesseract.js (Apache-2.0)
+- Tesseract.js-core 6.1.2, https://github.com/naptha/tesseract.js-core (Apache-2.0)
+- English trained data: @tesseract.js-data/eng 1.0.0 / 4.0.0_best_int
+  https://github.com/naptha/tessdata (Apache-2.0)
+Original license files are included. Upstream distributions are unmodified.
+Only LSTM core variants are included; createWorker uses OEM 1 (LSTM only).
+Files are fetched only after the visitor chooses a passport photo. Passport
+images and recognized text are processed locally and are never sent to OCR APIs.

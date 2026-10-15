@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cache_version="20261001-quality-v1"
-styles_version="20261001-quality-v1"
+cache_version="20261015-passport-v1"
+styles_version="20261015-passport-v1"
 
 html_files=()
 while IFS= read -r html_file; do
@@ -14,6 +14,8 @@ done < <(
     | sort
 )
 
+node --check assets/passport-autofill.js
+node scripts/check-passport-autofill.mjs
 node --check assets/app.js
 node --check assets/requirements.js
 node --check assets/site-metrics.js

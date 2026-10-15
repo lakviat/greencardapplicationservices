@@ -18,11 +18,11 @@ Package deep links (`/?package=single#apply`, also `couple`, `family`, `premium`
 
 ## Offer and ad copy
 
-Current one-time preparation prices are $24 Single, $44 Couple, $64 Family, and $94 Premium. Lead with the low entry price, but always state that government fees are separate. Government fees and the private service fee are different things.
+Current one-time preparation prices are $9.99 Single, $19.99 Couple, $29.99 Family, and $39.99 Premium. Lead with the low entry price, but always state that government fees are separate. Government fees and the private service fee are different things.
 
 Responsive search ad assets (headlines are at most 30 characters and descriptions at most 90; counts checked):
 
-- Headlines: "DV Lottery Application Help", "From $24 - One-Time Fee", "Photo & Document Review", "Family Details Checked", "You Approve Before Submission", "Independent Paid Service", "Secure Checkout With Stripe", "Clear Refund Terms", "Prepare Before Registration"
+- Headlines: "DV Lottery Application Help", "From $9.99 - One-Time Fee", "Photo & Document Review", "Family Details Checked", "You Approve Before Submission", "Independent Paid Service", "Secure Checkout With Stripe", "Clear Refund Terms", "Prepare Before Registration"
 - Descriptions: "Private DV Lottery application help. Photo, document and family-detail review." / "Choose Single, Couple, Family or Premium. Government fees are separate." / "Not a government site. Selection is random and never guaranteed." / "Review your prepared entry, then submit yourself or authorize us. Pay securely on Stripe."
 
 Pin nothing except the "not a government site" description to a visible position if the platform asks for a disclaimer. Ad copy must match the landing page. Any pricing, refund, or timing claim must match the current site and policies.
@@ -147,7 +147,7 @@ Registration for a new Diversity Visa program year is expected to open soon, and
 1. Search terms report: add irrelevant queries as negatives; promote converting queries to exact match.
 2. Compare click-through rate and checkout starts by ad group, not only clicks. A checkout start is intent, not revenue; confirm purchases in Stripe.
 3. Pause keywords that spend without reaching the form after a meaningful sample. Do not judge on a handful of clicks.
-4. Split-test the lead headline between price ("From $24") and trust ("You approve before submission") one at a time.
+4. Split-test the lead headline between price ("From $9.99") and trust ("You approve before submission") one at a time.
 5. Check mobile and desktop separately; most of this audience is on phones, so review the mobile landing experience with every change.
 
 ## Multilingual campaigns

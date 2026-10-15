@@ -25,7 +25,11 @@ customer personal information in the report.
   trusted status endpoint.
 - A browser `paymentStatus` field is informational only. Production payment
   confirmation must come from a verified Stripe webhook on a trusted backend.
-- Identity documents currently pass through Apps Script and Google Drive. Drive
+- The optional passport autofill scanner processes photos locally in browser memory;
+  it does not upload or attach those photos. Reviewed field values become normal
+  application fields and are sent only on submission. OCR assets are self-hosted;
+  only the homepage permits same-origin workers and WebAssembly compilation.
+- Separately uploaded identity documents pass through Apps Script and Google Drive. Drive
   access must be private, limited to required staff, protected by multi-factor
   authentication, and governed by a retention/deletion policy.
 

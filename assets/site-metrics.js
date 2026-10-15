@@ -5,10 +5,10 @@
   const advertisingId = "AW-17948229197";
   const consentStorageKey = "gcas_cookie_preferences_v1";
   const packages = Object.freeze({
-    single: { item_id: "single", item_name: "Single", price: 24 },
-    couple: { item_id: "couple", item_name: "Couple", price: 44 },
-    family: { item_id: "family", item_name: "Family", price: 64 },
-    premium: { item_id: "premium", item_name: "Premium", price: 94 },
+    single: { item_id: "single", item_name: "Single", price: 9.99 },
+    couple: { item_id: "couple", item_name: "Couple", price: 19.99 },
+    family: { item_id: "family", item_name: "Family", price: 29.99 },
+    premium: { item_id: "premium", item_name: "Premium", price: 39.99 },
   });
   const locations = new Set(["hero", "header", "article", "pricing", "footer", "process"]);
   const ctas = new Set(["navigation", "apply", "notify", "package", "compare-packages", "start-single"]);
