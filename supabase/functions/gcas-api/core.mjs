@@ -2,6 +2,7 @@ import {
   FORM_VERSION,
   PACKAGES,
   fields,
+  storedFields,
   initialDraft,
   progress,
 } from "../../../assets/preparation/schema.mjs";
@@ -85,7 +86,7 @@ export function sanitizePayload(input, pack, storedAssets = []) {
         );
         assert(
           typeof value === "boolean" ||
-            (typeof value === "string" && value.length <= 1000),
+            (typeof value === "string" && value.length <= 1500),
           400,
           "Invalid answer value.",
         );
@@ -93,11 +94,11 @@ export function sanitizePayload(input, pack, storedAssets = []) {
       }
       // Build conditional fields from answers, then retain only schema-defined values.
       const allowed = new Set(
-        fields(d).flatMap((f) => [f.id, f.exception].filter(Boolean)),
+        storedFields(d).flatMap((f) => [f.id, f.exception].filter(Boolean)),
       );
       for (const key of Object.keys(d.answers))
         if (!allowed.has(key)) delete d.answers[key];
-      for (const f of fields(d)) {
+      for (const f of storedFields(d)) {
         const value = d.answers[f.id];
         if (f.exception && d.answers[f.exception] !== undefined)
           assert(

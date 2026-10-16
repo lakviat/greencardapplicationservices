@@ -8,7 +8,7 @@
   "scripts": {
     "test": "node --test tests/preparation/*.test.mjs",
     "check": "bash scripts/check-static-site.sh",
-    "test:browser": "node tests/preparation/browser.cjs",
+    "test:browser": "node tests/preparation/browser.cjs && node tests/preparation/ux-browser.cjs",
     "serve": "node scripts/serve-local-https.cjs",
     "build:backend": "node scripts/build-backend.mjs",
     "test:backend": "node --test tests/backend/*.test.mjs && node tests/backend/integration.mjs",

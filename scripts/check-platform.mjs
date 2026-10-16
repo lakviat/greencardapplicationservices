@@ -21,7 +21,7 @@ for (const file of pages) {
     file + " retired flow",
   );
   assert.doesNotMatch(html, stale, file + " obsolete service claim");
-  assert.match(html, /20261016-workspace-v1/, file + " cache version");
+  assert.match(html, /20261016-workspace-v(?:1|21)/, file + " cache version");
 }
 const prepare = fs.readFileSync("prepare.html", "utf8");
 assert.doesNotMatch(

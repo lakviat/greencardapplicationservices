@@ -1,3 +1,4 @@
+import { parseMRZ, scanSuggestions } from "./mrz.mjs";
 // Sensitive image data and object URLs live only in memory. Nothing is uploaded here.
 export const MAX_SOURCE_BYTES = 20 * 1024 * 1024;
 export async function imageType(file) {
@@ -198,9 +199,14 @@ export async function scanPassport(blob, countries, onProgress, signal) {
           countries,
           result.data.blocks || [],
         );
-        if (!detected.firstName || !detected.lastName) {
+        let checked = parseMRZ(result.data.text);
+        if (
+          checked.status !== "checked" ||
+          !detected.firstName ||
+          !detected.lastName
+        ) {
           await worker.setParameters({
-            tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ<",
+            tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<",
             tessedit_pageseg_mode: "6",
           });
           const canvas = document.createElement("canvas");
@@ -224,13 +230,16 @@ export async function scanPassport(blob, countries, onProgress, signal) {
             mrz.data.text,
             countries,
           );
+          const retry = parseMRZ(mrz.data.text);
+          if (retry.status === "checked" || checked.status === "unreadable")
+            checked = retry;
           detected = {
             ...detected,
             firstName: detected.firstName || fallback.firstName,
             lastName: detected.lastName || fallback.lastName,
           };
         }
-        return detected;
+        return scanSuggestions(detected, checked);
       })(),
     ]);
   } finally {

@@ -6,7 +6,10 @@ import {
   plan,
   verifyStripeSignature,
 } from "../../supabase/functions/gcas-api/core.mjs";
-import { initialDraft } from "../../assets/preparation/schema.mjs";
+import {
+  initialDraft,
+  worksheetRows,
+} from "../../assets/preparation/schema.mjs";
 const document = () => ({
   ...initialDraft(),
   id: randomUUID(),
@@ -43,7 +46,7 @@ test("save rejects forged assets, missing consent, extra worksheets and invalid 
   d.version = "old";
   assert.throws(() => sanitizePayload({ documents: [d] }, "single"), /version/);
 });
-test("save strips hidden answers and runtime image URLs and preserves legitimate asset identity", () => {
+test("save preserves dormant answers but strips runtime image URLs and preserves legitimate asset identity", () => {
   const d = document(),
     asset = randomUUID();
   d.answers["spouse.firstName"] = "Hidden";
@@ -62,8 +65,56 @@ test("save strips hidden answers and runtime image URLs and preserves legitimate
       bytes: 100,
     },
   ]);
-  assert(!("spouse.firstName" in p.documents[0].answers));
+  assert.equal(p.documents[0].answers["spouse.firstName"], "Hidden");
   assert(!("url" in p.documents[0].assets["entrant.photo"]));
+});
+test("dormant spouse assets retain ownership checks and return only when applicable", () => {
+  const d = document(),
+    asset = randomUUID();
+  d.answers["entrant.marital"] = "unmarried";
+  d.answers["spouse.firstName"] = "ALEX";
+  d.assets["spouse.photo"] = { id: asset, confirmed: true };
+  const stored = {
+    id: asset,
+    document_id: d.id,
+    field_id: "spouse.photo",
+    width: 600,
+    height: 600,
+    bytes: 100,
+  };
+  assert.throws(
+    () => sanitizePayload({ documents: [d] }, "single"),
+    /does not belong/,
+  );
+  assert.throws(
+    () =>
+      sanitizePayload({ documents: [d] }, "single", [
+        { ...stored, document_id: randomUUID() },
+      ]),
+    /does not belong/,
+  );
+  assert.throws(
+    () =>
+      sanitizePayload({ documents: [d] }, "single", [
+        { ...stored, field_id: "entrant.photo" },
+      ]),
+    /does not belong/,
+  );
+  const saved = sanitizePayload({ documents: [d] }, "single", [stored])
+    .documents[0];
+  assert.equal(saved.assets["spouse.photo"].id, asset);
+  assert(
+    !worksheetRows(saved)
+      .flatMap((s) => s.fields)
+      .some((f) => f.id.startsWith("spouse.")),
+  );
+  saved.answers["entrant.marital"] = "married";
+  assert.equal(
+    worksheetRows(saved)
+      .flatMap((s) => s.fields)
+      .find((f) => f.id === "spouse.firstName").value,
+    "ALEX",
+  );
 });
 test("raw webhook signature rejects alteration, wrong secret, expiry; accepts key rotation signatures", async () => {
   const secret = "test-only",

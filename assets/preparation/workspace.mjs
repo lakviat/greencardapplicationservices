@@ -9,6 +9,7 @@ import {
   fields,
   validate,
   progress,
+  preparationProgress,
   warnings,
   recommendPackage,
   hasSpouse,
@@ -25,6 +26,10 @@ import { CAPABILITIES, unavailable, capabilities } from "./backend.mjs";
 import { cloudWorkspace } from "./cloud.mjs";
 import { worksheet } from "./worksheet.mjs";
 import { spouseWorksheet } from "./household.mjs";
+import { enhanceCountry } from "./country-control.mjs";
+import { attachViewport } from "./viewport.mjs";
+import { questionGroups } from "./presentation.mjs";
+import { dateControl } from "./date-control.mjs";
 const app = document.querySelector("#workspace");
 let draft = initialDraft();
 const sessionDrafts = [draft];
@@ -141,16 +146,31 @@ const saveButton = button("Save progress", openSave, {
 const reviewButton = button("Review", () => navigate("review"), {
   class: "button",
 });
+const compactRemaining = el("span", { class: "compact-remaining" }, "27 left");
+const actionsButton = button("•••", openActions, {
+  class: "actions-toggle",
+  "aria-label": "More preparation actions",
+  "aria-haspopup": "dialog",
+});
 const bottom = el(
   "footer",
   { class: "workspace-bottom" },
-  el("div", { class: "completion" }, percentLabel, progressBar, guideLabel),
+  button("←", previousField, {
+    class: "previous-field",
+    "aria-label": "Previous field",
+  }),
   el(
     "div",
-    { class: "field-navigation" },
-    button("← Previous", previousField, { "aria-label": "Previous field" }),
-    button("Next required →", nextField, { class: "next-field" }),
+    { class: "completion" },
+    percentLabel,
+    compactRemaining,
+    progressBar,
+    guideLabel,
   ),
+  button("→", nextField, {
+    class: "next-field",
+    "aria-label": "Next required field",
+  }),
   el(
     "div",
     { class: "workspace-actions" },
@@ -158,24 +178,33 @@ const bottom = el(
     saveButton,
     reviewButton,
   ),
+  actionsButton,
 );
 const header = el(
   "header",
   { class: "workspace-header" },
-  link("GC", "/", {
-    class: "brand-mark",
-    "aria-label": "Green Card Application Services home",
-  }),
-  el(
-    "div",
-    { class: "workspace-brand" },
-    el("strong", {}, "GREEN CARD"),
-    el("span", {}, "APPLICATION SERVICES"),
+  link(
+    el(
+      "span",
+      { class: "brand-content" },
+      el("img", { src: "/assets/favicon.png", alt: "", width: 39, height: 52 }),
+      el(
+        "span",
+        { class: "workspace-brand" },
+        el("strong", {}, "GREEN CARD"),
+        el("span", {}, "APPLICATION SERVICES"),
+      ),
+    ),
+    "/",
+    {
+      class: "workspace-home",
+      "aria-label": "Green Card Application Services home",
+    },
   ),
   el(
     "div",
     { class: "workspace-title" },
-    el("span", { class: "eyebrow" }, "YOUR PREPARATION SPACE"),
+
     el("strong", {}, "DV-2027 worksheet"),
   ),
   button("My preparations", () => navigate("dashboard"), {
@@ -185,7 +214,9 @@ const header = el(
 const notice = el(
   "div",
   { class: "workspace-notice" },
-  "Independent DV Preparation Worksheet — Not an Official Government Submission",
+  button("Unofficial preparation · About this worksheet", openSources, {
+    class: "disclosure-button",
+  }),
 );
 const draftStatus = el(
   "span",
@@ -198,11 +229,7 @@ const top = el(
   el(
     "div",
     {},
-    el(
-      "span",
-      { class: "edition-badge" },
-      "DV-2027 · provisional requirements",
-    ),
+    el("span", { class: "edition-badge" }, "DV-2027 · provisional"),
     draftStatus,
   ),
   button("Requirements & sources", openSources, { class: "text-button" }),
@@ -226,7 +253,6 @@ const help = el(
 );
 app.append(
   header,
-  notice,
   top,
   el(
     "div",
@@ -243,6 +269,7 @@ const countries = el(
   COUNTRIES.map((c) => el("option", { value: c.name }, c.code)),
 );
 app.append(countries);
+const viewport = attachViewport(bottom);
 function announce(text) {
   status.textContent = text;
 }
@@ -267,9 +294,14 @@ function fieldError(field) {
   return validate(field, draft);
 }
 function updateProgress() {
-  const p = progress(draft, countryNames);
+  const p = preparationProgress(draft, relatedDrafts.get(draft), countryNames);
   percentLabel.textContent = `${p.percent}%`;
   progressBar.value = p.percent;
+  compactRemaining.textContent = `${p.remaining.length} left`;
+  percentLabel.setAttribute(
+    "aria-label",
+    `${p.percent}% complete, ${p.remaining.length} items remaining`,
+  );
   const remainingText = `${p.remaining.length} ${p.remaining.length === 1 ? "item" : "items"} remaining`;
   // Avoid replacing a button's text node on input blur: Safari can cancel
   // the in-progress pointer click when its original target is removed.
@@ -311,6 +343,7 @@ function updateProgress() {
   }
 }
 function activate(id, { scroll = true, focus = true } = {}) {
+  const moved = active !== id;
   active = id;
   const field = currentField();
   if (!field) return;
@@ -319,6 +352,10 @@ function activate(id, { scroll = true, focus = true } = {}) {
     .forEach((n) => n.classList.remove("is-active"));
   const wrapper = document.getElementById(`field-${id}`);
   wrapper?.classList.add("is-active");
+  if (moved && scroll) {
+    wrapper?.classList.add("is-guided");
+    setTimeout(() => wrapper?.classList.remove("is-guided"), 700);
+  }
   document.querySelector("[data-guide-title]").textContent = field.label;
   document.querySelector("[data-guide-copy]").textContent =
     field.help ||
@@ -335,6 +372,7 @@ function activate(id, { scroll = true, focus = true } = {}) {
   if (focus) {
     const control = wrapper?.querySelector("[data-control]");
     control?.focus({ preventScroll: true });
+    setTimeout(() => viewport.ensureVisible(), 300);
   }
 }
 function nextField() {
@@ -349,7 +387,20 @@ function nextField() {
   const next = later || all.find((f) => f.required && fieldError(f));
   updateProgress();
   if (next) activate(next.id);
-  else navigate("review");
+  else {
+    const pending = preparationProgress(
+      draft,
+      relatedDrafts.get(draft),
+      countryNames,
+    ).remaining[0];
+    if (pending?.record && pending.record !== draft) {
+      draft = pending.record;
+      touched.clear();
+      renderDocument();
+      activate(pending.field.id);
+    } else if (pending?.field.id === "secondEntry") openMissing();
+    else navigate("review");
+  }
 }
 function previousField() {
   if (view !== "document") {
@@ -373,14 +424,89 @@ function makeField(field) {
     !field.required ? el("span", { class: "optional" }, "Optional") : null,
   );
   wrap.append(label);
-  if (field.help)
+  if (field.help) {
+    const mandatory = field.id === "preparation.consent";
     wrap.append(
-      el("p", { class: "field-help", id: `help-${field.id}` }, field.help),
+      el(
+        "p",
+        {
+          class: `field-help ${mandatory ? "mandatory-help" : ""}`,
+          id: `help-${field.id}`,
+        },
+        field.help,
+      ),
     );
+    if (!mandatory)
+      wrap.append(
+        button("?", () => openFieldHelp(field), {
+          class: "field-help-toggle",
+          "aria-label": `Help: ${field.label}`,
+          "aria-haspopup": "dialog",
+        }),
+      );
+  }
   if (["photo", "passportPhoto"].includes(field.type)) {
     wrap.append(mediaControl(field));
   } else {
     let input;
+    if (["date", "futureDate"].includes(field.type)) {
+      label.removeAttribute("for");
+      label.id = `label-${field.id}`;
+      wrap.append(
+        dateControl(field, draft.answers[field.id], {
+          change: (value) => {
+            draft.answers[field.id] = value;
+            changed();
+          },
+          focus: () => activate(field.id, { scroll: false, focus: false }),
+          blur: () => {
+            touched.add(field.id);
+            updateProgress();
+          },
+        }),
+        el("p", { class: "field-error", id: `error-${field.id}` }),
+      );
+      return wrap;
+    }
+    if (
+      field.id.endsWith(".sex") ||
+      ["entrant.marital", "entrant.education"].includes(field.id)
+    ) {
+      const group = el("div", {
+        class: `radio-options ${field.id === "entrant.marital" ? "radio-stacked" : field.id === "entrant.education" ? "radio-education" : ""}`,
+        role: "radiogroup",
+        "aria-label": field.label,
+        "aria-required": "true",
+      });
+      for (const option of field.options) {
+        const radio = el("input", {
+          type: "radio",
+          name: field.id,
+          id: `${field.id}-${option.value}`,
+          value: option.value,
+          checked: draft.answers[field.id] === option.value,
+          "data-control": "",
+          onfocus: () => activate(field.id, { scroll: false, focus: false }),
+          onchange: () => {
+            draft.answers[field.id] = option.value;
+            changed();
+            if (field.id === "entrant.marital") {
+              renderDocument();
+              document
+                .getElementById(`${field.id}-${option.value}`)
+                ?.focus({ preventScroll: true });
+            }
+          },
+        });
+        group.append(el("label", {}, radio, option.label));
+      }
+      label.removeAttribute("for");
+      wrap.append(
+        group,
+        el("p", { class: "field-error", id: `error-${field.id}` }),
+      );
+      return wrap;
+    }
     if (field.type === "select")
       input = el(
         "select",
@@ -454,7 +580,7 @@ function makeField(field) {
       }
     });
     if (field.type === "checkbox") wrap.prepend(input);
-    else wrap.append(input);
+    else wrap.append(field.type === "country" ? enhanceCountry(input) : input);
     if (field.exception) {
       const exception = el("input", {
         type: "checkbox",
@@ -612,7 +738,7 @@ function mediaControl(field) {
     }
     if (field.id === "passport.bio")
       area.append(
-        button("Autofill names from this passport", () => openScan(asset), {
+        button("Scan and review passport details", () => openScan(asset), {
           class: "button",
         }),
       );
@@ -695,6 +821,7 @@ function openDialog(title, content, cleanup) {
     closeDialog();
   });
   app.append(dialog);
+  document.body.classList.add("dialog-open");
   dialog.showModal();
 }
 function closeDialog() {
@@ -704,6 +831,7 @@ function closeDialog() {
   dialog.close();
   dialog.remove();
   dialog = null;
+  document.body.classList.remove("dialog-open");
   dialogTrigger?.focus?.({ preventScroll: true });
 }
 function openCrop(field, source) {
@@ -781,11 +909,140 @@ function openCrop(field, source) {
   );
   redraw();
 }
-async function openScan(asset) {
+function scanEntry() {
+  return el(
+    "div",
+    { class: "scan-entry" },
+    button(
+      el(
+        "span",
+        {},
+        el("span", { "aria-hidden": "true" }, "▣ "),
+        "Save time — Scan your passport",
+      ),
+      startPassportScan,
+      { class: "scan-entry-button", "aria-haspopup": "dialog" },
+    ),
+    el("span", {}, "Optional · review before applying"),
+  );
+}
+function startPassportScan() {
+  const target = draft;
+  const consent = el("input", { type: "checkbox", id: "scan-permission" });
+  const upload = el("input", {
+    type: "file",
+    accept: "image/jpeg,image/png,image/webp,image/heic,image/heif",
+    id: "scan-upload",
+    class: "sr-only",
+    tabindex: "-1",
+    "aria-label": "Upload passport for scanning",
+  });
+  const camera = el("input", {
+    type: "file",
+    accept: "image/*",
+    capture: "environment",
+    id: "scan-camera",
+    class: "sr-only",
+    tabindex: "-1",
+    "aria-label": "Take passport photo for scanning",
+  });
+  const take = button("Take Passport Photo", () => camera.click(), {
+    disabled: true,
+  });
+  const choose = button("Upload Passport", () => upload.click(), {
+    disabled: true,
+  });
+  consent.addEventListener("change", () => {
+    take.disabled = choose.disabled = !consent.checked;
+  });
+  const info = el("p", { role: "status" });
   const abort = new AbortController();
+  for (const input of [upload, camera])
+    input.addEventListener("change", async () => {
+      const file = input.files?.[0];
+      input.value = "";
+      if (!file || !consent.checked) return;
+      take.disabled = choose.disabled = true;
+      info.textContent = "Preparing a private image copy on this device…";
+      try {
+        const copy = await passportCopy(file);
+        if (abort.signal.aborted || draft !== target) return;
+        closeDialog();
+        openScan(copy, { attach: true });
+      } catch (e) {
+        if (!abort.signal.aborted) {
+          info.textContent = e.message;
+          take.disabled = choose.disabled = false;
+        }
+      }
+    });
+  openDialog(
+    "Scan your passport",
+    el(
+      "div",
+      {},
+      el(
+        "p",
+        {},
+        "Automatically fill supported details. You'll review everything before continuing. Include the whole photo page and both lines at the bottom.",
+      ),
+      el(
+        "p",
+        { class: "notice" },
+        "Reading happens on this device. Only after you confirm will the image join this worksheet. Paid saving uploads the copy to your private account. You can replace or remove it. No advertising or external AI receives this scan.",
+      ),
+      el(
+        "label",
+        { class: "photo-confirm", for: "scan-permission" },
+        consent,
+        "I have permission to process this passport and understand how the confirmed copy is saved.",
+      ),
+      el(
+        "div",
+        { class: "scan-choices" },
+        take,
+        choose,
+        button("Enter Manually", closeDialog),
+      ),
+      upload,
+      camera,
+      info,
+      link("Privacy and retention", "/policies/#privacy", {
+        target: "_blank",
+        rel: "noopener noreferrer",
+      }),
+    ),
+    () => abort.abort(),
+  );
+}
+async function openScan(asset, { attach = false } = {}) {
+  const target = draft,
+    abort = new AbortController(),
+    preview = URL.createObjectURL(asset.blob);
   const info = el("p", { role: "status" }, "Reading on your device…");
-  const body = el("div", {}, info);
-  openDialog("Review passport autofill", body, () => abort.abort());
+  const details = el("div", { class: "scan-values" });
+  const body = el(
+    "div",
+    {},
+    info,
+    el(
+      "div",
+      { class: "scan-review" },
+      el(
+        "div",
+        { class: "scan-image" },
+        el("img", {
+          src: preview,
+          alt: "Passport image to compare with every suggested value",
+        }),
+      ),
+      details,
+    ),
+  );
+  openDialog("Please verify your passport information", body, () => {
+    abort.abort();
+    URL.revokeObjectURL(preview);
+  });
   try {
     const values = await scanPassport(
       asset.blob,
@@ -795,57 +1052,134 @@ async function openScan(asset) {
       },
       abort.signal,
     );
-    if (abort.signal.aborted) return;
+    if (abort.signal.aborted || draft !== target) return;
     info.textContent =
-      "Check every suggestion against your passport. All given names may appear together; separate middle names yourself. Birth country is never inferred from nationality.";
-    const inputs = {};
-    for (const [key, label] of [
-      ["lastName", "Last / family name"],
-      ["firstName", "First / given name"],
-      ["middleName", "Middle name"],
-      ["country", "Country of birth"],
-    ]) {
-      const input = el("input", {
-        id: `scan-${key}`,
-        type: "text",
-        value: values[key] || "",
-        list: key === "country" ? "countries" : null,
-      });
-      inputs[key] = input;
-      body.append(
-        el("label", { class: "scan-field", for: `scan-${key}` }, label, input),
-      );
-    }
-    body.append(
-      button(
-        "Use reviewed details",
-        () => {
-          for (const key of ["lastName", "firstName", "middleName"])
-            if (inputs[key].value.trim()) {
-              draft.answers[`entrant.${key}`] = inputs[key].value.trim();
-              draft.answers[
-                `entrant.no${key[0].toUpperCase()}${key.slice(1)}`
-              ] = false;
-            }
-          if (countryNames.includes(inputs.country.value))
-            draft.answers["entrant.birthCountry"] = inputs.country.value;
-          changed();
-          closeDialog();
-          renderDocument();
-          activate("entrant.lastName");
-        },
-        { class: "button primary" },
-      ),
+      values.mrzStatus === "checked"
+        ? "MRZ checksums passed. This checks transcription only; verify every value against the image."
+        : "Low confidence — the full MRZ could not be verified. Check the suggestions and enter missing details manually.";
+    info.className = "notice";
+    for (const issue of values.issues || [])
+      details.append(el("p", { class: "scan-warning" }, issue));
+    details.append(
       el(
         "p",
         {},
-        "The passport copy stays in this tab with your worksheet. It has not been sent to a server.",
+        "All given names may be together. Separate middle names only as your passport shows them. Scanning does not verify DV eligibility.",
       ),
     );
+    const inputs = {};
+    values.fullName = [values.firstName, values.middleName, values.lastName]
+      .filter(Boolean)
+      .join(" ");
+    const mapping = [
+      ["lastName", "Last / family name", "entrant.lastName", "text"],
+      ["firstName", "First / given name", "entrant.firstName", "text"],
+      ["middleName", "Middle name", "entrant.middleName", "text"],
+      ["fullName", "Full name on passport", "passport.name", "text"],
+      ["birthDate", "Date of birth", "entrant.birthDate", "date"],
+      ["sex", "Sex", "entrant.sex", "select"],
+      ["number", "Passport number", "passport.number", "text"],
+      ["issuer", "Issuing country / authority", "passport.issuer", "text"],
+      ["expiry", "Expiration date", "passport.expiry", "date"],
+      [
+        "country",
+        "Country of birth — only if printed",
+        "entrant.birthCountry",
+        "country",
+      ],
+    ];
+    for (const [key, label, id, type] of mapping) {
+      const input =
+        type === "select"
+          ? el(
+              "select",
+              {},
+              el("option", { value: "" }, "Confirm manually"),
+              ...["Male", "Female"].map((v) => el("option", { value: v }, v)),
+            )
+          : el("input", {
+              type: type === "date" ? "date" : "text",
+              autocomplete: "off",
+              spellcheck: "false",
+            });
+      input.id = `scan-${key}`;
+      input.value = values[key] || "";
+      inputs[key] = input;
+      details.append(
+        el(
+          "div",
+          { class: `scan-field ${input.value ? "" : "scan-missing"}` },
+          el("label", { for: input.id }, label),
+          type === "country" ? enhanceCountry(input) : input,
+          el(
+            "small",
+            {},
+            input.value
+              ? "Review this suggestion"
+              : "Not read reliably · enter manually or leave unchanged",
+          ),
+        ),
+      );
+    }
+    if (values.nationalityCode)
+      details.append(
+        el(
+          "p",
+          {},
+          `Nationality code on passport: ${values.nationalityCode}. Not copied to birth country or eligibility.`,
+        ),
+      );
+    const error = el("p", { class: "error", role: "status" });
+    const confirm = button(
+      "I reviewed and confirm these details",
+      () => {
+        if (draft !== target) return;
+        if (
+          inputs.country.value &&
+          !countryNames.includes(inputs.country.value)
+        ) {
+          error.textContent =
+            "Choose a country from the list or leave country of birth blank.";
+          return;
+        }
+        for (const [key, , id] of mapping)
+          if (inputs[key].value.trim()) {
+            draft.answers[id] = inputs[key].value.trim();
+            if (["firstName", "middleName", "lastName"].includes(key))
+              draft.answers[
+                `entrant.no${key[0].toUpperCase()}${key.slice(1)}`
+              ] = false;
+          }
+        if (attach) {
+          draft.answers["passport.path"] = "passport";
+          setAsset("passport.bio", asset);
+        }
+        changed();
+        closeDialog();
+        renderDocument();
+        activate("entrant.lastName");
+        announce(
+          "Reviewed passport details applied. Confirm all remaining questions.",
+        );
+      },
+      { class: "button primary" },
+    );
+    body.append(
+      el(
+        "p",
+        {},
+        "Blank suggestions leave your existing answers unchanged. Birth country, residence and eligibility remain separate. Confirming a new scan selects the passport path; signature-page and eligibility confirmations still need your review.",
+      ),
+      error,
+      confirm,
+      button("Discard scan", closeDialog),
+    );
   } catch (e) {
-    if (!abort.signal.aborted)
+    if (!abort.signal.aborted) {
       info.textContent =
-        "We could not reliably read this passport. You can enter or correct every field manually.";
+        "We could not reliably read this passport. No answers or files were changed.";
+      body.append(button("Enter Manually", closeDialog));
+    }
   }
 }
 function familyControls() {
@@ -1004,7 +1338,7 @@ function renderDocument() {
           el(
             "div",
             {},
-            el("strong", {}, "DV ENTRY PREPARATION"),
+            el("strong", {}, "UNOFFICIAL PREPARATION WORKSHEET"),
             el("span", {}, `DV-${draft.year} · Worksheet ${pageNumber}`),
           ),
         ),
@@ -1015,8 +1349,21 @@ function renderDocument() {
     const sec = el(
       "section",
       { class: "document-section", id: `section-${section.id}` },
-      el("h2", {}, section.title),
-      el("div", { class: "document-fields" }, section.fields.map(makeField)),
+      section.id === "identity" ? scanEntry() : null,
+      ...questionGroups(section).map((group) =>
+        el(
+          "div",
+          { class: "question-group" },
+          el("h2", {}, group.title),
+          el(
+            "div",
+            {
+              class: `document-fields ${group.fields.length === 3 && group.fields.every((f) => f.type === "name") ? "name-fields" : ""}`,
+            },
+            group.fields.map(makeField),
+          ),
+        ),
+      ),
     );
     if (section.id === "family") sec.append(familyControls());
     if (section.childId)
@@ -1087,30 +1434,19 @@ function renderDocument() {
     el(
       "div",
       { class: "workspace-intro" },
-      el("p", { class: "eyebrow" }, "A FAMILIAR FORM. A CLEARER PATH."),
-      el("h1", {}, "Your story, one field at a time."),
+      el("h1", {}, "Guided DV Entry Preparation"),
+      el("p", {}, "Complete every field with guidance and automatic checks."),
       el(
-        "p",
-        {},
-        "Complete the document at your pace. Use the guide to find the next missing detail. Nothing is sent to the government.",
-      ),
-      el(
-        "details",
-        {},
-        el(
-          "summary",
-          {},
-          "Before you begin · provisional requirements & privacy",
-        ),
-        el("p", {}, FORM_VERSION.notice),
-        el(
-          "p",
-          {},
-          "Unsaved answers and images stay in this tab. After payment, Save Progress sends your answers, photos, and passport copies to private account storage. Closing this tab loses unsaved work. Saved files expire after 365 days without a save; you may delete them earlier.",
-        ),
-        link("Read the privacy notice ↗", "/policies/#privacy", {
-          target: "_blank",
-          rel: "noopener noreferrer",
+        "div",
+        { class: "document-options" },
+        notice,
+        button("Fit width", () => setDocumentZoom(false), {
+          class: "zoom-control",
+          "aria-label": "Fit document to width",
+        }),
+        button("Larger text", () => setDocumentZoom(true), {
+          class: "zoom-control",
+          "aria-label": "Enlarge document text",
         }),
       ),
     ),
@@ -1119,23 +1455,102 @@ function renderDocument() {
   updateProgress();
   activate(active, { scroll: false, focus: false });
 }
+function setDocumentZoom(large) {
+  document.body.classList.toggle("document-large", large);
+  announce(
+    large
+      ? "Document text enlarged. Browser pinch zoom is also available."
+      : "Document fits the available width.",
+  );
+}
+function openActions() {
+  const body = el(
+    "div",
+    { class: "actions-list" },
+    button("Save Progress", () => {
+      closeDialog();
+      openSave();
+    }),
+    button("Review Document", () => navigate("review")),
+    button("Missing Fields", () => {
+      closeDialog();
+      openMissing();
+    }),
+    button(
+      `${PACKAGES[draft.package].label} · ${price(draft.package)} · Package`,
+      () => {
+        closeDialog();
+        openPackages();
+      },
+    ),
+    button("Requirements / Help", () => {
+      closeDialog();
+      openSources();
+    }),
+    button("Exit Preparation", () => {
+      closeDialog();
+      header.querySelector("a").click();
+    }),
+  );
+  openDialog("Preparation actions", body);
+  dialog.classList.add("actions-sheet");
+}
+function openFieldHelp(field) {
+  openDialog(
+    field.label,
+    el(
+      "div",
+      {},
+      el("p", {}, field.help),
+      field.id.startsWith("eligibility.")
+        ? link(
+            "Official instructions and alternative chargeability",
+            "https://travel.state.gov/content/travel/en/us-visas/immigrate/diversity-visa-program-entry/diversity-visa-instructions.html",
+            { target: "_blank", rel: "noopener noreferrer" },
+          )
+        : null,
+      button("Back to field", () => {
+        closeDialog();
+        activate(field.id);
+      }),
+    ),
+  );
+}
+
 function openMissing() {
-  const p = progress(draft, countryNames);
+  const p = preparationProgress(draft, relatedDrafts.get(draft), countryNames);
   const list = el(
     "div",
     { class: "missing-list" },
     p.remaining.length
-      ? p.remaining.map(({ field, error }) =>
+      ? p.remaining.map(({ field, error, record }) =>
           button(
             el(
               "span",
               {},
               el("strong", {}, field.label),
-              el("small", {}, error),
+              el(
+                "small",
+                {},
+                `${record && record !== draft ? "Related principal · " : ""}${error}`,
+              ),
             ),
             () => {
-              touched.add(field.id);
               closeDialog();
+              if (field.id === "secondEntry") {
+                if (hasSpouse(draft)) openSpouseWorksheet();
+                else {
+                  navigate("document");
+                  activate("entrant.marital");
+                }
+                return;
+              }
+              if (record && record !== draft) {
+                draft = record;
+                touched.clear();
+                navigate("document");
+              }
+              touched.add(field.id);
               if (view !== "document") navigate("document");
               activate(field.id);
             },
@@ -1156,7 +1571,21 @@ function openSources() {
     el(
       "div",
       {},
+      el(
+        "p",
+        {},
+        "Independent DV preparation worksheet. Not an official government form, submission, confirmation or eligibility decision.",
+      ),
       el("p", { class: "notice" }, FORM_VERSION.notice),
+      el(
+        "p",
+        {},
+        "Unsaved answers and images stay in this tab. After payment and your consent, Save Progress sends them to private account storage. Saved files expire after 365 days without a save. You can delete them earlier.",
+      ),
+      link("Privacy notice", "/policies/#privacy", {
+        target: "_blank",
+        rel: "noopener noreferrer",
+      }),
       el(
         "p",
         {},
@@ -1238,7 +1667,7 @@ function openSave() {
   return cloud.save(draft);
 }
 function renderReview() {
-  const p = progress(draft, countryNames);
+  const p = preparationProgress(draft, relatedDrafts.get(draft), countryNames);
   const complete = p.remaining.length === 0;
   const hero = el(
     "div",
@@ -1617,25 +2046,8 @@ header.querySelector("a").addEventListener("click", (event) => {
     ),
   );
 });
-// Browser-native safe-area behavior is retained. A keyboard-aware bar avoids
-// covering the active control; no answers, image data, or events are persisted.
-window.visualViewport?.addEventListener("resize", () => {
-  document.body.classList.toggle(
-    "keyboard-open",
-    window.innerHeight - window.visualViewport.height > 150,
-  );
-});
-const mobileLayout = window.matchMedia("(max-width: 800px)");
-function placeMissingControl() {
-  // Keep the missing-field action inside the bar on phones, clear of inputs.
-  (mobileLayout.matches ? bottom.querySelector(".completion") : help).append(
-    remainingButton,
-  );
-}
-mobileLayout.addEventListener("change", placeMissingControl);
-placeMissingControl();
 navigate(location.hash.slice(1) || "document");
-activate(active, { scroll: false });
+activate(active, { scroll: false, focus: false });
 
 capabilities().then(() => {
   if (view === "dashboard") renderDashboard();

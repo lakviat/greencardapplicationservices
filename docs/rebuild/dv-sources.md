@@ -13,7 +13,7 @@ The implementation is a **provisional DV-2027 preparation schema**, not the gove
 
 The new rule includes the principal’s full passport name, number, issuing country/authority, expiry, and biographic/signature pages. The implementation prepares JPEG copies up to 5 MB, keeps pages separate unless the user confirms they coincide, and records exemption facts without approving them. Verify the final form’s exact combined/separate upload semantics and exception process before release.
 
-Country of birth, nationality, issuing country, residence and chargeability are distinct. OCR only suggests names and a birth country when detected; it never substitutes issuer/nationality for birth country. The country selector is not an official eligibility list. Final DV-2027 eligible-country decisions, special cases and list changes are unresolved.
+Country of birth, nationality, issuing country, residence and chargeability are distinct. OCR suggests names, individually checksum-checked dates and document numbers, and a birth country only when explicitly detected. All suggestions require user review; issuer/nationality never substitutes for birth country. The country selector is not an official eligibility list. Final DV-2027 eligible-country decisions, special cases and list changes are unresolved.
 
 Required family information is never package-gated. Spouse/child requirements and U.S. citizen/LPR or court-ordered separation exceptions need final-year verification. A second principal worksheet requires independent eligibility; copied household facts do not establish it.
 
@@ -24,6 +24,6 @@ Required family information is never package-gated. Spouse/child requirements an
 - Passport exemption evidence, final page-upload behavior and consular-office field semantics.
 - Current official fees, separate from the four private preparation prices.
 - Final photo validation rules and practical device compatibility.
-- Complete visual comparison of all six archived sample pages. Direct retrieval returned HTTP 403; the research tools identified the six-page PDF but did not return usable screenshot pixels. The current layout is structurally inspired, not certified as an exact reproduction.
+- The v2.1 pass rendered the six-page archived sample successfully in Chrome and visually inspected pages 2 and 4 for form structure, name/date placement and radio groups. A complete six-page fidelity audit remains open; the current layout is structurally inspired, not certified as an exact reproduction. See [v2.1 evidence](ux-v21/verification.md).
 
 Update `FORM_VERSION`, field conditions, validation, guidance and tests together. Existing paid documents must retain their historical schema version and be offered an explicit review/migration when requirements change; that persistence and migration behavior belongs to the deferred backend.

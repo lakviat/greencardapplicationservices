@@ -446,8 +446,10 @@ export function sections(d) {
       ),
     ],
   });
+  const pages = [...new Set(result.map((s) => s.page))];
   return result.map((s) => ({
     ...s,
+    page: pages.indexOf(s.page) + 1,
     fields: s.fields
       .filter((field) => !field.visible || field.visible(d))
       .map((field, order) => ({
@@ -459,6 +461,32 @@ export function sections(d) {
   }));
 }
 export const fields = (d) => sections(d).flatMap((s) => s.fields);
+// Include dormant conditional answers in private saves so toggling an answer
+// does not destroy prior work. Visible fields still alone determine completeness.
+export function storedFields(d) {
+  const expanded = {
+    ...d,
+    answers: {
+      ...d.answers,
+      "entrant.marital": "married",
+      "passport.path": "passport",
+      "passport.samePage": false,
+      "eligibility.basis": "parents",
+    },
+  };
+  const exemption = {
+    ...expanded,
+    answers: { ...expanded.answers, "passport.path": "stateless" },
+  };
+  return [
+    ...new Map(
+      [...fields(d), ...fields(expanded), ...fields(exemption)].map((f) => [
+        f.id,
+        f,
+      ]),
+    ).values(),
+  ];
+}
 export function validate(field, d, now = new Date()) {
   const value = d.answers[field.id];
   if (
@@ -608,4 +636,35 @@ export function worksheetRows(d) {
                 : String(d.answers[field.id] || "Not provided"),
     })),
   }));
+}
+
+// A related principal contributes only after deliberately requesting it. A
+// missing second worksheet is one explicit pending task, never a completed form.
+export function preparationProgress(d, related, countries = []) {
+  const records = d.secondEntry && related ? [d, related] : [d];
+  const counts = records.map((record) => ({
+    record,
+    ...progress(record, countries),
+  }));
+  const pending = d.secondEntry && !related;
+  const total = counts.reduce((n, p) => n + p.total, 0) + (pending ? 1 : 0);
+  const complete = counts.reduce((n, p) => n + p.complete, 0);
+  const remaining = counts.flatMap((p) =>
+    p.remaining.map((item) => ({ ...item, record: p.record })),
+  );
+  if (pending)
+    remaining.push({
+      record: d,
+      field: {
+        id: "secondEntry",
+        label: "Prepare the separate principal worksheet",
+      },
+      error: "Create and review the independently eligible spouse’s worksheet.",
+    });
+  return {
+    total,
+    complete,
+    remaining,
+    percent: total ? Math.floor((complete / total) * 100) : 0,
+  };
 }

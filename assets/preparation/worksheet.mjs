@@ -1,57 +1,77 @@
 import { el } from "./dom.mjs";
-import { FORM_VERSION, worksheetRows, warnings, PACKAGES } from "./schema.mjs";
-// Same schema and field order as the editor. The future authenticated PDF service
-// can render this print layout; no payment or server entitlement is simulated.
+import { FORM_VERSION, worksheetRows, warnings } from "./schema.mjs";
+import { questionGroups, fieldRows, preparedDate } from "./presentation.mjs";
 export function worksheet(d) {
-  const root = el("article", { class: "worksheet-output" });
-  root.append(
-    el(
-      "header",
-      {},
-      el("p", { class: "eyebrow" }, "GREEN CARD APPLICATION SERVICES"),
-      el("h1", {}, "DV Lottery Entry Preparation Worksheet — Unofficial"),
-      el(
-        "p",
-        {},
-        `DV-${d.year} · Prepared ${new Date().toISOString().slice(0, 10)} · ${PACKAGES[d.package].label}`,
-      ),
-      el("p", {}, `Requirements version: ${d.version}`),
-      el(
-        "p",
-        {},
-        "Independent preparation worksheet. This is not a government submission, confirmation, or eligibility decision.",
-      ),
-    ),
-  );
-  root.append(
-    el(
-      "p",
-      {},
-      `Required children listed: ${d.childIds.length}. Each independently eligible principal needs a separate worksheet and official entry.`,
-    ),
-  );
-  for (const section of worksheetRows(d)) {
-    root.append(
-      el(
+  const root = el("article", { class: "worksheet-output document-stack" });
+  let page, number;
+  const rows = worksheetRows(d);
+  const count = new Set(rows.map((s) => s.page)).size;
+  for (const section of rows) {
+    if (section.page !== number) {
+      number = section.page;
+      page = el(
         "section",
-        { class: "output-section" },
-        el("h2", {}, `${section.part} · ${section.title}`),
+        {
+          class: "document-page output-page",
+          "aria-label": `Preview page ${number}`,
+        },
         el(
-          "dl",
-          {},
-          section.fields.map((f) =>
+          "header",
+          { class: "document-masthead" },
+          el(
+            "div",
+            {},
+            el("strong", {}, "GREEN CARD APPLICATION SERVICES"),
+            el("span", {}, "Unofficial Preparation Worksheet"),
+          ),
+          el(
+            "div",
+            {},
+            el("strong", {}, `DV-${d.year}`),
+            el("span", {}, `Prepared ${preparedDate()}`),
+          ),
+        ),
+        el("p", { class: "document-part" }, section.part),
+        el(
+          "p",
+          { class: "output-identification" },
+          `Independent preparation only · Worksheet page ${number} of ${count}`,
+        ),
+      );
+      root.append(page);
+    }
+    for (const group of questionGroups(section)) {
+      page.append(
+        el(
+          "section",
+          { class: "output-section" },
+          el("h2", {}, group.title),
+          ...fieldRows(group).map((row) =>
             el(
-              "div",
-              {},
-              el("dt", {}, `${f.reference} · ${f.label}`),
-              el("dd", {}, f.value),
+              "dl",
+              { class: `output-row columns-${row.length}` },
+              ...row.map((f) =>
+                el(
+                  "div",
+                  {},
+                  el("dt", {}, `${f.reference} · ${f.label}`),
+                  el("dd", {}, f.value),
+                  ["photo", "passportPhoto"].includes(f.type) && d.assets[f.id]
+                    ? el(
+                        "small",
+                        {},
+                        "Private attachment · open this worksheet in My Preparations to view.",
+                      )
+                    : null,
+                ),
+              ),
             ),
           ),
         ),
-      ),
-    );
+      );
+    }
   }
-  root.append(
+  page.append(
     el(
       "section",
       { class: "output-section" },
@@ -59,13 +79,14 @@ export function worksheet(d) {
       el(
         "p",
         {},
-        "Verify every answer against your documents and the final government instructions. Submit your official entry separately at dvprogram.state.gov during the announced registration period. Do not submit more than one entry per person. Retain the government confirmation number after official submission; this worksheet has no confirmation number.",
+        "Review every answer against the final instructions. Submit separately at dvprogram.state.gov during the announced period. This worksheet has no government confirmation number.",
       ),
       el(
         "ul",
         {},
         warnings(d).map((w) => el("li", {}, w)),
       ),
+      el("p", {}, `Requirements version: ${FORM_VERSION.id}`),
     ),
   );
   return root;

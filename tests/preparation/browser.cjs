@@ -16,6 +16,34 @@ const selected = (process.env.PREP_ENGINES || "chromium,webkit,firefox").split(
 );
 const engines = { chromium, webkit, firefox };
 const input = (page, id) => page.locator(`[data-field="${id}"] [data-control]`);
+async function action(page, name) {
+  if (
+    await page
+      .getByRole("button", { name: "More preparation actions", exact: true })
+      .isVisible()
+  ) {
+    await page
+      .getByRole("button", { name: "More preparation actions", exact: true })
+      .click();
+    const match = {
+      save: "Save Progress",
+      review: "Review Document",
+      missing: "Missing Fields",
+    }[name];
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: match || /· Package$/, exact: !!match })
+      .click();
+  } else {
+    const selector = {
+      save: ".workspace-actions .primary",
+      review: ".workspace-actions .button:not(.primary)",
+      missing: ".remaining-button",
+      package: ".package-indicator",
+    }[name];
+    await page.locator(selector).click();
+  }
+}
 const noOverflow = async (page) =>
   assert(
     await page.evaluate(
@@ -99,15 +127,16 @@ async function screenshot(page, name) {
         await screenshot(page, "editor-" + width);
       await input(page, "entrant.lastName").fill("EXAMPLE");
       await page
-        .getByRole("button", { name: "Next required →", exact: true })
+        .getByRole("button", { name: "Next required field", exact: true })
         .click();
       assert.equal(
         await page.evaluate(() => document.activeElement.id),
         "entrant.firstName",
       );
       await input(page, "entrant.firstName").fill("JANE");
-      await page.getByRole("button", { name: /items remaining/ }).click();
+      await action(page, "missing");
       await page
+        .getByRole("dialog")
         .getByRole("button", { name: /City where you were born/ })
         .click();
       assert.equal(
@@ -115,7 +144,7 @@ async function screenshot(page, name) {
         "entrant.birthCity",
       );
       await input(page, "entrant.birthCity").fill("Tokyo");
-      await input(page, "entrant.marital").selectOption("married");
+      await page.locator('[id="entrant.marital-married"]').check();
       assert.equal(await input(page, "spouse.firstName").count(), 1);
       await input(page, "spouse.firstName").fill("ALEX");
       await page.getByRole("button", { name: "+ Add a child" }).click();
@@ -123,7 +152,7 @@ async function screenshot(page, name) {
         '[data-field^="child."][data-field$=".firstName"] [data-control]',
       );
       await child.fill("SAM");
-      await page.locator(".package-indicator").click();
+      await action(page, "package");
       await page
         .getByRole("button", { name: "Select Family", exact: true })
         .click();
@@ -141,22 +170,20 @@ async function screenshot(page, name) {
       await page
         .getByRole("button", { name: "Edit document", exact: true })
         .click();
-      await page.locator(".package-indicator").click();
+      await action(page, "package");
       await page
         .getByRole("button", { name: "Select Single", exact: true })
         .click();
       assert.equal(await child.inputValue(), "SAM");
       assert.equal(await input(page, "spouse.firstName").inputValue(), "ALEX");
-      await page
-        .getByRole("button", { name: "Save progress", exact: true })
-        .click();
+      await action(page, "save");
       assert(
         await page
           .getByRole("heading", { name: "Account setup in progress" })
           .isVisible(),
       );
       await page.getByRole("button", { name: "Close dialog" }).click();
-      await page.getByRole("button", { name: "Review", exact: true }).click();
+      await action(page, "review");
       assert.match(
         await page.locator("h1").innerText(),
         /check your worksheet/,
@@ -371,7 +398,7 @@ async function screenshot(page, name) {
     assert(scan.cancelled);
     await input(page, "entrant.lastName").fill("EXAMPLE");
     await input(page, "entrant.firstName").fill("JANE");
-    await page.getByRole("button", { name: "Review", exact: true }).click();
+    await action(page, "review");
     if (name === "chromium") await screenshot(page, "review-mobile");
     const a11y = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
