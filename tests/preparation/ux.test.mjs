@@ -79,6 +79,24 @@ test("checked OCR digit substitutions remain explicit and ambiguous centuries re
   assert.equal(ambiguous.values.birthDate, "");
   assert(ambiguous.issues.some((i) => i.includes("century is ambiguous")));
 });
+test("name padding OCR noise does not discard a checked data row or repair its length", () => {
+  const noisy = "P<UTOERIKSSON<<ANNA<MARIA<<LLLLLLLLLLLLLLLLKL";
+  const data = "L898902C36UT07408122F1204159ZE184226B<<<<<10";
+  const parsed = parseMRZ(noisy + "\n" + data, now);
+  assert.equal(parsed.status, "checked");
+  assert.equal(parsed.values.number, "L898902C3");
+  assert.equal(parsed.values.birthDate, "1974-08-12");
+  assert.equal(parsed.values.nationalityCode, undefined);
+  assert(parsed.issues.some((i) => i.includes("name-row padding")));
+  assert.equal(
+    parseMRZ(noisy + "\n" + data.slice(1), now).status,
+    "unreadable",
+  );
+  assert.equal(
+    parseMRZ(noisy + "NOTPADDING" + "\n" + data, now).status,
+    "unreadable",
+  );
+});
 test("page numbers are continuous for every family and passport visibility combination", () => {
   for (const married of ["", "married", "married-us"])
     for (const n of [0, 1, 5]) {

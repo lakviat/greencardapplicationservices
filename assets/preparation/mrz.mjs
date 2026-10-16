@@ -47,8 +47,14 @@ export function parseMRZ(text, now = new Date()) {
     .map((s) =>
       s.replace(/[«]/g, "<<").replace(/[‹]/g, "<").replace(/\s/g, ""),
     );
+  // The name row is not checksummed. OCR often expands its trailing chevrons;
+  // allow that narrow case only to locate the independently checked data row.
+  // Never pad/truncate the data row or use this to alter suggested names.
   const first = lines.findIndex(
-    (s) => /^P[A-Z<][A-Z<]{3}/.test(s) && s.length === 44,
+    (s) =>
+      /^P[A-Z<][A-Z<]{3}[A-Z<]+<<[A-Z<]+$/.test(s) &&
+      (s.length === 44 ||
+        (s.length >= 40 && s.length <= 48 && /[<KL]{5,}$/.test(s))),
   );
   const empty = {
     status: "unreadable",
@@ -88,9 +94,14 @@ export function parseMRZ(text, now = new Date()) {
   if (valid) {
     values.sex = { M: "Male", F: "Female" }[b[20]] || "";
     values.issuerCode = a.slice(2, 5);
-    values.nationalityCode = b.slice(10, 13);
+    if (/^[A-Z<]{3}$/.test(b.slice(10, 13)))
+      values.nationalityCode = b.slice(10, 13);
   }
   const issues = [];
+  if (a.length !== 44)
+    issues.push(
+      "OCR changed the name-row padding. Names require manual comparison; the separate data-row checks are unchanged.",
+    );
   if (!valid)
     issues.push(
       "One or more MRZ checksums failed. Unchecked document details were left blank. Compare every suggestion with the image.",

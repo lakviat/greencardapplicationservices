@@ -17,10 +17,10 @@ Prices, entitlement checks, Stripe/Supabase interfaces, database structures and 
 
 | Check | Evidence |
 | --- | --- |
-| `npm run check` | 26 schema/UX/household/privacy tests, 7 existing passport parser cases, syntax, 20 HTML pages, local references, SEO, platform privacy/capability guards and whitespace passed. |
+| `npm run check` | 27 schema/UX/household/privacy tests, 7 existing passport parser cases, syntax, 20 HTML pages, local references, SEO, platform privacy/capability guards and whitespace passed. |
 | `npm run test:browser` | Chromium, WebKit and Firefox: existing 320/390/430/1440px journeys plus new passport review, keyboard country search, date parts, compact toolbar, contextual help, viewport resizing and 320×568 / 200% text checks. |
 | Accessibility | axe WCAG 2.0/2.1 A/AA editor/review/public-page checks passed. Keyboard country selection, next-field focus and reduced-motion mode exercised. |
-| OCR/privacy | Actual self-hosted Tesseract reads a synthetic MRZ in all three engines. No insertion/attachment before confirmation; changes apply after review; deletion works. External requests are blocked except an empty health response; no applicant data or browser persistence. Invalid checksums, digit substitutions, unsupported MRZ and ambiguous centuries have unit coverage. |
+| OCR/privacy | Actual self-hosted Tesseract reads names, a checked date and a checked document number from a synthetic MRZ in all three engines. No insertion/attachment before confirmation; changes apply after review; deletion works. External requests are blocked except an empty health response; no applicant data or browser persistence. Invalid checksums, digit substitutions, name-row padding noise, unsupported MRZ and ambiguous centuries have unit coverage. |
 | `npm run test:backend` | Seven unit tests plus real local Supabase Auth/Postgres/Storage/API integration: cross-account isolation, paid-only writes, webhook signature and idempotency, refund ordering, revision conflict, malformed uploads, dormant asset ownership, PDF and deletion passed. |
 | `node tests/backend/browser.mjs` | Real local Mailpit OTP, authenticated purchased-preparation reopen, edit and autosave passed in a mobile Chromium viewport. Payment entitlement is a synthetic local fixture; no real charge. |
 | PDF | Server-generated single (5 pages) and family/long-answer (10 pages) PDFs rendered and visually inspected. Text bounds and continuous page numbering checked on every page. Regression test reads PDF content streams to verify long-answer start/end, applicant/spouse/child data, date/year, numbering and exclusion of inapplicable spouse data. |
@@ -38,7 +38,7 @@ Prices, entitlement checks, Stripe/Supabase interfaces, database structures and 
 ## Release checks still required
 
 - Physical iPhone Safari/Chrome and Android Chrome camera handoffs, keyboard/browser-chrome changes, pinch zoom and representative HEIC variants. Playwright WebKit is not a claim of physical Safari testing; visualViewport keyboard geometry in this suite is simulated.
-- Representative real-world passport layouts, glare, rotation and low-quality images. The checksum reader supports standard two-line, 44-character TD3 passports; other formats and ambiguous values require manual entry. Checksums detect transcription errors, not identity or eligibility.
+- Representative real-world passport layouts, glare, rotation and low-quality images. The checksum reader supports standard TD3 passports with a complete 44-character data row (minor name-row padding noise is flagged); other formats and ambiguous values require manual entry. Checksums detect transcription errors, not identity or eligibility.
 - Existing production provider activation: Gmail SMTP credentials and restricted Stripe checkout credentials still require completion/verification. Local authenticated-save and payment-state tests do not prove live email delivery or live checkout. This PR does not activate the production capability gates or re-enable Premium.
 - Final DV-2027 requirements and eligible-country list remain subject to official publication/review. The controlled country vocabulary is not an eligibility determination. No government entry is submitted by this workspace.
 

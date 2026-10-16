@@ -119,8 +119,8 @@ const engines = { chromium, webkit, firefox };
       x.fillStyle = "black";
       x.font = "48px monospace";
       x.fillText("SYNTHETIC TEST DOCUMENT", 50, 100);
-      x.fillText("P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<", 50, 430);
-      x.fillText("L898902C36UTO7408122F1204159ZE184226B<<<<<10", 50, 510);
+      x.fillText("P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<", 50, 480);
+      x.fillText("L898902C36UTO7408122F1204159ZE184226B<<<<<10", 50, 550);
       return c.toDataURL("image/png").split(",")[1];
     });
     await input("scan-upload").setInputFiles({
@@ -135,10 +135,15 @@ const engines = { chromium, webkit, firefox };
     assert.equal(await input("passport.path").inputValue(), "");
     assert.equal(await page.locator('[data-field="passport.bio"]').count(), 0);
     assert.match(await input("scan-lastName").inputValue(), /ERIKSSON/);
+    assert.equal(await input("scan-number").inputValue(), "L898902C3");
+    assert.equal(await input("scan-birthDate").inputValue(), "1974-08-12");
     assert.equal(await input("scan-country").inputValue(), "");
     await input("scan-firstName").fill("ANNA");
     await input("scan-middleName").fill("MARIA");
     await input("scan-expiry").fill("2030-04-15");
+    await page.getByRole("dialog").evaluate((d) => {
+      d.scrollTop = 0;
+    });
     await page.screenshot({
       path: path.join(output, `passport-review-${name}.png`),
     });
