@@ -1513,7 +1513,13 @@ function renderDashboard() {
           ? "Your saved preparations"
           : "Cloud accounts are awaiting activation",
       ),
-      el("p", {}, unavailable),
+      el(
+        "p",
+        {},
+        CAPABILITIES.accounts
+          ? "Sign in with your verified email to open purchased preparations."
+          : unavailable,
+      ),
       button(
         CAPABILITIES.accounts
           ? "Sign in / open saved preparations"
@@ -1526,9 +1532,9 @@ function renderDashboard() {
       ),
     ),
     ...cards,
-    sessionDrafts.some((record) => record.package === "family")
-      ? householdIndex()
-      : null,
+    ...(sessionDrafts.some((record) => record.package === "family")
+      ? [householdIndex()]
+      : []),
   );
 }
 function renderPreview() {
@@ -1540,7 +1546,9 @@ function renderPreview() {
       el(
         "p",
         {},
-        "Document preview · secure PDF download will be enabled with verified payment and backend delivery.",
+        CAPABILITIES.pdfDownload
+          ? "Document preview · download your PDF after saving a completed, purchased preparation."
+          : "Document preview · secure PDF download will be enabled with verified payment and backend delivery.",
       ),
       button(
         CAPABILITIES.pdfDownload ? "Download PDF" : "Download PDF unavailable",

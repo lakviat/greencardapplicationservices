@@ -45,3 +45,13 @@ Saved data expires 365 days after its last successful save. Unpaid order metadat
 - Provider dashboards and production credentials must be configured and verified before paid capabilities are advertised as live.
 
 Official references: [Supabase custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp), [Edge Function deployment](https://supabase.com/docs/guides/functions/deploy), [Stripe fulfillment](https://docs.stripe.com/checkout/fulfillment).
+
+## Production verification — 2026-10-16
+
+Code commit `ca02ddf` was pushed directly to main with owner authorization. GitHub Pages and the Supabase GitHub integration both completed. The deployed preparation HTML and three backend-connected browser modules matched the committed bytes. The production API health endpoint returned HTTP 200 with every paid/account capability disabled and Premium false. The preparations schema exists; the storage bucket is private with JPEG-only uploads and a 5 MiB file limit. An unauthenticated private API request returned 401.
+
+GitHub run `38925751109` passed static checks, Chromium, Firefox, WebKit, and real local backend integration. Production cleanup run `38925964510` and deployed-site smoke run `38925968615` passed. The daily cleanup environment secret is configured.
+
+Stripe live destination `we_1URDGTPPnLl3qhjKQ1MXMQz7` is configured for the four documented events with API version `2026-02-25.clover`. Its signing secret is saved in Supabase Edge Function secrets. A harmless signed configuration probe returned 200; altering that exact body returned 400. This verifies endpoint signing, not a completed payment. No payment or applicant records were created by this probe.
+
+Outstanding activation: Stripe's restricted-key creation is waiting at account verification. Gmail SMTP fields are prepared for the owner-selected address but the Google App Password/account verification is pending. SMTP credentials must also be installed in the Edge Function secret store for worksheet notifications. Keep all capability flags off until real sign-in delivery and Stripe sandbox/payment verification are complete. Premium stays disabled.
