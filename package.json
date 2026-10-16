@@ -11,7 +11,7 @@
     "test:browser": "node tests/preparation/browser.cjs",
     "serve": "node scripts/serve-local-https.cjs",
     "build:backend": "node scripts/build-backend.mjs",
-    "test:backend": "node --test tests/backend/core.test.mjs && node tests/backend/integration.mjs",
+    "test:backend": "node --test tests/backend/*.test.mjs && node tests/backend/integration.mjs",
     "backend:cleanup": "node scripts/backend-cleanup.mjs"
   },
   "devDependencies": {
@@ -24,6 +24,7 @@
   "dependencies": {
     "@supabase/supabase-js": "2.118.0",
     "jpeg-js": "0.4.4",
+    "nodemailer": "10.1.2",
     "pdf-lib": "1.17.1"
   }
 }

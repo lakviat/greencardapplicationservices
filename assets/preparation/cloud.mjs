@@ -2,10 +2,17 @@ import { api, auth, user, CAPABILITIES, unavailable } from "./backend.mjs";
 import { el, button, link } from "./dom.mjs";
 import { price, PACKAGES } from "./schema.mjs";
 const groups = new WeakMap();
-let account = null,
-  busy = false,
-  timer = null,
-  changeNumber = 0;
+let account = null;
+const pendingSaves = new Set();
+function scheduleSave(g, action, delay) {
+  clearTimeout(g.timer);
+  pendingSaves.delete(g.timer);
+  g.timer = setTimeout(() => {
+    pendingSaves.delete(g.timer);
+    action();
+  }, delay);
+  pendingSaves.add(g.timer);
+}
 export function cloudWorkspace(ui) {
   const message = (title, text) =>
     ui.dialog(title, el("p", { role: "status" }, text));
@@ -78,7 +85,8 @@ export function cloudWorkspace(ui) {
                 ui.close();
                 await next();
               } catch (e) {
-                output.textContent = e.message;
+                if (account) error(e);
+                else output.textContent = e.message;
               } finally {
                 verify.disabled = false;
               }
@@ -133,12 +141,12 @@ export function cloudWorkspace(ui) {
         "Confirm processing permission in the final section of each worksheet before saving or checkout.",
       );
     if (g.state !== "paid") return checkout(d);
-    if (busy)
+    if (g.busy)
       throw new Error(
         "A save is already in progress. Please wait for it to finish, then try again.",
       );
-    busy = true;
-    const started = changeNumber;
+    g.busy = true;
+    const started = g.changeNumber || 0;
     ui.status("Saving…");
     try {
       // Snapshot answers before asynchronous uploads. Further edits trigger another save.
@@ -174,15 +182,15 @@ export function cloudWorkspace(ui) {
       });
       g.revision = p.revision;
       g.updated_at = p.updated_at;
-      if (started === changeNumber) {
+      if (started === (g.changeNumber || 0)) {
         ui.saved(g.documents);
         ui.status("Saved to your account");
       } else {
         ui.status("Saving latest changes…");
-        timer = setTimeout(() => save(d).catch(error), 800);
+        scheduleSave(g, () => save(d).catch(error), 800);
       }
     } finally {
-      busy = false;
+      g.busy = false;
     }
   }
   async function checkout(d) {
@@ -201,6 +209,7 @@ export function cloudWorkspace(ui) {
     if (!CAPABILITIES.checkout)
       return message("Checkout setup in progress", unavailable);
     const output = el("p", { role: "status" });
+    let paymentWatch;
     const confirm = button(
       `Continue to Stripe · ${price(g.package)}`,
       async () => {
@@ -227,10 +236,15 @@ export function cloudWorkspace(ui) {
           const url = new URL(result.url);
           if (url.origin !== "https://checkout.stripe.com")
             throw new Error("Unexpected checkout destination.");
+          g.checkoutStarted = true;
           popup.opener = null;
           popup.location.href = url.href;
           output.textContent =
-            "Complete payment in the Stripe tab, then return here. Keep this worksheet tab open. Your answers have not been uploaded yet.";
+            "Complete payment in the Stripe tab, then return here. Keep this worksheet tab open. We will check payment automatically and save when it is confirmed.";
+          clearInterval(paymentWatch);
+          paymentWatch = setInterval(() => {
+            if (!check.disabled) check.click();
+          }, 5000);
         } catch (e) {
           popup.close();
           output.textContent = e.message;
@@ -251,8 +265,11 @@ export function cloudWorkspace(ui) {
               "Payment has not been confirmed yet. Please check again shortly.";
             return;
           }
-          g.state = "paid";
-          g.revision = p.revision;
+          if (g.state !== "paid") {
+            g.state = "paid";
+            g.revision = p.revision;
+          }
+          clearInterval(paymentWatch);
           await save(d);
           ui.close();
           message(
@@ -301,6 +318,7 @@ export function cloudWorkspace(ui) {
         check,
         button("Return to worksheet", ui.close, { class: "button" }),
       ),
+      () => clearInterval(paymentWatch),
     );
   }
   async function load(id) {
@@ -339,11 +357,20 @@ export function cloudWorkspace(ui) {
   }
   return {
     info: (d) => groups.get(d),
+    link(source, next) {
+      const g = groups.get(source);
+      if (g && g.package !== "single" && g.documents.length < 2) {
+        next.id ||= crypto.randomUUID();
+        next.package = g.package;
+        g.documents.push(next);
+        groups.set(next, g);
+      }
+    },
     changed(d) {
-      changeNumber++;
-      if (groups.get(d)?.state === "paid") {
-        clearTimeout(timer);
-        timer = setTimeout(() => save(d).catch(error), 1800);
+      const g = groups.get(d);
+      if (g) g.changeNumber = (g.changeNumber || 0) + 1;
+      if (g?.state === "paid") {
+        scheduleSave(g, () => save(d).catch(error), 1800);
       }
     },
     save: (d) => signIn(() => save(d)).catch(error),
@@ -363,6 +390,9 @@ export function cloudWorkspace(ui) {
       const g = groups.get(d);
       if (!g) return;
       const result = await api("delete", { id: g.id });
+      clearTimeout(g.timer);
+      pendingSaves.delete(g.timer);
+      g.state = "deleted";
       for (const r of g.documents) groups.delete(r);
       ui.remove(g.documents);
       ui.status(
@@ -406,7 +436,8 @@ export function cloudWorkspace(ui) {
             button(
               "Sign out & clear this tab",
               async () => {
-                clearTimeout(timer);
+                for (const timer of pendingSaves) clearTimeout(timer);
+                pendingSaves.clear();
                 await (await auth()).signOut();
                 account = null;
                 ui.close();

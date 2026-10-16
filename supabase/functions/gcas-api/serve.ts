@@ -1843,6 +1843,72 @@ async function makePdf(documents, pack) {
   return pdf.save();
 }
 
+// supabase/functions/gcas-api/email.mjs
+import nodemailer from "npm:nodemailer@10.1.2";
+function emailReady(env2) {
+  return !!env2("EMAIL_FROM") && (env2("SMTP_HOST") ? !!(env2("SMTP_USER") && env2("SMTP_PASSWORD")) : !!env2("SENDGRID_API_KEY"));
+}
+async function sendReadyEmail(env2, recipient, origin2) {
+  const subject = "Your DV Lottery Preparation Worksheet Is Ready";
+  const text = `Your preparation worksheet is available. Sign in with this email address to download it securely:
+
+${origin2}/prepare.html#dashboard
+
+You can correct and download your purchased preparation again without another charge. Submit the government entry separately at https://dvprogram.state.gov. We are an independent preparation service, not a government agency. Support: info@greencardapplicationservices.com`;
+  const from = {
+    address: env2("EMAIL_FROM"),
+    name: "Green Card Application Services"
+  };
+  if (env2("SMTP_HOST")) {
+    const transport = nodemailer.createTransport({
+      host: env2("SMTP_HOST"),
+      port: Number(env2("SMTP_PORT") || 465),
+      secure: true,
+      auth: { user: env2("SMTP_USER"), pass: env2("SMTP_PASSWORD") },
+      tls: { minVersion: "TLSv1.2" },
+      connectionTimeout: 15e3,
+      greetingTimeout: 1e4,
+      socketTimeout: 2e4,
+      disableFileAccess: true,
+      disableUrlAccess: true,
+      logger: false,
+      debug: false
+    });
+    try {
+      const result = await transport.sendMail({
+        from,
+        to: { address: recipient },
+        subject,
+        text
+      });
+      return result.accepted?.some(
+        (address) => String(address).toLowerCase() === recipient.toLowerCase()
+      ) === true;
+    } finally {
+      transport.close();
+    }
+  }
+  const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
+    method: "POST",
+    signal: AbortSignal.timeout(2e4),
+    headers: {
+      Authorization: `Bearer ${env2("SENDGRID_API_KEY")}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      personalizations: [{ to: [{ email: recipient }] }],
+      from: { email: from.address, name: from.name },
+      subject,
+      content: [{ type: "text/plain", value: text }],
+      tracking_settings: {
+        click_tracking: { enable: false, enable_text: false },
+        open_tracking: { enable: false }
+      }
+    })
+  });
+  return response.ok;
+}
+
 // supabase/functions/gcas-api/index.ts
 var env = (name) => Deno.env.get(name) || "";
 var origin = env("PUBLIC_APP_ORIGIN") || "https://greencardapplicationservices.com";
@@ -2039,7 +2105,7 @@ async function handle(req, url) {
       cloudSave: ready(),
       checkout: checkoutReady(),
       pdfDownload: ready(),
-      emailDelivery: ready() && !!env("SENDGRID_API_KEY") && !!env("EMAIL_FROM"),
+      emailDelivery: ready() && emailReady(env),
       premium: false
     };
   assert(req.method === "POST", 405, "Use POST.");
@@ -2302,51 +2368,23 @@ async function handle(req, url) {
         }
       });
     }
-    assert(
-      env("SENDGRID_API_KEY") && env("EMAIL_FROM"),
-      503,
-      "Email delivery is not configured yet."
-    );
+    assert(emailReady(env), 503, "Email delivery is not configured yet.");
     await limited(`${user.id}:email`, 3, 3600);
     const job = check(
       await admin.from("gcas_deliveries").insert({ preparation_id: p.id, revision: p.revision }).select("id").single()
     );
-    const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${env("SENDGRID_API_KEY")}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        personalizations: [{ to: [{ email: user.email }] }],
-        from: {
-          email: env("EMAIL_FROM"),
-          name: "Green Card Application Services"
-        },
-        subject: "Your DV Lottery Preparation Worksheet Is Ready",
-        content: [
-          {
-            type: "text/plain",
-            value: `Your preparation worksheet is available. Sign in with this email address to download it securely:
-
-${origin}/prepare.html#dashboard
-
-You can correct and download your purchased preparation again without another charge. Submit the government entry separately at https://dvprogram.state.gov. We are an independent preparation service, not a government agency. Support: info@greencardapplicationservices.com`
-          }
-        ],
-        tracking_settings: {
-          click_tracking: { enable: false, enable_text: false },
-          open_tracking: { enable: false }
-        }
-      })
-    });
+    let accepted = false;
+    try {
+      accepted = await sendReadyEmail(env, user.email, origin);
+    } catch {
+    }
     check(
       await admin.from("gcas_deliveries").update({
-        state: res.ok ? "sent" : "failed",
-        sent_at: res.ok ? (/* @__PURE__ */ new Date()).toISOString() : null
+        state: accepted ? "sent" : "failed",
+        sent_at: accepted ? (/* @__PURE__ */ new Date()).toISOString() : null
       }).eq("id", job.id)
     );
-    assert(res.ok, 503, "Email was not accepted. Please try again later.");
+    assert(accepted, 503, "Email was not accepted. Please try again later.");
     return { accepted: true };
   }
   throw new HttpError(404, "Unknown operation.");

@@ -31,6 +31,7 @@ jobs:
       - name: Install locked test dependencies
         run: npm ci
       - name: Install browser
+        timeout-minutes: 5
         run: npx playwright install --with-deps ${{ matrix.engine }}
       - name: Check document, image, accessibility and public-page journeys
         run: |

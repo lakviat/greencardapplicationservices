@@ -15,6 +15,7 @@ import {
   verifyStripeSignature,
 } from "./core.mjs";
 import { makePdf } from "./pdf.mjs";
+import { emailReady, sendReadyEmail } from "./email.mjs";
 const env = (name: string) => Deno.env.get(name) || "";
 const origin =
   env("PUBLIC_APP_ORIGIN") || "https://greencardapplicationservices.com";
@@ -249,8 +250,7 @@ async function handle(req: Request, url: URL) {
       cloudSave: ready(),
       checkout: checkoutReady(),
       pdfDownload: ready(),
-      emailDelivery:
-        ready() && !!env("SENDGRID_API_KEY") && !!env("EMAIL_FROM"),
+      emailDelivery: ready() && emailReady(env),
       premium: false,
     };
   assert(req.method === "POST", 405, "Use POST.");
@@ -560,11 +560,7 @@ async function handle(req: Request, url: URL) {
         },
       });
     }
-    assert(
-      env("SENDGRID_API_KEY") && env("EMAIL_FROM"),
-      503,
-      "Email delivery is not configured yet.",
-    );
+    assert(emailReady(env), 503, "Email delivery is not configured yet.");
     await limited(`${user.id}:email`, 3, 3600);
     const job = check(
       await admin
@@ -573,41 +569,22 @@ async function handle(req: Request, url: URL) {
         .select("id")
         .single(),
     );
-    const res = await fetch("https://api.sendgrid.com/v3/mail/send", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${env("SENDGRID_API_KEY")}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        personalizations: [{ to: [{ email: user.email }] }],
-        from: {
-          email: env("EMAIL_FROM"),
-          name: "Green Card Application Services",
-        },
-        subject: "Your DV Lottery Preparation Worksheet Is Ready",
-        content: [
-          {
-            type: "text/plain",
-            value: `Your preparation worksheet is available. Sign in with this email address to download it securely:\n\n${origin}/prepare.html#dashboard\n\nYou can correct and download your purchased preparation again without another charge. Submit the government entry separately at https://dvprogram.state.gov. We are an independent preparation service, not a government agency. Support: info@greencardapplicationservices.com`,
-          },
-        ],
-        tracking_settings: {
-          click_tracking: { enable: false, enable_text: false },
-          open_tracking: { enable: false },
-        },
-      }),
-    });
+    let accepted = false;
+    try {
+      accepted = await sendReadyEmail(env, user.email, origin);
+    } catch {
+      // Never return SMTP diagnostics, credentials or recipient details to clients/logs.
+    }
     check(
       await admin
         .from("gcas_deliveries")
         .update({
-          state: res.ok ? "sent" : "failed",
-          sent_at: res.ok ? new Date().toISOString() : null,
+          state: accepted ? "sent" : "failed",
+          sent_at: accepted ? new Date().toISOString() : null,
         })
         .eq("id", job.id),
     );
-    assert(res.ok, 503, "Email was not accepted. Please try again later.");
+    assert(accepted, 503, "Email was not accepted. Please try again later.");
     return { accepted: true };
   }
   throw new HttpError(404, "Unknown operation.");

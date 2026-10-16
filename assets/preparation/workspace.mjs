@@ -932,6 +932,7 @@ function openSpouseWorksheet() {
       const source = draft;
       const next = spouseWorksheet(source, { reuse: reuse.checked });
       sessionDrafts.push(next);
+      cloud.link(source, next);
       relatedDrafts.set(source, next);
       relatedDrafts.set(next, source);
       closeDialog();
@@ -1208,7 +1209,8 @@ function openPackages() {
           disabled:
             !!p.disabled ||
             key === draft.package ||
-            cloud.info(draft)?.state === "paid",
+            cloud.info(draft)?.state === "paid" ||
+            !!cloud.info(draft)?.checkoutStarted,
         },
       ),
     ),
@@ -1226,7 +1228,7 @@ function openPackages() {
       el(
         "p",
         { class: "notice" },
-        "Selecting a package does not charge you. The exact price is shown before Stripe checkout. Purchased bundles keep their original package; contact support for upgrades.",
+        "Selecting a package does not charge you. The exact price is shown before Stripe checkout. Purchased bundles and open checkouts keep their original package; contact support for upgrades.",
       ),
       el("div", { class: "package-choices" }, cards),
     ),

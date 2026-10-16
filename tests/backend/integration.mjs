@@ -65,15 +65,13 @@ const a = await makeUser(),
   b = await makeUser(),
   id = randomUUID();
 check(
-  await admin
-    .from("gcas_preparations")
-    .insert({
-      id,
-      owner_id: a.user.id,
-      package: "single",
-      version: FORM_VERSION.id,
-      year: 2027,
-    }),
+  await admin.from("gcas_preparations").insert({
+    id,
+    owner_id: a.user.id,
+    package: "single",
+    version: FORM_VERSION.id,
+    year: 2027,
+  }),
 );
 assert.equal((await call(b, "get", { id })).status, 404);
 assert.equal(
@@ -249,6 +247,137 @@ const row = check(
 );
 assert.deepEqual(row.payload, { documents: [] });
 assert.equal(row.state, "deleted");
+// Expiry and cleanup operate on real private files, not only database metadata.
+const expiring = randomUUID(),
+  expiredAsset = randomUUID();
+{
+  check(
+    await admin.from("gcas_preparations").insert({
+      id: expiring,
+      owner_id: a.user.id,
+      package: "single",
+      version: FORM_VERSION.id,
+      year: 2027,
+      state: "paid",
+    }),
+  );
+  const objectPath = `${a.user.id}/${expiring}/${expiredAsset}.jpg`;
+  check(
+    await admin.storage
+      .from("gcas-private")
+      .upload(objectPath, photo, { contentType: "image/jpeg" }),
+  );
+  check(
+    await admin.from("gcas_assets").insert({
+      id: expiredAsset,
+      preparation_id: expiring,
+      document_id: d.id,
+      field_id: "entrant.photo",
+      object_path: objectPath,
+      bytes: photo.length,
+      width: 600,
+      height: 600,
+    }),
+  );
+  assert(
+    (
+      await admin.from("gcas_assets").insert({
+        id: randomUUID(),
+        preparation_id: expiring,
+        document_id: d.id,
+        field_id: "entrant.photo",
+        object_path: "synthetic-quota-denied",
+        bytes: 536870913,
+        width: 600,
+        height: 600,
+      })
+    ).error,
+    "Storage capacity enforced inside the database lock",
+  );
+  const old = new Date(Date.now() - 172800000).toISOString();
+  check(
+    await admin
+      .from("gcas_assets")
+      .update({ created_at: old })
+      .eq("id", expiredAsset),
+  );
+  check(
+    await admin
+      .from("gcas_preparations")
+      .update({
+        payload: {
+          documents: [{ assets: { "entrant.photo": { id: expiredAsset } } }],
+        },
+      })
+      .eq("id", expiring),
+  );
+  const orphan = randomUUID(),
+    orphanPath = `${a.user.id}/${expiring}/${orphan}.jpg`;
+  check(
+    await admin.storage
+      .from("gcas-private")
+      .upload(orphanPath, photo, { contentType: "image/jpeg" }),
+  );
+  check(
+    await admin
+      .from("gcas_assets")
+      .insert({
+        id: orphan,
+        preparation_id: expiring,
+        document_id: d.id,
+        field_id: "entrant.photo",
+        object_path: orphanPath,
+        bytes: photo.length,
+        width: 600,
+        height: 600,
+        created_at: old,
+      }),
+  );
+  execFileSync(process.execPath, ["scripts/backend-cleanup.mjs"], {
+    env: {
+      ...process.env,
+      SUPABASE_URL: config.API_URL,
+      SUPABASE_SECRET_KEY: config.SERVICE_ROLE_KEY,
+    },
+    stdio: "pipe",
+  });
+  assert(
+    (await admin.storage.from("gcas-private").download(orphanPath)).error,
+    "Abandoned upload removed",
+  );
+  assert.equal(
+    (await admin.storage.from("gcas-private").download(objectPath)).error,
+    null,
+    "Saved image retained",
+  );
+  check(
+    await admin
+      .from("gcas_preparations")
+      .update({ expires_at: new Date(Date.now() - 1000).toISOString() })
+      .eq("id", expiring),
+  );
+  assert.equal((await call(a, "get", { id: expiring })).status, 404);
+  execFileSync(process.execPath, ["scripts/backend-cleanup.mjs"], {
+    env: {
+      ...process.env,
+      SUPABASE_URL: config.API_URL,
+      SUPABASE_SECRET_KEY: config.SERVICE_ROLE_KEY,
+    },
+    stdio: "pipe",
+  });
+  assert.equal(
+    check(
+      await admin
+        .from("gcas_preparations")
+        .select("state")
+        .eq("id", expiring)
+        .single(),
+    ).state,
+    "deleted",
+  );
+  assert((await admin.storage.from("gcas-private").download(objectPath)).error);
+  check(await admin.from("gcas_preparations").delete().eq("id", expiring));
+}
 // Delete only these disposable local test fixtures.
 check(await admin.from("gcas_orders").delete().eq("preparation_id", id));
 check(await admin.from("gcas_preparations").delete().eq("id", id));

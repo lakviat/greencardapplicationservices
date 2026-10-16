@@ -6,15 +6,15 @@ await build({
   platform: "neutral",
   target: "es2022",
   outfile: "supabase/functions/gcas-api/serve.ts",
-  external: ["@supabase/supabase-js", "jpeg-js", "pdf-lib"],
+  external: ["@supabase/supabase-js", "jpeg-js", "pdf-lib", "nodemailer"],
   plugins: [
     {
       name: "deno-imports",
       setup(b) {
         b.onResolve(
-          { filter: /^(@supabase\/supabase-js|jpeg-js|pdf-lib)$/ },
+          { filter: /^(@supabase\/supabase-js|jpeg-js|pdf-lib|nodemailer)$/ },
           (a) => ({
-            path: `npm:${a.path}@${{ "@supabase/supabase-js": "2.118.0", "jpeg-js": "0.4.4", "pdf-lib": "1.17.1" }[a.path]}`,
+            path: `npm:${a.path}@${{ "@supabase/supabase-js": "2.118.0", "jpeg-js": "0.4.4", "pdf-lib": "1.17.1", nodemailer: "10.1.2" }[a.path]}`,
             external: true,
           }),
         );

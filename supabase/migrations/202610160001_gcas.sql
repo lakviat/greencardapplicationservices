@@ -84,10 +84,10 @@ begin
  update public.gcas_preparations set payload='{"documents":[]}'::jsonb,state='deleted',revision=revision+1,updated_at=now() where id=p_id;
 end $$;
 create function public.gcas_expire() returns void language plpgsql set search_path='' as $$
-declare p record;
+declare expired_record record;
 begin
- for p in select id,owner_id from public.gcas_preparations where state<>'deleted' and expires_at<now() loop
- perform public.gcas_delete(p.id,p.owner_id);
+ for expired_record in select id,owner_id from public.gcas_preparations where state<>'deleted' and expires_at<now() loop
+ perform public.gcas_delete(expired_record.id,expired_record.owner_id);
  end loop;
  -- Uploaded but never referenced by a successful save: clean up after one day.
  insert into public.gcas_storage_cleanup(object_path) select a.object_path from public.gcas_assets a join public.gcas_preparations p on p.id=a.preparation_id
