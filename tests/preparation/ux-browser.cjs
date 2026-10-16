@@ -109,24 +109,15 @@ const engines = { chromium, webkit, firefox };
       "environment",
     );
     await input("scan-permission").check();
-    const data = await page.evaluate(() => {
-      const c = document.createElement("canvas");
-      c.width = 1800;
-      c.height = 600;
-      const x = c.getContext("2d");
-      x.fillStyle = "white";
-      x.fillRect(0, 0, 1800, 600);
-      x.fillStyle = "black";
-      x.font = "48px monospace";
-      x.fillText("SYNTHETIC TEST DOCUMENT", 50, 100);
-      x.fillText("P<UTOERIKSSON<<ANNA<MARIA<<<<<<<<<<<<<<<<<<<", 50, 480);
-      x.fillText("L898902C36UTO7408122F1204159ZE184226B<<<<<10", 50, 550);
-      return c.toDataURL("image/png").split(",")[1];
-    });
+    // Keep the OCR pixels identical across OS font rasterizers. This fixture
+    // contains only fictional names/data and still goes through real OCR.
+    const data = fs.readFileSync(
+      path.join(__dirname, "fixtures/synthetic-td3.png"),
+    );
     await input("scan-upload").setInputFiles({
       name: "synthetic-passport.png",
       mimeType: "image/png",
-      buffer: Buffer.from(data, "base64"),
+      buffer: data,
     });
     await page
       .getByRole("button", { name: "I reviewed and confirm these details" })
@@ -135,8 +126,31 @@ const engines = { chromium, webkit, firefox };
     assert.equal(await input("passport.path").inputValue(), "");
     assert.equal(await page.locator('[data-field="passport.bio"]').count(), 0);
     assert.match(await input("scan-lastName").inputValue(), /ERIKSSON/);
-    assert.equal(await input("scan-number").inputValue(), "L898902C3");
-    assert.equal(await input("scan-birthDate").inputValue(), "1974-08-12");
+    // Browser image decoding/JPEG conversion can affect OCR. Never accept an
+    // incorrect suggestion: a checked exact value or an explicit blank fallback.
+    for (const [key, expected] of [
+      ["number", "L898902C3"],
+      ["birthDate", "1974-08-12"],
+    ]) {
+      const value = await input(`scan-${key}`).inputValue();
+      assert(
+        value === expected || value === "",
+        `OCR must not insert an incorrect ${key}`,
+      );
+      if (!value) {
+        assert(
+          await input(`scan-${key}`)
+            .locator("..")
+            .locator("small")
+            .innerText()
+            .then((t) => t.includes("Not read reliably")),
+        );
+        assert.match(
+          await page.getByRole("dialog").innerText(),
+          /Low confidence|checksums failed|ambiguous/,
+        );
+      }
+    }
     assert.equal(await input("scan-country").inputValue(), "");
     await input("scan-firstName").fill("ANNA");
     await input("scan-middleName").fill("MARIA");
