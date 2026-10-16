@@ -1,120 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
-cache_version="20261015-package-scroll-v1"
-styles_version="20261015-package-scroll-v1"
-
-html_files=()
-while IFS= read -r html_file; do
-  html_files+=("$html_file")
-done < <(
-  find . -type f -name '*.html' \
-    -not -path './.git/*' \
-    -not -path './node_modules/*' \
-    | sort
-)
-
-node --check assets/passport-autofill.js
-node scripts/check-passport-autofill.mjs
 node --check assets/app.js
 node --check assets/requirements.js
+node --check assets/passport-autofill.js
 node --check assets/site-metrics.js
-node scripts/check-conversion-flow.mjs
+for file in assets/preparation/*.mjs; do node --check "$file"; done
+node --test tests/preparation/*.test.mjs
+node scripts/check-passport-autofill.mjs
 node scripts/check-local-references.mjs
 node scripts/check-seo.mjs
-
-if command -v xmllint >/dev/null 2>&1; then
-  xmllint --noout sitemap.xml
-fi
-
-if grep -nE '[[:space:]]style=|[[:space:]]on[a-z]+=' -- "${html_files[@]}"; then
-  echo "Inline styles or event handlers are not allowed by the CSP." >&2
+node scripts/check-platform.mjs
+if command -v xmllint >/dev/null 2>&1; then xmllint --noout sitemap.xml; fi
+# Report filenames only; never echo credential contents into logs.
+if git grep -lE '(sk|rk)_(live|test)_[A-Za-z0-9]{16,}|BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY' -- ':!scripts/check-static-site.sh'; then
+  printf '%s\n' 'Potential credential detected; remove it before publishing.' >&2
   exit 1
 fi
-
-if grep -n "unsafe-inline" -- "${html_files[@]}"; then
-  echo "The Content Security Policy must not allow inline code." >&2
-  exit 1
-fi
-
-html_count="${#html_files[@]}"
-csp_count="$(grep -l 'Content-Security-Policy' -- "${html_files[@]}" | wc -l | tr -d ' ')"
-if [[ "$html_count" != "$csp_count" ]]; then
-  echo "Every HTML page must include the Content Security Policy." >&2
-  exit 1
-fi
-
-if grep -R -nE --include='*.js' 'eval\(|document\.write\(|\.innerHTML[[:space:]]*=' assets; then
-  echo "Unsafe JavaScript DOM or evaluation API detected." >&2
-  exit 1
-fi
-
-if git grep -nE '(sk|rk)_(live|test)_[A-Za-z0-9]{16,}|BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY' -- ':!scripts/check-static-site.sh'; then
-  echo "Potential credential detected." >&2
-  exit 1
-fi
-
-if git grep -nE '\[INSERT|pending confirmation|pending final business approval' -- '*.html' '*.js' '*.css'; then
-  echo "Unfinished public policy content detected." >&2
-  exit 1
-fi
-
-if ! grep -q 'name="checkoutConsent" type="checkbox" required' index.html; then
-  echo "The single required checkout agreement is missing." >&2
-  exit 1
-fi
-
-if grep -qE 'name="(consent|serviceDisclaimer|contactAuthorization|policyConsent|marketingConsent)"' index.html; then
-  echo "Legacy checkout consent checkboxes must not be rendered." >&2
-  exit 1
-fi
-
-if ! grep -q 'name="notifyMarketingConsent" type="checkbox"' index.html ||
-  grep -qE 'name="notifyMarketingConsent"[^>]*(required|checked)' index.html; then
-  echo "Marketing consent must be separate from checkout, optional, and unchecked." >&2
-  exit 1
-fi
-
-node --input-type=module <<'NODE'
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-const html = readFileSync("index.html", "utf8");
-const form = (id) => html.match(new RegExp(`<form\\b[^>]*id="${id}"[^>]*>([\\s\\S]*?)</form>`))?.[1] || "";
-const intake = form("intakeForm");
-const notification = form("notifyForm");
-assert.equal((intake.match(/name="checkoutConsent"/g) || []).length, 1,
-  "Intake must have exactly one checkout consent control.");
-assert.doesNotMatch(intake, /name="(?:notifyMarketingConsent|marketingConsent)"/,
-  "Marketing opt-in belongs only in the notification form.");
-assert.match(notification, /name="notifyMarketingConsent"/,
-  "Notification form must offer its separate optional marketing opt-in.");
-for (const control of html.matchAll(/<input\b[^>]*name="(?:checkoutConsent|notifyMarketingConsent)"[^>]*>/g)) {
-  assert.doesNotMatch(control[0], /\schecked(?:\s|=|\/?>)/, "Consent must never be prechecked.");
-}
-NODE
-
-styles_count="$(grep -l "assets/styles\.css?v=${styles_version}" -- "${html_files[@]}" | wc -l | tr -d ' ')"
-if [[ "$html_count" != "$styles_count" ]]; then
-  echo "Every HTML page must use the current stylesheet cache version." >&2
-  exit 1
-fi
-
-app_count="$(grep -l "assets/app\.js?v=${cache_version}" -- "${html_files[@]}" | wc -l | tr -d ' ')"
-if [[ "$html_count" != "$app_count" ]]; then
-  echo "Every HTML page must use the current application cache version." >&2
-  exit 1
-fi
-
-metrics_count="$(grep -l "assets/site-metrics\.js?v=${cache_version}" -- "${html_files[@]}" | wc -l | tr -d ' ')"
-if [[ "$html_count" != "$metrics_count" ]]; then
-  echo "Every HTML page must use the current analytics cache version." >&2
-  exit 1
-fi
-
-if ! grep -q "assets/requirements\.js?v=${cache_version}" requirements.html; then
-  echo "The requirements page must use the current requirements-script cache version." >&2
-  exit 1
-fi
-
 git diff --check
-echo "Static security checks passed."
+printf '%s\n' 'Static, schema, SEO, and privacy checks passed.'

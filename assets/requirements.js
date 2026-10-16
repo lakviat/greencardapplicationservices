@@ -161,17 +161,17 @@ function validatePhoto() {
   }
 
   if (!isPlainLightBackground()) {
-    failures.push("background may not be plain white/off-white");
+    warnings.push("background may not be plain white/off-white; check it visually");
   }
 
-  warnings.push("manual review still required for glasses, hats, expression, shadows, blur, and head position");
+  warnings.push("your visual review is still required for glasses, hats, expression, shadows, blur, and head position");
 
   if (failures.length) {
     setStatus(`FAIL: ${failures.join("; ")}. ${warnings.join("; ")}.`, true);
     return;
   }
 
-  setStatus(`PASS: 600 x 600 JPEG, ${sizeKb} KB, background appears light/plain. ${warnings.join("; ")}.`);
+  setStatus(`Technical checks passed: 600 x 600 JPEG, ${sizeKb} KB. ${warnings.join("; ")}.`);
 }
 
 async function startCamera() {

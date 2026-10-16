@@ -101,7 +101,7 @@ for (const htmlFile of htmlFiles) {
     if (!canonical.startsWith(`${siteOrigin}/`)) {
       failures.push(`${htmlFile}: canonical must use ${siteOrigin}`);
     }
-    if (!sitemapUrls.has(canonical)) {
+    if (!/name="robots" content="noindex/.test(content) && !sitemapUrls.has(canonical)) {
       failures.push(`${htmlFile}: canonical URL is missing from sitemap.xml`);
     }
   }

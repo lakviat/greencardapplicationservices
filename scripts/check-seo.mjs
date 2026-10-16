@@ -5,12 +5,6 @@ const root = process.cwd();
 const origin = "https://greencardapplicationservices.com";
 const ignoredDirectories = new Set([".git", "node_modules"]);
 const stalePricePattern = /\$(24|44|64|94|39|69|99|149)(?![\d.])/g;
-const expectedStripeUrls = [
-  "https://buy.stripe.com/9B614p5JI4SH6xNd0U0Ny05",
-  "https://buy.stripe.com/28E28t5JI4SH1dt1ic0Ny06",
-  "https://buy.stripe.com/eVqbJ34FE98X6xN6Cw0Ny07",
-  "https://buy.stripe.com/cNiaEZ2xw1Gv4pFd0U0Ny08",
-];
 // Public path => phrase that should remain visible in page metadata or early main copy.
 const PAGE_KEYWORDS = {
   "/": "dv lottery",
@@ -207,11 +201,6 @@ for (const sitemapUrl of sitemapUrls) {
   }
 }
 
-const appJs = fs.readFileSync(path.join(root, "assets/app.js"), "utf8");
-for (const stripeUrl of expectedStripeUrls) {
-  if (!appJs.includes(stripeUrl)) failures.push(`assets/app.js: missing Stripe payment link ${stripeUrl}`);
-}
-
 const heroDirectory = path.join(root, "assets/images/hero");
 for (const entry of fs.readdirSync(heroDirectory, { withFileTypes: true })) {
   if (!entry.isFile()) continue;
@@ -226,6 +215,7 @@ for (const [relativePath, limit] of [["assets/styles.css", 140000], ["assets/app
 
 for (const file of htmlFiles) {
   const html = fs.readFileSync(path.join(root, file), "utf8");
+  if (file === "prepare.html") continue; // Noindex application; independently validated by platform checks.
   const publicPath = toPublicPath(file);
   const titleBlocks = blocks(html, "title").map(stripMarkup).filter(Boolean);
   if (titleBlocks.length !== 1) {
@@ -263,7 +253,7 @@ for (const file of htmlFiles) {
       if (!allowedCanonicalPaths(file).includes(canonical.pathname)) {
         failures.push(`${file}: canonical path ${canonical.pathname} does not match ${publicPath}`);
       }
-      if (!sitemapSet.has(canonical.href)) {
+      if (!/name="robots" content="noindex/.test(html) && !sitemapSet.has(canonical.href)) {
         failures.push(`${file}: canonical URL is missing from sitemap.xml`);
       }
     } catch {

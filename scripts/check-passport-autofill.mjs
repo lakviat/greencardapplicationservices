@@ -25,16 +25,6 @@ test('ambiguous or unreadable values remain empty and explicit middle name is pr
   assert.equal(parse('PLACE OF BIRTH: UTOPIA').country, '');
   assert.equal(parse('SURNAME\nTESTER\nFIRST NAME\nJANE\nMIDDLE NAME\nANNA').middleName, 'ANNA');
 });
-test('all applicants display first, last, middle; scan controls never submit', () => {
-  const html = readFileSync('index.html', 'utf8');
-  for (const prefix of ['', 'applicant2', 'applicant3']) {
-    const names = prefix ? ['FirstName', 'LastName', 'MiddleName'] : ['firstName','lastName','middleName'];
-    const positions = names.map(name => html.indexOf(`name="${prefix}${name}"`));
-    assert(positions.every(p => p >= 0));
-    assert(positions[0] < positions[1] && positions[1] < positions[2]);
-  }
-  for (const button of html.matchAll(/<button[^>]*data-passport-[^>]*>/g)) assert.match(button[0], /type="button"/);
-});
 
 test('misread MRZ padding is excluded without truncating genuine name endings', () => {
   assert.equal(parse('P<UTOEXAMPLE<<JANE<K<L<LLLLLLKLLLKLKL').firstName, 'JANE');

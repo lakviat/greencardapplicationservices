@@ -3,13 +3,6 @@ import path from "node:path";
 
 const defaultBaseUrl = "https://greencardapplicationservices.com";
 const productionOrigin = new URL(defaultBaseUrl).origin;
-const expectedStripeUrls = [
-  "https://buy.stripe.com/9B614p5JI4SH6xNd0U0Ny05",
-  "https://buy.stripe.com/28E28t5JI4SH1dt1ic0Ny06",
-  "https://buy.stripe.com/eVqbJ34FE98X6xN6Cw0Ny07",
-  "https://buy.stripe.com/cNiaEZ2xw1Gv4pFd0U0Ny08",
-];
-
 function decodeEntities(value) {
   return String(value)
     .replace(/&nbsp;/gi, " ")
@@ -214,9 +207,12 @@ async function main() {
   if (!String(jsResponse.headers.get("content-type") || "").toLowerCase().includes("javascript")) {
     failures.push(`/assets/app.js content-type must include javascript (got ${jsResponse.headers.get("content-type") || "missing"})`);
   }
-  for (const stripeUrl of expectedStripeUrls) {
-    assertIncludes(appJs || "", stripeUrl, `live /assets/app.js is missing Stripe URL ${stripeUrl}`, failures);
-  }
+  if (/buy\.stripe\.com/.test(appJs || "")) failures.push("Legacy payment links remain in public code");
+  const { response: preparationResponse, text: preparation } = await request(new URL("/prepare.html", baseUrl), { expectText: true });
+  if (preparationResponse.status !== 200) failures.push("Preparation workspace is unavailable");
+  if (!preparation?.includes("assets/preparation/workspace.mjs")) failures.push("Preparation module missing");
+  if (/site-metrics|googletagmanager/.test(preparation || "")) failures.push("Tracking must not load in preparation workspace");
+
 
   if (failures.length) {
     console.error("Smoke test failed:\n" + failures.map((failure) => `- ${failure}`).join("\n"));

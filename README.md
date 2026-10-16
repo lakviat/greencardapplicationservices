@@ -1,654 +1,78 @@
 # Green Card Application Services
 
-We help people around the world prepare and submit Diversity Visa applications with care, accuracy, and reliable follow-up.
+Independent DV Lottery document preparation, built on the existing static site. The v2 feature branch replaces the limited request form with a responsive, editable worksheet at `/prepare.html`.
 
-For many families, the U.S. Diversity Visa program is a once-a-year chance to pursue permanent residence in the United States. The application looks simple, but the details matter: eligible country rules, photo specifications, family information, deadlines, confirmation numbers, and official instructions all have to be handled correctly.
+**Review preview — not the production paid service.** On October 16, 2026, the owner deferred backend implementation and asked that Premium remain disabled. This branch implements the frontend and public content. Do not merge it into `main` until launch requirements are approved: GitHub Pages publishes `main` automatically.
 
-Our service is built for people who want professional help avoiding preventable mistakes. We review information, check documents, verify photos, prepare the application, submit during the official registration window, and send the official confirmation details back to the customer.
+## What works now
 
-## What We Do
+- Versioned document schema, Part One and Part Two, yellow section headers, field guidance, keyboard navigation, missing-item navigation and live completeness checks.
+- Principal, spouse and unrestricted required-child records. Package changes preserve answers. Creating a spouse’s independent worksheet requires permission and explicit approval to reuse household facts.
+- Local photo capture/upload, square cropping, JPEG size and resolution checks, manual visual confirmation, separate passport bio/signature pages, and optional local OCR with review before applying names.
+- Review, printable worksheet preview, and an in-memory dashboard with edit and delete. No government submission or confirmation is created.
+- Revised homepage, pricing, FAQ, guides, registration status, and owner-review policy drafts. All existing informational page URLs are retained; old `#apply` links route to the new workspace.
 
-We provide application preparation and submission support for the U.S. Diversity Visa program.
+Single is $9.99, Couple $19.99, Family $29.99 and Premium $39.99 USD. These are planned one-time prices. Premium selection is disabled. Required spouse and child details are included on every principal worksheet, regardless of package.
 
-Our support includes:
+## What is deliberately unavailable
 
-- Eligibility review based on the active Diversity Visa year
-- Country-of-birth / chargeability guidance based on official instructions
-- DV photo requirement review
-- Document collection and organization
-- Application preparation
-- Customer review before submission
-- Official submission during the registration period
-- Confirmation number and receipt delivery
-- Follow-up reminders and status support
+Accounts, cloud saving, cross-device resume, Stripe checkout, payment entitlements, customer PDF downloads and transactional delivery require the deferred backend. They are visibly unavailable; no payment or success state is simulated. Answers and images remain only in tab memory and disappear on reload or close. Changing a frontend flag cannot establish a payment entitlement.
 
-The U.S. government makes up to approximately 55,000 diversity visas available annually for people from countries with historically low rates of immigration to the United States. Selection is random, but careful preparation helps protect applicants from avoidable errors.
+A developer-only synthetic PDF verifies the real worksheet print layout. It is not a customer download implementation. Family bundle delivery and retention periods also require the backend phase and owner approval.
 
-## Why People Use Our Service
+## Run and check
 
-A Diversity Visa entry must be accurate, complete, and submitted on time. Even small mistakes can create serious problems later, especially with names, dates, eligible country selection, spouse or child information, and photo requirements.
-
-We help customers stay organized from the beginning. Our goal is simple: make the application process clearer, calmer, and more carefully handled.
-
-## Photo and Document Requirements
-
-The website includes a dedicated requirements page at `requirements.html`.
-
-Key DV photo requirements from the U.S. Department of State:
-
-- JPEG image
-- Exactly 600 x 600 pixels for DV entry
-- Square aspect ratio
-- 240 KB or less
-- Color photo
-- Taken within the last 6 months
-- Plain white or off-white background
-- Full-face view directly facing the camera
-- Neutral facial expression with both eyes open
-- No copied/scanned driver license or official document photos
-- No digital enhancement or alteration that changes appearance
-
-Future selfie feature direction:
-
-- Let applicants take or upload a photo from the web app.
-- Guide them to use a real white or off-white background.
-- Crop, resize, and compress to the technical DV format.
-- Do not rely on automatic background replacement as the default path.
-- Send questionable photos to staff review before submission.
-
-Current selfie prototype:
-
-- Opens the device camera when permission is granted.
-- Shows a square preview with a face alignment guide.
-- Captures a centered square image to `600 x 600` pixels.
-- Exports a JPEG with a target under `200 KB` where possible.
-- Includes a `Validate photo` button that returns a browser-side pass/fail result for dimensions, JPEG output, file size, and a basic plain-background estimate.
-- Provides upload fallback when camera access is blocked.
-- Pulses the capture button after the camera is ready.
-- Shows official Department of State good photo examples plus a separate bad photo examples block for glasses, tilt/sideways pose, wrong background, expression, and bad lighting.
-- Keeps official Department of State source links available without making the page feel crowded.
-- Runs locally in the browser until secure backend upload is added.
-
-Photo validation note:
-
-The browser validator is helpful, but it is not a replacement for staff review. It can check technical output and estimate whether the background is light/plain. It cannot reliably prove that the applicant has no glasses, no hat, correct head size, neutral expression, perfect focus, or an acceptable background in every case.
-
-## About Us
-
-We are a Miami-based application support service with experience helping customers prepare important immigration-related submissions and records. We are not a law firm, we are not attorneys, and we do not provide legal advice.
-
-Our role is practical support: reviewing information, organizing documents, checking requirements, submitting authorized entries, and keeping customers updated.
-
-## Important Notice
-
-We are not affiliated with USCIS, the U.S. Department of State, or any U.S. government agency.
-
-Customers may submit their own Diversity Visa entry directly through the official U.S. government website at https://dvprogram.state.gov/.
-
-Our service fee is for preparation, review, submission assistance, document organization, and follow-up support. We cannot guarantee selection, visa approval, green card issuance, entry into the United States, or future U.S. citizenship. The Diversity Visa program is a random lottery, and no private service can increase the chance of selection.
-
-Official Diversity Visa information should always be verified at:
-
-- https://dvprogram.state.gov/
-- https://travel.state.gov/content/travel/en/us-visas/immigrate/diversity-visa-program-entry.html
-
-## Development and Security
-
-The public website is a static site with no build step and an optional, self-hosted passport OCR library. Run it locally with
-`python3 -m http.server 8080`, then run the repository checks with
-`bash scripts/check-static-site.sh` before deployment.
-
-All public pages share `assets/styles.css`. Its root variables define the palette,
-card radius, shadows, and maximum-width page gutters. When changing shared
-styles, update the stylesheet query version in every HTML page and
-`styles_version` in `scripts/check-static-site.sh`; script versions are separate.
-
-Stripe checkout is hosted by Stripe; card data must never be added to the site,
-Apps Script, Google Drive records, logs, or this repository. The secure Apps
-Script templates in `scripts/` require `ROOT_FOLDER_ID` and `ALLOWED_WEBSITES`
-to be configured in each Apps Script project's Script properties before a new
-version is deployed. See `SECURITY.md` for architecture boundaries and private
-vulnerability reporting.
-
-## Quality Checks and Deployment Pipeline
-
-The site is static and deployed by GitHub Pages from `main`. Three layers guard it.
-
-**1. Fast static checks** (`bash scripts/check-static-site.sh`, runs on every push and pull request):
-JavaScript syntax, deterministic conversion/consent regressions, local links and
-anchors, Content Security Policy rules, shared asset cache versions, and
-`scripts/check-seo.mjs`. The SEO check enforces unique titles and descriptions
-within search-result length limits, one `h1`, canonical URLs that match the sitemap,
-social preview metadata, image `alt` text, structured-data syntax, stale-price and
-Stripe-link guards, and performance budgets (hero images, stylesheet, script, and a
-social preview of 300 KB or less so WhatsApp and Facebook render link previews).
-It also keeps each page's primary keyword in its title/heading or opening copy.
-
-**2. Cross-browser regression** (`scripts/check-mobile-layout.cjs`, runs in CI for
-Chromium, WebKit, and Firefox on every pull request). It covers 18 pages across
-phone, tablet, and desktop widths, the first-screen call to action, touch-target
-sizes, package selection with touch and keyboard, form validation, all four
-package-to-Stripe journeys with every external request mocked, menus, FAQ,
-notification and cookie dialogs, support widget, and the photo carousel.
+Use Node.js 20+ and OpenSSL. Frontend runtime assets are already checked in; npm installs test tools only.
 
 ```sh
-node scripts/serve-local-https.cjs &            # serves the repo at https://127.0.0.1:8443
-node scripts/check-mobile-layout.cjs            # all three engines; MOBILE_ENGINES=webkit to narrow
+npm ci
+npx playwright install
+PORT=8444 npm run serve
 ```
 
-Playwright must be installed (`npm install --no-save playwright`, then
-`npx playwright install`); set `NODE_PATH=$(npm root -g)` for a global install.
-The local server must use HTTPS: WebKit upgrades HTTP subresources under the
-production `upgrade-insecure-requests` CSP, so an HTTP-only preview can look
-unstyled even when Chromium loads it. Do not disable the CSP to work around this.
-The runner accepts a self-signed certificate only for loopback, intercepts external
-requests, and never sends real applications or payments.
+In a second terminal:
 
-**3. Post-deploy smoke test** (`.github/workflows/post-deploy-smoke.yml`): after the
-Pages deployment succeeds, `scripts/check-live-site.mjs` makes read-only requests to
-the live site and fails if the deployed asset versions differ from the commit,
-prices or payment links are missing, the sitemap or social image is broken, or key
-pages stop returning 200. It can also be started manually (`workflow_dispatch`) or
-run locally: `node scripts/check-live-site.mjs https://greencardapplicationservices.com`.
-The workflow trigger depends on the built-in Pages workflow name; confirm it fires
-after the next deployment, and use `workflow_dispatch` until then.
-
-Browser emulation covers layout and interaction, not every physical-device
-behavior. Review significant changes on a real phone before relying on them,
-especially browser toolbar tinting, the software keyboard, camera permissions, and
-the native file picker.
-
-### Images
-
-Hero photos are WebP (about 55 KB each). Keep new hero images at 150 KB or less. The
-social preview (`assets/images/social-preview-v6.jpg`) must stay at 300 KB or less;
-change its filename when replacing it so social platforms refetch it.
-
-## Conversion Measurement and Campaigns
-
-Pricing cards select the corresponding form package and Stripe Payment Link.
-Links such as `/?package=couple#apply` preselect a package without submitting
-anything. Production prices are $9.99, $19.99, $29.99, and $39.99 USD, respectively.
-
-Checkout uses one required agreement covering private paid support, linked terms,
-privacy and refunds, beginning service after payment, and necessary application
-contact. The payload derives the legacy consent flags from this single checkbox
-for compatibility with deployed intake scripts. It does not grant marketing
-permission. Registration alerts have their own required permission and a separate,
-optional, initially unchecked marketing opt-in.
-
-Returning from Stripe restores editable details. An unchanged request can reopen
-checkout without dispatching a duplicate; revised information gets a fresh intake
-reference after a 125-second cooldown following the previous request's settlement.
-This only protects retries in the same page session, not across tabs or reloads.
-The page cannot establish payment status: check the Stripe receipt or contact
-support before paying again.
-
-With analytics consent, `assets/site-metrics.js` records the following GA4 funnel:
-
-| Event | Meaning |
-| --- | --- |
-| `view_item_list` | The pricing section became visible. |
-| `select_item` | A visitor selected a preparation package. |
-| `form_view` / `form_start` | The request form was seen / interacted with. |
-| `validation_error` | A required, format, constraint, or upload check failed; no field values are sent. |
-| `request_dispatch` | An application or notification request was dispatched, not confirmed received. |
-| `begin_checkout` | A validated application request resolved and Stripe navigation was initiated, not a payment. |
-| `cta_click` | A tagged call to action was clicked, with an allowlisted location. |
-
-No `purchase` or confirmed-lead event is emitted by this static site. Count actual
-sales in Stripe, not by form submissions, redirects, or a browser return URL.
-Before optimizing ads for purchases, connect a trusted backend to verified Stripe
-payment events, deduplicate by transaction ID, and reconcile the existing
-`client_reference_id` against the intake record. That backend and account setup
-are not part of this static repository. Apps Script currently uses opaque
-`no-cors` responses; a resolved request does not prove that intake was stored.
-Verify intake delivery and payment matching operationally before buying traffic.
-
-In GA4, create a funnel exploration using the events above. **Disable Enhanced
-Measurement form interactions and automatic history-based page views in the web
-stream**, and review other automatic measurement for unexpected fields. Client
-flags alone do not replace these account settings. Verify events in DebugView or
-Realtime after deploying; configure custom dimensions for `cta_location`,
-`cta_id`, and `error_category` if needed. Rejection or withdrawal of analytics
-consent stops this site's custom events. No names, emails, phone numbers, country
-selections, file details, raw referrers, or query strings are added to them.
-
-Campaign attribution accepts only complete, exact triples:
-
-| Parameter | Allowed values |
-| --- | --- |
-| `utm_source` | `newsletter`, `google`, `facebook`, `instagram` |
-| `utm_medium` | `email`, `cpc`, `social` |
-| `utm_campaign` | `dv-preparation`, `photo-checklist`, `family-guide` |
-
-Example opt-in email campaign link:
-`https://greencardapplicationservices.com/?utm_source=newsletter&utm_medium=email&utm_campaign=dv-preparation#pricing`.
-Unknown or partial campaign values are dropped. Campaign values are not persisted
-across pages, and click IDs are not forwarded; this is privacy-limited attribution,
-not complete Google Ads conversion attribution. Adjust account-side attribution
-only with the appropriate consent and purchase-verification infrastructure.
-
-The costs article, photo requirements, and family guide provide useful landing
-pages for educational campaigns. Send only to contacts with appropriate marketing
-permission, include sender identification and a working unsubscribe mechanism,
-and use the government dates rather than manufactured urgency. This change does
-not send email or launch paid campaigns. Check advertising-platform restrictions
-for government-document/immigration assistance before launching ads.
-
-After deployment, submit the updated sitemap in Search Console and monitor
-indexing, landing-page engagement, package selection, checkout starts, and
-Stripe-confirmed purchases separately. Search rankings and sales improvements
-are not guaranteed by metadata or visual changes.
-
-## Official Fees and Dates
-
-The State Department's [September 16, 2025 final rule](https://www.federalregister.gov/documents/2025/09/16/2025-17851/schedule-of-fees-for-consular-services-department-of-state-and-overseas-embassies-and)
-established a $1 electronic DV registration fee, effective that day. Do not
-describe current official entry as universally free. Government fees are separate
-from the site's preparation prices; consult the active-year instructions.
-The homepage countdown targets **October 18, 2026 at noon Eastern**, explicitly
-labeled a planning estimate, not an official opening or payment deadline.
-Expired or invalid targets show a source-checking message rather than claiming
-registration has opened. Change the target only after reviewing official sources;
-never silently roll the estimate forward.
-
-## DV-2026 Eligible Countries
-
-This historical list is based on the U.S. Department of State DV-2026 instructions
-and matches the country dropdown used on the website. It is not confirmation of
-current-year eligibility. Refresh the dropdown and this list against the active
-DV instructions before using them for current-year targeting.
-
-Historical country reference, one country per line:
-
-```text
-Afghanistan
-Albania
-Algeria
-Andorra
-Angola
-Antigua and Barbuda
-Argentina
-Armenia
-Australia
-Austria
-Azerbaijan
-Bahamas
-Bahrain
-Barbados
-Belarus
-Belgium
-Belize
-Benin
-Bhutan
-Bolivia
-Bosnia and Herzegovina
-Botswana
-Brunei
-Bulgaria
-Burkina Faso
-Burundi
-Cabo Verde
-Cambodia
-Cameroon
-Central African Republic
-Chad
-Chile
-Comoros
-Congo, Democratic Republic of the
-Congo, Republic of the
-Costa Rica
-Cote d'Ivoire
-Croatia
-Cyprus
-Czech Republic
-Denmark
-Djibouti
-Dominica
-Ecuador
-Egypt
-Equatorial Guinea
-Eritrea
-Estonia
-Eswatini
-Ethiopia
-Fiji
-Finland
-France
-Gabon
-Gambia
-Georgia
-Germany
-Ghana
-Greece
-Grenada
-Guatemala
-Guinea
-Guinea-Bissau
-Guyana
-Iceland
-Indonesia
-Iran
-Iraq
-Ireland
-Israel
-Italy
-Japan
-Jordan
-Kazakhstan
-Kenya
-Kiribati
-Kosovo
-Kuwait
-Kyrgyzstan
-Laos
-Latvia
-Lebanon
-Lesotho
-Liberia
-Libya
-Liechtenstein
-Lithuania
-Luxembourg
-Madagascar
-Malawi
-Malaysia
-Maldives
-Mali
-Malta
-Marshall Islands
-Mauritania
-Mauritius
-Micronesia
-Moldova
-Monaco
-Mongolia
-Montenegro
-Morocco
-Mozambique
-Myanmar
-Namibia
-Nauru
-Nepal
-Netherlands
-New Zealand
-Nicaragua
-Niger
-North Korea
-North Macedonia
-Norway
-Oman
-Palau
-Panama
-Papua New Guinea
-Paraguay
-Peru
-Poland
-Portugal
-Qatar
-Romania
-Russia
-Rwanda
-Saint Kitts and Nevis
-Saint Lucia
-Saint Vincent and the Grenadines
-Samoa
-San Marino
-Sao Tome and Principe
-Saudi Arabia
-Senegal
-Serbia
-Seychelles
-Sierra Leone
-Singapore
-Slovakia
-Slovenia
-Solomon Islands
-Somalia
-South Africa
-South Sudan
-Spain
-Sri Lanka
-Sudan
-Suriname
-Sweden
-Switzerland
-Syria
-Taiwan
-Tajikistan
-Tanzania
-Thailand
-Timor-Leste
-Togo
-Tonga
-Trinidad and Tobago
-Tunisia
-Turkey
-Turkmenistan
-Tuvalu
-Uganda
-Ukraine
-United Arab Emirates
-United Kingdom
-Uruguay
-Uzbekistan
-Vanuatu
-Vatican City
-Yemen
-Zambia
-Zimbabwe
+```sh
+npm run check
+npm run test:browser
 ```
 
-Readable list:
+The local server is `https://127.0.0.1:8444`. Its temporary self-signed certificate is accepted only by tests targeting loopback. The strict production CSP stays enabled. `PREP_ENGINES=webkit npm run test:browser` narrows a run; `PREP_ARTIFACTS=/absolute/path` changes the synthetic screenshot/PDF output directory. Default artifacts are in `/tmp/gcas-rebuild/verification`.
 
-- Afghanistan
-- Albania
-- Algeria
-- Andorra
-- Angola
-- Antigua and Barbuda
-- Argentina
-- Armenia
-- Australia
-- Austria
-- Azerbaijan
-- Bahamas
-- Bahrain
-- Barbados
-- Belarus
-- Belgium
-- Belize
-- Benin
-- Bhutan
-- Bolivia
-- Bosnia and Herzegovina
-- Botswana
-- Brunei
-- Bulgaria
-- Burkina Faso
-- Burundi
-- Cabo Verde
-- Cambodia
-- Cameroon
-- Central African Republic
-- Chad
-- Chile
-- Comoros
-- Congo, Democratic Republic of the
-- Congo, Republic of the
-- Costa Rica
-- Cote d'Ivoire
-- Croatia
-- Cyprus
-- Czech Republic
-- Denmark
-- Djibouti
-- Dominica
-- Ecuador
-- Egypt
-- Equatorial Guinea
-- Eritrea
-- Estonia
-- Eswatini
-- Ethiopia
-- Fiji
-- Finland
-- France
-- Gabon
-- Gambia
-- Georgia
-- Germany
-- Ghana
-- Greece
-- Grenada
-- Guatemala
-- Guinea
-- Guinea-Bissau
-- Guyana
-- Iceland
-- Indonesia
-- Iran
-- Iraq
-- Ireland
-- Israel
-- Italy
-- Japan
-- Jordan
-- Kazakhstan
-- Kenya
-- Kiribati
-- Kosovo
-- Kuwait
-- Kyrgyzstan
-- Laos
-- Latvia
-- Lebanon
-- Lesotho
-- Liberia
-- Libya
-- Liechtenstein
-- Lithuania
-- Luxembourg
-- Madagascar
-- Malawi
-- Malaysia
-- Maldives
-- Mali
-- Malta
-- Marshall Islands
-- Mauritania
-- Mauritius
-- Micronesia
-- Moldova
-- Monaco
-- Mongolia
-- Montenegro
-- Morocco
-- Mozambique
-- Myanmar
-- Namibia
-- Nauru
-- Nepal
-- Netherlands
-- New Zealand
-- Nicaragua
-- Niger
-- North Korea
-- North Macedonia
-- Norway
-- Oman
-- Palau
-- Panama
-- Papua New Guinea
-- Paraguay
-- Peru
-- Poland
-- Portugal
-- Qatar
-- Romania
-- Russia
-- Rwanda
-- Saint Kitts and Nevis
-- Saint Lucia
-- Saint Vincent and the Grenadines
-- Samoa
-- San Marino
-- Sao Tome and Principe
-- Saudi Arabia
-- Senegal
-- Serbia
-- Seychelles
-- Sierra Leone
-- Singapore
-- Slovakia
-- Slovenia
-- Solomon Islands
-- Somalia
-- South Africa
-- South Sudan
-- Spain
-- Sri Lanka
-- Sudan
-- Suriname
-- Sweden
-- Switzerland
-- Syria
-- Taiwan
-- Tajikistan
-- Tanzania
-- Thailand
-- Timor-Leste
-- Togo
-- Tonga
-- Trinidad and Tobago
-- Tunisia
-- Turkey
-- Turkmenistan
-- Tuvalu
-- Uganda
-- Ukraine
-- United Arab Emirates
-- United Kingdom
-- Uruguay
-- Uzbekistan
-- Vanuatu
-- Vatican City
-- Yemen
-- Zambia
-- Zimbabwe
+Tests cover schema and household behavior, existing consent-gated analytics, parser regressions, three browser engines, four editor viewports (320/390/430/1440), real local OCR, image errors, the review/dashboard, accessibility, and every public page. External requests are blocked during browser tests. No real passport, payment, email or customer record is used.
 
-## Optional passport autofill
+`Security and quality` runs on PRs. The read-only post-deployment smoke check remains for a future approved release; it must compare the deployed revision, not this preview against the old production site.
 
-A compact control after package selection offers camera capture or a photo upload
-for the primary applicant. `assets/passport-autofill.js` loads the self-hosted
-Tesseract.js 6.0.1 scanner only after a photo is selected. Its worker, LSTM cores,
-and English model live in `vendor/passport-ocr/` with upstream licenses. No OCR API
-or remote model CDN is used. The homepage CSP permits same-origin workers and
-WebAssembly compilation; other pages keep workers disabled.
+## Code map
 
-The selected photo is processed in browser memory, with a separate focused MRZ
-pass and label-position checks for multilingual and multi-column passports. Filler
-misreads are rejected or removed only when clearly separated from name tokens.
-MRZ given names remain together for review instead of guessing middle names.
-Country of birth is read from birth labels, never issuer or nationality codes.
+| Area | Files |
+| --- | --- |
+| Version, conditional fields, validation, pricing, export mapping | `assets/preparation/schema.mjs` |
+| Interactive document and session dashboard | `assets/preparation/workspace.mjs`, `workspace.css` |
+| Photo processing and local OCR | `assets/preparation/media.mjs`, `assets/passport-autofill.js`, `vendor/` |
+| Explicit household reuse | `assets/preparation/household.mjs` |
+| Worksheet print template | `assets/preparation/worksheet.mjs` |
+| Deferred backend boundary | `assets/preparation/backend.mjs` |
+| Public site | Root HTML files, `policies/`, `assets/platform.css`, existing `styles.css` |
+| Public notification/support/cookies | `assets/app.js`, `assets/site-metrics.js` |
 
-The review action “Use details & attach photo” applies the fields and includes a
-metadata-free JPEG copy with the preparation request. The scanner retains that
-copy in page memory independently of the native file picker, so selecting another
-document cannot silently replace it. The document summary includes both sources;
-it is uploaded and stored by the normal Apps Script intake only when the applicant
-submits the request. Removing it preserves other documents. Scanning, cancelling,
-and reviewing cause no submission. No OCR text or photo enters browser storage,
-analytics, or a remote OCR API. Email and phone remain manual fields.
+There is no backend environment configuration in this phase. The [backend contract and future configuration](docs/rebuild/backend-plan.md) describes the next stage without claiming that migrations or services exist.
 
-HEIC/HEIF photos use the same self-hosted CSP-compatible HEIC worker across
-browsers to keep color and orientation handling consistent. JPG, PNG and WebP are supported; files must be under
-15 MB. The source country list does not establish current-year eligibility.
+## Existing integrations
 
-Check parser behavior with `node scripts/check-passport-autofill.mjs`; the normal
-static checks include this test. `scripts/check-passport-browser.cjs` runs real
-OCR against an in-memory synthetic passport and intercepts delivery to a mocked
-intake endpoint. It verifies automatic attachment when applying autofill, explicit removal, and the
-JPEG payload after submission; it sends no records to production services.
-Never commit real customer documents or their recognized text as test fixtures.
+Public notification signup retains its separate, explicit consent and Google Apps Script endpoint. Optional marketing permission remains separate. The browser can report dispatch, not verified delivery, because the existing integration uses `no-cors`. This endpoint never receives new worksheet answers or documents.
+
+The old intake Apps Script template remains in `scripts/intake-apps-script.gs` for existing operations and migration reference. It is not called by the new worksheet. Old external Stripe Payment Links have been removed from active site paths but have not been archived in Stripe; archive them only after the replacement is verified and existing-customer handling is resolved.
+
+Public pages retain optional cookie-controlled analytics and support links. `prepare.html` loads neither the public app nor analytics; its CSP permits only same-origin requests. Do not include identity data in URLs, analytics, logs, Stripe metadata or ordinary email attachments.
+
+## Review documentation
+
+- [Implementation status, before/after audit and launch requirements](docs/rebuild/review.md)
+- [Backend plan and environment settings](docs/rebuild/backend-plan.md)
+- [DV-year sources and unresolved requirements](docs/rebuild/dv-sources.md)
+- [Verification and visual evidence](docs/rebuild/verification.md)
+- [Original requirements and owner’s scope amendment](docs/rebuild/requirements.md)
+- [Security policy](SECURITY.md)
+
+No changes to existing marketing drafts are included in this branch. Campaigns must be aligned with the finished service before publication; the preview cannot generate sales through a disabled checkout.
