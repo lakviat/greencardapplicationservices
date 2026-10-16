@@ -1,29 +1,30 @@
 # Security Policy
 
-Report suspected vulnerabilities privately through this repository’s Security tab and GitHub Security Advisories. Include reproduction steps and impact, without real identity documents, card details or customer personal information. Do not open public issues containing sensitive records.
+Report vulnerabilities privately through GitHub Security Advisories. Use synthetic examples; do not submit passports, payment details or applicant records in public issues.
 
-## Current preview boundary
+## Backend boundary
 
-This is a static GitHub Pages site. Browser JavaScript and its configuration are public. The owner deferred the backend; the preparation workspace has no authentication, upload endpoint, paid entitlement, cloud persistence or transactional delivery.
+The browser and every public configuration file are public. Only the Supabase publishable key belongs there. Supabase service credentials, Stripe secrets, webhook signing secrets and mail keys must stay in server secret stores. Rotate any secret disclosed in chat before live collection.
 
-Answers, images and object URLs stay in tab memory. OCR and HEIC conversion use self-hosted workers. Images are decoded and re-encoded locally; file type, size and pixel bounds are checked. These are browser usability checks, not a replacement for future server upload validation or malware scanning. Removing a document or deleting a worksheet releases its object URL and local references. No sensitive values are written to browser storage, URLs or analytics.
+Every private Edge Function operation verifies the current user with Supabase Auth, checks ownership and enforces payment requirements independently. Client table mutations and RPC execution are revoked; RLS limits reads to owned, active paid preparations. Private storage has no anonymous or authenticated object policies. Image/PDF requests require a current verified account token and are streamed with `Cache-Control: no-store`. A return URL or client flag never confirms payment.
 
-`prepare.html` has a separate same-origin CSP, no-referrer policy and no analytics or advertising scripts. Public pages retain explicit optional cookie choices. A user who follows a support or notification action chooses that channel; do not send passport scans through those channels.
+Stripe events are raw-body signature verified, checked against the current Stripe session, and applied with transaction-level deduplication. Prices are server-owned. Refunds/disputes revoke access and cannot be undone by a late success event. Application data never enters Stripe metadata.
 
-The existing public notification integration uses Google Apps Script with `no-cors`: successful dispatch is not confirmed server acceptance. Frontend identifiers and the legacy compatibility token are public and must never be treated as authentication. The old intake template remains for migration reference and existing operations, not the new application flow.
+Images are size/pixel bounded, decoded and JPEG re-encoded server-side. This strips source metadata and excludes arbitrary document formats; it is not an antivirus product or a government photo-acceptance guarantee. Schema checks reject invalid record structure and foreign asset references. PDF generation rechecks completeness. Logs and error messages must not contain answers, passport numbers, tokens or request bodies.
 
-## Paid-launch requirements
+## Browser and retention
 
-Before receiving production identity documents, implement and test authenticated ownership checks on every endpoint, private object storage, row-level access control, verified email ownership, short-lived download authorization, safe logging, secure sessions, rate limits, server-side file validation, deletion and retention cleanup. Confirm provider encryption and contractual privacy obligations for supported markets.
+Unpaid work and account sessions remain in tab memory. The workspace has no marketing scripts, no-referrer and noindex policies, and a CSP permitting only the site and its named Supabase project for connections. Close/reload loses unsaved work; checkout uses another tab to preserve the original session. Sensitive data is never written to browser localStorage or sessionStorage.
 
-Use server-priced Stripe Checkout and signature-verified idempotent webhooks. Do not trust browser prices, package flags, return URLs or a `paymentStatus` field. Never collect card numbers or CVCs in this app. Do not put applicant answers or scans in payment metadata. Backend authorization must independently gate saving and exports.
+Saved preparation data expires 365 days after the last save; unpaid order metadata expires after seven days. Deletion clears record contents and queues private-file removal. Daily maintenance retries storage cleanup and removes stale orphan uploads. Monitor the retention workflow for failures. Order/payment references are retained separately for reconciliation and disputes. Email contains an authenticated dashboard link, not sensitive attachments.
 
-## Repository and hosting rules
+## Release checks
 
-- Do not commit secrets, `.env` files, private keys, customer documents or exported records.
-- Keep GitHub secret scanning and push protection enabled.
-- Run the static checks and all browser engines before release.
-- Keep this rebuild on its feature branch until the documented launch requirements and policy review are complete.
-- GitHub Pages cannot set arbitrary response headers. A backend-capable host must enforce CSP, `frame-ancestors`, HSTS, `X-Content-Type-Options`, restrictive `Permissions-Policy`, and private/no-store caching for authenticated documents as HTTP headers.
+- Run the schema, browser and real local backend integration tests.
+- Verify production SMTP delivery and Stripe sandbox outcomes before activating checkout.
+- Configure and run daily private-storage cleanup before collecting customer documents.
+- Keep Premium disabled until the owner approves its deliverables.
+- Keep secrets and applicant fixtures out of Git; fixtures must be synthetic.
+- GitHub Pages cannot set arbitrary security response headers. A future backend-capable frontend host should add frame-ancestors, HSTS and restrictive Permissions-Policy headers. API responses already use no-store and nosniff.
 
-See `docs/rebuild/backend-plan.md` for the planned security boundary and `docs/rebuild/review.md` for the explicit deferred scope.
+See [backend activation and limits](docs/rebuild/backend-plan.md). Public Apps Script notifications are a separate consented feature, not an identity-document store or entitlement service.

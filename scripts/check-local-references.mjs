@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const root = process.cwd();
-const ignoredDirectories = new Set([".git", "node_modules"]);
+const ignoredDirectories = new Set([".git", "node_modules", "supabase", "dist"]);
 const htmlFiles = [];
 
 function collectHtmlFiles(directory, relativeDirectory = "") {

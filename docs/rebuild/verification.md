@@ -1,3 +1,5 @@
+> Backend implementation was authorized on 2026-10-16 after this frontend review. Current deployment details and test scope are in [backend-plan.md](backend-plan.md). The older deferred-backend statements below describe that earlier milestone.
+
 # Verification — October 16, 2026
 
 All applicant data and document imagery in these tests are synthetic. Requests outside loopback are blocked. No payment, email, government entry, production upload or deployment was performed.

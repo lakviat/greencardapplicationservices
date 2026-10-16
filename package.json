@@ -9,11 +9,21 @@
     "test": "node --test tests/preparation/*.test.mjs",
     "check": "bash scripts/check-static-site.sh",
     "test:browser": "node tests/preparation/browser.cjs",
-    "serve": "node scripts/serve-local-https.cjs"
+    "serve": "node scripts/serve-local-https.cjs",
+    "build:backend": "node scripts/build-backend.mjs",
+    "test:backend": "node --test tests/backend/core.test.mjs && node tests/backend/integration.mjs",
+    "backend:cleanup": "node scripts/backend-cleanup.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
+    "esbuild": "0.28.2",
     "playwright": "1.64.1",
-    "prettier": "3.9.10"
+    "prettier": "3.9.10",
+    "supabase": "2.121.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.118.0",
+    "jpeg-js": "0.4.4",
+    "pdf-lib": "1.17.1"
   }
 }

@@ -1,3 +1,5 @@
+> Backend implementation was authorized on 2026-10-16 after this frontend review. Current deployment details and test scope are in [backend-plan.md](backend-plan.md). The older deferred-backend statements below describe that earlier milestone.
+
 # Frontend rebuild review — October 16, 2026
 
 This is the frontend phase of the master implementation request. The owner explicitly said “we will build backend later once we done with other part” and “Keep Premium disabled pending my review.” The implementation follows that scope. It is reviewable code, not an operational paid platform; do not merge/deploy it as one.

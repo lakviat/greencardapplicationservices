@@ -53,19 +53,32 @@ assert.deepEqual(
 );
 assert(PACKAGES.premium.disabled);
 const backend = fs.readFileSync("assets/preparation/backend.mjs", "utf8");
-assert.doesNotMatch(
-  backend,
-  /:\s*true/,
-  "Deferred backend capabilities must fail closed",
-);
+assert.match(backend, /persistSession:\s*false/);
+assert.doesNotMatch(backend, /sb_secret_|sk_live_/);
+assert.match(backend, /key\s*!==\s*"premium"/);
 console.log(
-  "19 pages: obsolete flow removed; workspace privacy and deferred-payment gates passed.",
+  "Platform pages: obsolete flow removed; workspace privacy and server capability gates passed.",
 );
 
-for (const name of ['app.js','requirements.js','site-metrics.js','passport-autofill.js']) {
- const source=fs.readFileSync('assets/'+name,'utf8');
- assert.doesNotMatch(source,/\beval\s*\(|document\.write\s*\(|\.innerHTML\s*=/,name+' unsafe DOM');
+for (const name of [
+  "app.js",
+  "requirements.js",
+  "site-metrics.js",
+  "passport-autofill.js",
+]) {
+  const source = fs.readFileSync("assets/" + name, "utf8");
+  assert.doesNotMatch(
+    source,
+    /\beval\s*\(|document\.write\s*\(|\.innerHTML\s*=/,
+    name + " unsafe DOM",
+  );
 }
-const notify = fs.readFileSync('index.html','utf8').match(/<input\b[^>]*name="notifyMarketingConsent"[^>]*>/)?.[0];
-assert(notify,'Notification marketing choice must remain separate');
-assert.doesNotMatch(notify,/\s(?:required|checked)(?:\s|=|\/?>)/,'Marketing permission must be optional and unchecked');
+const notify = fs
+  .readFileSync("index.html", "utf8")
+  .match(/<input\b[^>]*name="notifyMarketingConsent"[^>]*>/)?.[0];
+assert(notify, "Notification marketing choice must remain separate");
+assert.doesNotMatch(
+  notify,
+  /\s(?:required|checked)(?:\s|=|\/?>)/,
+  "Marketing permission must be optional and unchecked",
+);

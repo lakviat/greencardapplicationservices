@@ -378,7 +378,7 @@ export function sections(d) {
         }),
         f("passport.bio", "Passport biographic page", "passportPhoto", {
           visible: hasPassport,
-          help: "JPEG only, up to 5 MB. Keep every edge and all printed information visible. Stored in this tab only during this preview.",
+          help: "JPEG only, up to 5 MB. Keep every edge and all printed information visible. Kept in this tab until you save; paid saving includes the image in private account storage.",
         }),
         f(
           "passport.samePage",
@@ -441,7 +441,7 @@ export function sections(d) {
         "checkbox",
         {
           reference: "Service consent",
-          help: "This preview processes answers and images on this device only. They are lost when this tab closes or reloads. Cloud saving, payment and email delivery are unavailable. Read the linked privacy notice before entering sensitive information.",
+          help: "I authorize processing and, when I choose paid saving, private storage of these answers, photos, passport copies, and authorized family information. Saved files expire after 365 days without a save. I can delete my preparation earlier. Read the privacy notice.",
         },
       ),
     ],

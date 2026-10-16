@@ -1112,3 +1112,7 @@ Prioritize accuracy, usability, transparency, security, and working implementati
 
 ## Scope amendment — 2026-10-16
 Owner explicitly deferred backend implementation until the other parts are complete. This PR implements the frontend and public content, with no active checkout, accounts, cloud persistence, or email delivery. Premium stays disabled pending owner review. Do not merge/deploy as the paid platform until the backend and launch gates are complete.
+
+## Owner amendment — backend authorization, 2026-10-16
+
+The owner supplied a new Supabase project (`wofazcvfvazfkvujwwcw`) and authorized completing backend integration and pushing directly to main. This replaces the earlier backend deferral and feature-branch-only restriction. Premium remains disabled pending owner review. Credentials are configuration inputs, never repository content. Live capabilities still require verified provider setup and working security controls.

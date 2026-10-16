@@ -46,3 +46,31 @@ jobs:
             sleep 1
           done
           exit 1
+  backend-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - run: npm ci
+      - name: Verify generated server bundle and browser SDK
+        run: npm run build:backend && git diff --exit-code -- supabase/functions/gcas-api/serve.ts assets/vendor/supabase.mjs
+      - name: Start isolated Supabase services
+        run: npx supabase start > /tmp/gcas-local-start.log 2>&1
+      - run: npm run test:backend
+      - run: npx playwright install --with-deps chromium
+      - name: Test OTP and paid save in a mobile browser
+        run: |
+          set -euo pipefail
+          printf 'GCAS_AUTH_READY=true\nGCAS_EXTRA_ORIGINS=https://127.0.0.1:8444\n' > .env.backend-test
+          npx supabase functions serve gcas-api --env-file .env.backend-test > /tmp/gcas-functions.log 2>&1 &
+          PORT=8444 node scripts/serve-local-https.cjs > /tmp/gcas-web.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            if curl --silent --fail --insecure https://127.0.0.1:8444/prepare.html >/dev/null && curl --silent http://127.0.0.1:54321/functions/v1/gcas-api/health | grep -q '"accounts":true'; then
+              node tests/backend/browser.mjs
+              exit 0
+            fi
+            sleep 1
+          done
+          exit 1
+      - if: always()
+        run: npx supabase stop

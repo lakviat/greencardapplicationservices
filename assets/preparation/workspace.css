@@ -1328,3 +1328,15 @@ body:not([data-view="document"]) .workspace-layout {
     margin: 16mm;
   }
 }
+/* Account controls remain comfortable with a mobile keyboard open. */
+#account-email,
+#account-code {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 0.75rem;
+  margin: 0.5rem 0 1rem;
+  border: 1px solid #afbdd1;
+  border-radius: 0.5rem;
+  font: inherit;
+}

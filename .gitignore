@@ -36,3 +36,7 @@ dist/
 *.pem
 *.p12
 lighthouse-report.*
+
+# Local Supabase state
+supabase/.temp/
+supabase/.branches/

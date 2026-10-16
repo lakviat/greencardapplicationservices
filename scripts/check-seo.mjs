@@ -3,7 +3,7 @@ import path from "node:path";
 
 const root = process.cwd();
 const origin = "https://greencardapplicationservices.com";
-const ignoredDirectories = new Set([".git", "node_modules"]);
+const ignoredDirectories = new Set([".git", "node_modules", "supabase", "dist"]);
 const stalePricePattern = /\$(24|44|64|94|39|69|99|149)(?![\d.])/g;
 // Public path => phrase that should remain visible in page metadata or early main copy.
 const PAGE_KEYWORDS = {
@@ -215,7 +215,7 @@ for (const [relativePath, limit] of [["assets/styles.css", 140000], ["assets/app
 
 for (const file of htmlFiles) {
   const html = fs.readFileSync(path.join(root, file), "utf8");
-  if (file === "prepare.html") continue; // Noindex application; independently validated by platform checks.
+  if (["prepare.html", "payment-return.html"].includes(file)) continue; // Noindex application; independently validated by platform checks.
   const publicPath = toPublicPath(file);
   const titleBlocks = blocks(html, "title").map(stripMarkup).filter(Boolean);
   if (titleBlocks.length !== 1) {

@@ -21,13 +21,78 @@ import {
   passportCopy,
   scanPassport,
 } from "./media.mjs";
-import { CAPABILITIES, unavailable } from "./backend.mjs";
+import { CAPABILITIES, unavailable, capabilities } from "./backend.mjs";
+import { cloudWorkspace } from "./cloud.mjs";
 import { worksheet } from "./worksheet.mjs";
 import { spouseWorksheet } from "./household.mjs";
 const app = document.querySelector("#workspace");
 let draft = initialDraft();
 const sessionDrafts = [draft];
 const relatedDrafts = new WeakMap();
+const dirtyRecords = new WeakSet();
+let cloudStatus = "";
+const cloud = cloudWorkspace({
+  dialog: openDialog,
+  close: closeDialog,
+  related: (d) => relatedDrafts.get(d),
+  status: (text) => {
+    cloudStatus = text;
+    draftStatus.textContent = text;
+  },
+  saved: (records) => {
+    records.forEach((r) => dirtyRecords.delete(r));
+    dirty = sessionDrafts.some((r) => dirtyRecords.has(r));
+  },
+  load: (records) => {
+    for (const r of records) {
+      const old = sessionDrafts.find((x) => x.id === r.id);
+      if (old && dirtyRecords.has(old))
+        throw new Error(
+          "You have unsaved edits to this preparation. Keep this tab open and resolve those before reopening it.",
+        );
+    }
+    for (const r of records) {
+      const index = sessionDrafts.findIndex((x) => x.id === r.id);
+      if (index >= 0) {
+        Object.values(sessionDrafts[index].assets).forEach((a) =>
+          URL.revokeObjectURL(a.url),
+        );
+        sessionDrafts.splice(index, 1, r);
+      } else sessionDrafts.push(r);
+    }
+    if (records.length === 2) {
+      relatedDrafts.set(records[0], records[1]);
+      relatedDrafts.set(records[1], records[0]);
+    }
+    draft = records[0];
+    navigate("document");
+  },
+  remove: (records) => {
+    for (const r of records) {
+      Object.values(r.assets).forEach((a) => URL.revokeObjectURL(a.url));
+      r.answers = {};
+      r.assets = {};
+      const index = sessionDrafts.indexOf(r);
+      if (index >= 0) sessionDrafts.splice(index, 1);
+    }
+    if (!sessionDrafts.length) sessionDrafts.push(initialDraft());
+    draft = sessionDrafts[0];
+    dirty = sessionDrafts.some((r) => dirtyRecords.has(r));
+    navigate("dashboard");
+  },
+  signOut: () => {
+    for (const r of sessionDrafts) {
+      Object.values(r.assets).forEach((a) => URL.revokeObjectURL(a.url));
+      r.answers = {};
+      r.assets = {};
+    }
+    sessionDrafts.splice(0, sessionDrafts.length, initialDraft());
+    draft = sessionDrafts[0];
+    dirty = false;
+    cloudStatus = "Signed out";
+    navigate("dashboard");
+  },
+});
 const countryNames = COUNTRIES.map((c) => c.name);
 const touched = new Set();
 let active = "entrant.lastName",
@@ -183,6 +248,9 @@ function announce(text) {
 }
 function changed() {
   dirty = true;
+  dirtyRecords.add(draft);
+  cloudStatus = "";
+  cloud.changed(draft);
   draft.reviewed = false;
   updateProgress();
 }
@@ -210,9 +278,9 @@ function updateProgress() {
   const packageText = `${PACKAGES[draft.package].label} · ${price(draft.package)}`;
   if (packageIndicator.textContent !== packageText)
     packageIndicator.textContent = packageText;
-  draftStatus.textContent = dirty
-    ? "Unsaved · keep this tab open"
-    : "In this tab · not saved";
+  draftStatus.textContent =
+    cloudStatus ||
+    (dirty ? "Unsaved · keep this tab open" : "In this tab · not saved");
   for (const field of fields(draft)) {
     const node = document.getElementById(`field-${field.id}`);
     if (!node) continue;
@@ -1037,7 +1105,7 @@ function renderDocument() {
         el(
           "p",
           {},
-          "This preview keeps answers and images only in this tab’s memory. Closing or reloading the tab loses the draft. No cloud saving, checkout, or email delivery is active.",
+          "Unsaved answers and images stay in this tab. After payment, Save Progress sends your answers, photos, and passport copies to private account storage. Closing this tab loses unsaved work. Saved files expire after 365 days without a save; you may delete them earlier.",
         ),
         link("Read the privacy notice ↗", "/policies/#privacy", {
           target: "_blank",
@@ -1135,7 +1203,13 @@ function openPackages() {
           announce(`${p.label} selected. No payment was made.`);
           if (view === "review") renderReview();
         },
-        { class: "button", disabled: !!p.disabled || key === draft.package },
+        {
+          class: "button",
+          disabled:
+            !!p.disabled ||
+            key === draft.package ||
+            cloud.info(draft)?.state === "paid",
+        },
       ),
     ),
   );
@@ -1152,42 +1226,14 @@ function openPackages() {
       el(
         "p",
         { class: "notice" },
-        "Checkout is unavailable in this preview. Selecting a package does not charge you or unlock cloud services.",
+        "Selecting a package does not charge you. The exact price is shown before Stripe checkout. Purchased bundles keep their original package; contact support for upgrades.",
       ),
       el("div", { class: "package-choices" }, cards),
     ),
   );
 }
 function openSave() {
-  openDialog(
-    "Save your DV preparation and continue anytime",
-    el(
-      "div",
-      {},
-      el(
-        "p",
-        { class: "save-price" },
-        `${PACKAGES[draft.package].label} · ${price(draft.package)} USD · one time`,
-      ),
-      el(
-        "ul",
-        { class: "benefit-list" },
-        [
-          "Secure cloud saving and access from supported devices",
-          "Unlimited corrections within the purchased preparation",
-          "Persistent document progress",
-          "PDF preparation and secure delivery when complete",
-        ].map((x) => el("li", {}, x)),
-      ),
-      el("p", { class: "notice" }, unavailable),
-      button("Checkout not connected", () => {}, {
-        class: "button primary",
-        disabled: !CAPABILITIES.checkout,
-      }),
-      button("Return to my worksheet", closeDialog, { class: "button" }),
-      button("Review package", openPackages, { class: "text-button" }),
-    ),
-  );
+  return cloud.save(draft);
 }
 function renderReview() {
   const p = progress(draft, countryNames);
@@ -1270,7 +1316,7 @@ function renderReview() {
       el(
         "p",
         {},
-        `${PACKAGES[draft.package].label} · ${price(draft.package)} USD · no payment collected`,
+        `${PACKAGES[draft.package].label} · ${price(draft.package)} USD · ${cloud.info(draft)?.state === "paid" ? "Purchased" : "Not purchased"}`,
       ),
       button("Preview prepared worksheet", () => navigate("preview"), {
         class: "button",
@@ -1324,7 +1370,13 @@ function renderDashboard() {
     el(
       "article",
       { class: "dashboard-card" },
-      el("span", { class: "edition-badge" }, "Current session · unsaved"),
+      el(
+        "span",
+        { class: "edition-badge" },
+        cloud.info(record)?.state === "paid"
+          ? "Purchased preparation"
+          : "Current session · unsaved",
+      ),
       el(
         "h2",
         {},
@@ -1340,7 +1392,13 @@ function renderDashboard() {
         {},
         `DV-${record.year} · ${PACKAGES[record.package].label} · ${progress(record, countryNames).percent}% complete`,
       ),
-      el("p", {}, "Last cloud save: never · No purchase recorded"),
+      el(
+        "p",
+        {},
+        cloud.info(record)?.updated_at
+          ? `Last cloud save: ${new Date(cloud.info(record).updated_at).toLocaleString()}`
+          : "Last cloud save: never · No saved purchase",
+      ),
       el(
         "div",
         { class: "dashboard-actions" },
@@ -1354,11 +1412,11 @@ function renderDashboard() {
           },
           { class: "button primary" },
         ),
-        button("Download PDF", () => {}, {
+        button("Download PDF", () => cloud.download(record), {
           class: "button",
           disabled: !CAPABILITIES.pdfDownload,
         }),
-        button("Email secure link", () => {}, {
+        button("Email secure link", () => cloud.email(record), {
           class: "button",
           disabled: !CAPABILITIES.emailDelivery,
         }),
@@ -1374,19 +1432,32 @@ function renderDashboard() {
           "Delete this draft",
           () =>
             openDialog(
-              "Delete this unsaved draft?",
+              cloud.info(record)?.state === "paid"
+                ? "Delete this saved preparation?"
+                : "Delete this unsaved draft?",
               el(
                 "div",
                 {},
                 el(
                   "p",
                   {},
-                  "This removes this worksheet’s answers and images from this tab. There is no cloud copy to recover. Other worksheets remain.",
+                  cloud.info(record)?.state === "paid"
+                    ? "This permanently removes all worksheets and passport/photo copies in this purchased bundle. Financial references remain for payment records. This cannot be undone."
+                    : "This removes this worksheet’s answers and images from this tab. There is no cloud copy to recover. Other worksheets remain.",
                 ),
                 button("Keep draft", closeDialog, { class: "button" }),
                 button(
                   "Delete draft",
-                  () => {
+                  async () => {
+                    if (cloud.info(record)?.state === "paid") {
+                      try {
+                        await cloud.remove(record);
+                        closeDialog();
+                      } catch (e) {
+                        announce(e.message);
+                      }
+                      return;
+                    }
                     for (const a of Object.values(record.assets))
                       URL.revokeObjectURL(a.url);
                     const related = relatedDrafts.get(record);
@@ -1433,12 +1504,24 @@ function renderDashboard() {
     el(
       "div",
       { class: "dashboard-notice" },
-      el("h2", {}, "Cloud accounts are not connected yet"),
+      el(
+        "h2",
+        {},
+        CAPABILITIES.accounts
+          ? "Your saved preparations"
+          : "Cloud accounts are awaiting activation",
+      ),
       el("p", {}, unavailable),
-      button("Email sign-in unavailable", () => {}, {
-        class: "button",
-        disabled: true,
-      }),
+      button(
+        CAPABILITIES.accounts
+          ? "Sign in / open saved preparations"
+          : "Email sign-in unavailable",
+        cloud.dashboard,
+        {
+          class: "button",
+          disabled: !CAPABILITIES.accounts,
+        },
+      ),
     ),
     ...cards,
     sessionDrafts.some((record) => record.package === "family")
@@ -1457,10 +1540,14 @@ function renderPreview() {
         {},
         "Document preview · secure PDF download will be enabled with verified payment and backend delivery.",
       ),
-      button("Download PDF unavailable", () => {}, {
-        class: "button",
-        disabled: true,
-      }),
+      button(
+        CAPABILITIES.pdfDownload ? "Download PDF" : "Download PDF unavailable",
+        () => cloud.download(draft),
+        {
+          class: "button",
+          disabled: !CAPABILITIES.pdfDownload,
+        },
+      ),
     ),
     worksheet(draft),
   );
@@ -1490,7 +1577,7 @@ window.addEventListener("beforeunload", (event) => {
   if (dirty) {
     event.preventDefault();
     event.returnValue =
-      "Your progress is only in this tab. Cloud saving is not connected yet.";
+      "Your progress has not been saved to your account. Keep this tab open or save before leaving.";
   }
 });
 // Keep navigation within the application in memory; show a specific warning on exits.
@@ -1505,13 +1592,9 @@ header.querySelector("a").addEventListener("click", (event) => {
       el(
         "p",
         {},
-        "Your progress is only in this tab. Cloud saving is not connected yet.",
+        "Your progress has not been saved to your account. Keep this tab open or save before leaving.",
       ),
-      el(
-        "p",
-        {},
-        "Cloud saving is not connected in this preview. Keep this tab open to retain your answers.",
-      ),
+      el("p", {}, "Keep this tab open to retain unsaved answers and images."),
       button("Keep working", closeDialog, { class: "button primary" }),
       button(
         "Leave and discard",
@@ -1543,3 +1626,7 @@ mobileLayout.addEventListener("change", placeMissingControl);
 placeMissingControl();
 navigate(location.hash.slice(1) || "document");
 activate(active, { scroll: false });
+
+capabilities().then(() => {
+  if (view === "dashboard") renderDashboard();
+});

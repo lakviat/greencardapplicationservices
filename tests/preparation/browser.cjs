@@ -51,6 +51,22 @@ async function screenshot(page, name) {
       await context.route("**/*", (route) => {
         if (new URL(route.request().url()).origin === base)
           return route.continue();
+        if (
+          route.request().url() ===
+          "https://wofazcvfvazfkvujwwcw.supabase.co/functions/v1/gcas-api/health"
+        )
+          return route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify({
+              accounts: false,
+              cloudSave: false,
+              checkout: false,
+              pdfDownload: false,
+              emailDelivery: false,
+              premium: false,
+            }),
+          });
         outbound++;
         return route.abort();
       });
@@ -136,12 +152,10 @@ async function screenshot(page, name) {
         .click();
       assert(
         await page
-          .getByRole("button", { name: "Checkout not connected" })
-          .isDisabled(),
+          .getByRole("heading", { name: "Account setup in progress" })
+          .isVisible(),
       );
-      await page
-        .getByRole("button", { name: "Return to my worksheet" })
-        .click();
+      await page.getByRole("button", { name: "Close dialog" }).click();
       await page.getByRole("button", { name: "Review", exact: true }).click();
       assert.match(
         await page.locator("h1").innerText(),
