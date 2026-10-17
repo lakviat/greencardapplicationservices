@@ -1,6 +1,6 @@
 # Backend implementation and activation
 
-Updated 2026-10-16. The owner authorized Supabase backend work and deployment to `main`. Premium remains disabled. This supersedes the earlier backend deferral.
+Updated 2026-10-17. The owner authorized Supabase backend work and deployment to `main`. Google sign-in is active; checkout, email delivery and Premium remain disabled. This supersedes the earlier backend deferral.
 
 ## Implemented
 
@@ -12,7 +12,7 @@ Stripe Checkout prices are calculated on the server: Single 999 cents, Couple 19
 
 Paid saves validate the schema, explicit processing permission, document limits and image ownership. Revision checks prevent one device overwriting a newer save. Image uploads are byte/size checked, decoded with memory/pixel limits, and JPEG re-encoded server-side to strip metadata. PDF generation revalidates completeness and uses the same ordered schema as the editor. PDFs are streamed, not published at public URLs. Email is sent only to the verified account address with an authenticated dashboard link, never applicant/passport attachments. Provider rejection is recorded as failed; the user may retry. The UI does not describe provider acceptance as inbox delivery.
 
-Free work stays in the open worksheet tab. Checkout opens a separate Stripe tab so the original draft remains in memory; the open payment dialog polls for confirmation and saves automatically, with a Check payment & save action for retry. No sensitive pre-payment staging is implemented. Closing/reloading the original tab before saving loses that draft; browser eviction also remains a limitation. Paid records can be reopened with email verification on another device.
+Free work stays in the open worksheet tab. Checkout opens a separate Stripe tab so the original draft remains in memory; the open payment dialog polls for confirmation and saves automatically, with a Check payment & save action for retry. No sensitive pre-payment staging is implemented. Closing/reloading the original tab before saving loses that draft; browser eviction also remains a limitation. Paid records can be reopened by signing in with the same provider account on another device.
 
 ## Retention and deletion
 
@@ -72,3 +72,11 @@ Provider activation still requires the Gmail App Password in `SMTP_PASSWORD`, a 
 The owner chose Google first, with Apple deferred until the Apple Developer membership is ready. The account UI no longer accepts arbitrary email addresses, passwords, or phone numbers. Supabase still stores the provider-verified email for account identity and requested preparation notifications. Different Google and Apple identities (particularly Apple Hide My Email) can be different accounts; customers are prompted to use the same provider/account each time. There were no production customer accounts or paid preparations when the change began.
 
 The OAuth client uses PKCE with an in-memory verifier and session. An isolated sign-in tab returns only its one-use code through a per-attempt same-origin channel; the original worksheet never navigates. Canceled or timed-out attempts cannot adopt a session. The callback strips its URL and loads no analytics. Public provider settings and the backend readiness gate must both allow a provider before sign-in is offered. See [setup and verification](social-sign-in.md).
+
+## Google activation — 2026-10-17
+
+The owner completed Google policy acceptance/client creation and explicitly requested installation of the downloaded credentials in Supabase. Google is enabled in Supabase and the Google consent app is **In production**. The existing OAuth secret remains only in the owner's local file and provider configuration. Apple, email and phone registration remain disabled.
+
+`GCAS_AUTH_READY=true` is saved in Edge Function secrets. Real first-time and returning Google sign-in passed on the public site in Chrome, including verified account identity, loading the authenticated preparations list, and preserving a synthetic unfinished worksheet. The API now advertises accounts/cloud-save/PDF capabilities; paid entitlement checks still protect document saves. No live purchase or applicant document save was performed.
+
+This supersedes the earlier all-flags-off and email-sign-in requirements above. OAuth login does not require SMTP. Remaining paid-service activation requires the restricted Stripe server key and sandbox payment/webhook verification. Email notifications separately require the matching `SMTP_PASSWORD` and a delivery test. Checkout, email delivery and Premium remain disabled. Physical-device Google login remains an additional manual check; automated mobile/backend and three-engine OAuth coverage passed before activation.

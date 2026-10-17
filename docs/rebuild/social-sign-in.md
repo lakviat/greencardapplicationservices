@@ -1,10 +1,10 @@
 # Google first; Apple later
 
-The owner selected Google first on 2026-10-17. Keep Apple and phone disabled. Production email registration is disabled in the remote configuration. Leave global new-user signup enabled, because Google needs it. Do not enable `GCAS_AUTH_READY` until live Google sign-in has been tested. Do not enable checkout until the separate Stripe verification is complete.
+The owner selected Google first on 2026-10-17. Google sign-in is now configured, publicly available, and verified with a real account; `GCAS_AUTH_READY=true`. Keep Apple and phone disabled. Production email registration is disabled in the remote configuration. Leave global new-user signup enabled, because Google needs it. Do not enable checkout until the separate Stripe verification is complete.
 
 ## Google configuration
 
-The dedicated Google Cloud project is `gcas-signin-20261017` (Green Card Applications). Its consent setup is pending the owner’s public support-email choice. In Google Auth Platform configure the app name, business support email, external audience, and only OpenID/email/profile scopes. No Gmail, contacts, Drive or other data access is needed.
+The dedicated Google Cloud project is `gcas-signin-20261017` (Green Card Applications). The owner approved `lakviat@gmail.com` as the public support email and completed Google's policy/client-creation steps. The configured app name is Green Card Application Services, audience is External, and publishing status is In production. Only identity/email/profile access is used; no Gmail, contacts, Drive or other data access is needed.
 
 Create a **Web application** OAuth client:
 
@@ -31,7 +31,7 @@ Requires an active Apple Developer membership, primary App ID with Sign in with 
 
 `tests/backend/browser.mjs` pairs the simulated OAuth response with a real local Auth session, then tests real authenticated paid record access, mobile country selection, autosave and reopening. The entitlement is a synthetic local fixture. The local email/OTP suite tests fixture authentication only and is no longer a production-login acceptance test.
 
-Before activation, test real Google signup and repeat login on desktop and mobile, verify that unfinished worksheet answers remain present, and confirm that account identity/ownership works. Check `/auth/v1/settings`: Google enabled, Apple/email/phone disabled. Test cancellation and access with the wrong account. Enable accounts only after those checks pass. Payment and notification activation are separate.
+For provider changes, test real Google signup and repeat login, verify that unfinished worksheet answers remain present, and confirm that account identity/ownership works. Check `/auth/v1/settings`: Google enabled, Apple/email/phone disabled. Maintain cross-browser/mobile, cancellation and cross-account isolation coverage. Payment and notification activation are separate.
 
 References: [Supabase Google](https://supabase.com/docs/guides/auth/social-login/auth-google), [Supabase Apple](https://supabase.com/docs/guides/auth/social-login/auth-apple), [Supabase redirect rules](https://supabase.com/docs/guides/auth/redirect-urls).
 
@@ -39,4 +39,12 @@ References: [Supabase Google](https://supabase.com/docs/guides/auth/social-login
 
 Static/schema/SEO/privacy checks passed. Free worksheet, accessibility, household, media, and form-interaction suites passed in Chromium, WebKit, and Firefox. The final social-login suite passed in all three engines, including Google-only and Apple-only availability. A separate mobile test passed with a real local Supabase Auth session, database, functions, paid fixture, and autosave/reopening. The isolated stack uses ports 55321–55328 and does not restart the shared UI stack. No real OAuth credential, external email, or charge was used by these tests.
 
-Google Cloud project `gcas-signin-20261017` was created; consent screen/client credentials are not yet complete. Live login remains disabled. The owner must choose the public support email before consent setup continues.
+## Live activation — 2026-10-17
+
+The owner's downloaded Web application OAuth JSON was checked against the expected project, website origin and Supabase callback. Its existing client ID and secret were installed directly in Supabase's Google provider. The secret was not committed or included in frontend code. Nonce checking remains enabled and accounts without email are not allowed.
+
+Google branding links point to the existing site homepage, `/policies#privacy`, and `/policies#terms`. After a successful owner test, Google Auth Platform was published and visibly reported **In production**. The Google account chooser currently identifies the Supabase callback hostname; custom app branding has not been separately verified.
+
+Real first-time signup and returning login with the owner's approved Google account both completed in Chrome on the public site. The callback established the verified Supabase session and the authenticated API loaded the saved-preparations list. During repeat login, a synthetic unsaved worksheet answer remained intact in the original tab. No payment, cloud-saved applicant document, or external notification was created. Real Google login on physical mobile devices has not been checked; mobile and other-engine coverage above uses synthetic OAuth responses.
+
+Production Auth settings report Google enabled and Apple/email/phone disabled. The API reports accounts, cloud-save and PDF capabilities enabled, with checkout, email delivery and Premium disabled. Paid entitlement checks still apply to saves; enabling Google alone does not enable purchases or notification delivery.
