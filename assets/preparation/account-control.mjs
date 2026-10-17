@@ -1,4 +1,4 @@
-import { el, button } from "./dom.mjs?v=20261017-workspace-v30";
+import { el, button } from "./dom.mjs?v=20261017-workspace-v31";
 
 // Only Google's profile-image CDN may receive an avatar request. Metadata is
 // untrusted; arbitrary remote URLs, credentials and application answers stay out.
@@ -25,10 +25,10 @@ export function accountControl(open) {
   const label = el("span", { class: "account-label" });
   const node = button([face, label], open, {
     class: "account-control",
-    "aria-haspopup": "dialog",
   });
   const update = (account) => {
-    label.textContent = account ? "Signed in" : "Sign in";
+    label.textContent = account ? "" : "Sign in";
+    label.hidden = !!account;
     const description = account
       ? `Account: ${account.email}`
       : "Sign in to your account";

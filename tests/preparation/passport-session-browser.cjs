@@ -93,7 +93,9 @@ const publicPages = fs
       await page
         .getByRole("heading", { name: "Saved preparations", exact: true })
         .waitFor();
-      await page.getByRole("button", { name: "Close dialog" }).click();
+      await page
+        .getByRole("button", { name: "Back to my preparations" })
+        .click();
       await page
         .getByRole("button", { name: "Edit document", exact: true })
         .click();
@@ -230,9 +232,9 @@ const publicPages = fs
               c.toBlob(resolve, "image/png"),
             );
             const { scanPassport } =
-              await import("/assets/preparation/media.mjs?v=20261017-workspace-v30");
+              await import("/assets/preparation/media.mjs?v=20261017-workspace-v31");
             const { COUNTRIES } =
-              await import("/assets/preparation/countries.mjs?v=20261017-workspace-v30");
+              await import("/assets/preparation/countries.mjs?v=20261017-workspace-v31");
             return scanPassport(
               blob,
               COUNTRIES.map((c) => c.name),
@@ -274,6 +276,7 @@ const publicPages = fs
         1,
         "All pages and back/forward use the original Google login",
       );
+      await page.getByRole("button", { name: "Settings", exact: true }).click();
       await page
         .getByRole("button", { name: "Sign out & clear this tab" })
         .click();

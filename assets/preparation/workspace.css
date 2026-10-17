@@ -690,9 +690,28 @@ progress::-webkit-progress-value {
   max-width: 680px;
   width: calc(100% - 32px);
   max-height: min(85dvh, calc(var(--viewport-height, 100dvh) - 24px));
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y pinch-zoom;
   color: var(--ink);
   box-shadow: 0 20px 80px #152d4840;
+}
+html.modal-open {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+body.dialog-open {
+  position: fixed;
+  width: 100%;
+  overflow: hidden;
+}
+.workspace-dialog > *,
+.scan-review > *,
+.scan-field {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 .workspace-dialog::backdrop {
   background: #10253e80;
@@ -1260,6 +1279,9 @@ body:not([data-view="document"]) .workspace-layout {
 }
 .scan-field input,
 .scan-field select {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
   min-height: 44px;
   width: 100%;
   font-size: 16px;
@@ -1705,7 +1727,7 @@ body:not([data-view="document"]) .workspace-layout {
     margin: 0 auto 10px;
   }
   .scan-review {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .scan-image {
     position: static;

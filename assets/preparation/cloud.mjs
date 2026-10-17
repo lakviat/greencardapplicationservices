@@ -1,4 +1,4 @@
-import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v30";
+import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v31";
 import {
   api,
   acceptAuth,
@@ -7,9 +7,11 @@ import {
   PROVIDERS,
   CAPABILITIES,
   unavailable,
-} from "./backend.mjs?v=20261017-workspace-v30";
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v30";
-import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v30";
+} from "./backend.mjs?v=20261017-workspace-v31";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v31";
+import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v31";
+import { passportUploadCopy } from "./media.mjs?v=20261017-workspace-v31";
+import { accountPage } from "./account-page.mjs?v=20261017-workspace-v31";
 const groups = new WeakMap();
 let account = null;
 const pendingSaves = new Set();
@@ -184,19 +186,32 @@ export function cloudWorkspace(ui) {
         g.revision = p.revision;
         g.state = p.state;
       }
+      const pendingImages = [];
       for (const r of documents) {
         for (const [field, a] of Object.entries(r.assets)) {
           if (!a.id) {
-            const uploaded = await api(
-              "upload",
-              a.blob,
-              `?id=${g.id}&document=${r.id}&field=${encodeURIComponent(field)}`,
-            );
-            a.id = uploaded.id;
-            const original = g.documents.find((x) => x.id === r.id)?.assets[
-              field
-            ];
-            if (original?.blob === a.blob) original.id = a.id;
+            try {
+              const blob = field.startsWith("passport.")
+                ? await passportUploadCopy(a.blob)
+                : a.blob;
+              const uploaded = await api(
+                "upload",
+                blob,
+                `?id=${g.id}&document=${r.id}&field=${encodeURIComponent(field)}`,
+              );
+              a.id = uploaded.id;
+              const original = g.documents.find((x) => x.id === r.id)?.assets[
+                field
+              ];
+              if (original?.blob === a.blob) original.id = a.id;
+            } catch {
+              pendingImages.push({ document: r.id, field });
+              // Keep a previously saved copy when a replacement fails. A new
+              // failed image is omitted; its local blob remains available to retry.
+              if (a.previous) r.assets[field] = a.previous;
+              else delete r.assets[field];
+              continue;
+            }
           }
           r.assets[field] = { id: a.id, confirmed: !!a.confirmed };
         }
@@ -212,9 +227,14 @@ export function cloudWorkspace(ui) {
       g.state = p.state;
       g.package = p.package;
       g.expires_at = p.expires_at;
+      g.pendingImages = pendingImages;
       if (started === (g.changeNumber || 0)) {
-        ui.saved(g.documents);
-        ui.status("Saved to your account");
+        if (!pendingImages.length) ui.saved(g.documents);
+        ui.status(
+          pendingImages.length
+            ? "Answers saved · some images still need saving. Keep this tab open and retry Save progress."
+            : "Saved to your account",
+        );
         return true;
       } else {
         ui.status("Saving latest changes…");
@@ -234,6 +254,45 @@ export function cloudWorkspace(ui) {
   async function saveProgress(d) {
     await saveLatest(d);
     const g = group(d);
+    if (g.pendingImages?.length) {
+      ui.dialog(
+        "Answers saved — images need attention",
+        el(
+          "div",
+          {},
+          el(
+            "p",
+            { role: "status" },
+            "Your answers are saved to your account. Some images could not be saved yet. Any previously saved copies are still there.",
+          ),
+          el(
+            "p",
+            {},
+            "Keep this tab open to retain the pending images. Retry saving, or replace the affected image with a clear JPEG and save again.",
+          ),
+          el(
+            "ul",
+            {},
+            g.pendingImages.map(({ field }) =>
+              el(
+                "li",
+                {},
+                field === "passport.bio"
+                  ? "Passport information page"
+                  : field === "passport.signature"
+                    ? "Passport signature page"
+                    : "Applicant or family photograph",
+              ),
+            ),
+          ),
+          button("Retry saving images", () => saveProgress(d).catch(error), {
+            class: "button primary",
+          }),
+          button("Continue editing", ui.close, { class: "button" }),
+        ),
+      );
+      return;
+    }
     const unpaid = g.state !== "paid";
     ui.dialog(
       "Progress saved",
@@ -290,6 +349,7 @@ export function cloudWorkspace(ui) {
   async function checkout(d, { receivePdf = false, direct = false } = {}) {
     await saveLatest(d);
     const g = group(d);
+    if (g.pendingImages?.length) return saveProgress(d);
     if (g.state === "paid") {
       if (receivePdf) ui.pdfReady(d);
       return;
@@ -480,6 +540,10 @@ export function cloudWorkspace(ui) {
     clearTimeout(g.timer);
     pendingSaves.delete(g.timer);
     await saveLatest(d);
+    if (g.pendingImages?.length)
+      throw new Error(
+        "Your answers are saved, but some images still need saving. Return to the worksheet and retry Save progress.",
+      );
     ui.status("Preparing PDF…");
     return api("pdf", { id: g.id });
   }
@@ -520,6 +584,7 @@ export function cloudWorkspace(ui) {
       signIn(async () => {
         await saveLatest(d);
         const g = group(d);
+        if (g.pendingImages?.length) return saveProgress(d);
         if (g.state !== "paid") return;
         await api("email", { id: g.id });
         message(
@@ -546,51 +611,31 @@ export function cloudWorkspace(ui) {
       );
     },
     dashboard: () =>
-      signIn(async () => {
-        const result = await api("list");
-        ui.dialog(
-          "Saved preparations",
-          el(
-            "div",
-            {},
-            el("p", {}, `Signed in as ${account.email}`),
-            result.preparations.length
-              ? result.preparations.map((p) =>
-                  el(
-                    "section",
-                    {},
-                    el(
-                      "p",
-                      {},
-                      `DV-${p.year} · ${PACKAGES[p.package].label} · ${p.state === "paid" ? "Purchased" : "Saved draft · pay later"} · Last saved ${new Date(p.updated_at).toLocaleDateString()}`,
-                    ),
-                    button(
-                      "Open preparation",
-                      () => load(p.id).then(ui.close).catch(error),
-                      { class: "button primary" },
-                    ),
-                  ),
-                )
-              : el("p", {}, "No preparations have been saved yet."),
-            el(
-              "p",
-              {},
-              "Signing out clears all answers and images from this tab. Save any changes first.",
-            ),
-            button(
-              "Sign out & clear this tab",
-              async () => {
-                for (const timer of pendingSaves) clearTimeout(timer);
-                pendingSaves.clear();
-                await signOut();
-                updateAccount(null);
-                ui.close();
-                ui.signOut();
-              },
-              { class: "button" },
-            ),
-          ),
-        );
+      signIn(() => {
+        const page = accountPage({
+          account,
+          list: () => api("list"),
+          open: load,
+          preparations: ui.preparations,
+          checkoutAvailable: CAPABILITIES.checkout,
+          signOut: async () => {
+            for (const timer of pendingSaves) clearTimeout(timer);
+            pendingSaves.clear();
+            // Finish any write already in flight before clearing its session.
+            await Promise.allSettled(
+              [...ui.records()]
+                .map((d) => groups.get(d)?.saving)
+                .filter(Boolean),
+            );
+            for (const timer of pendingSaves) clearTimeout(timer);
+            pendingSaves.clear();
+            await signOut();
+            updateAccount(null);
+            ui.close();
+            ui.signOut();
+          },
+        });
+        ui.accountPage(page);
       }).catch(error),
   };
 }

@@ -2,8 +2,8 @@ import {
   parseMRZ,
   mergeMRZ,
   scanSuggestions,
-} from "./mrz.mjs?v=20261017-workspace-v30";
-import { parsePrintedPassport } from "./passport-fields.mjs?v=20261017-workspace-v30";
+} from "./mrz.mjs?v=20261017-workspace-v31";
+import { parsePrintedPassport } from "./passport-fields.mjs?v=20261017-workspace-v31";
 // Sensitive image data and object URLs live only in memory. Nothing is uploaded here.
 export const MAX_SOURCE_BYTES = 20 * 1024 * 1024;
 export async function imageType(file) {
@@ -119,6 +119,34 @@ export async function passportCopy(file) {
     status: "valid",
     confirmed: true,
   };
+}
+// Keep the detailed local scan, but bound the cloud copy's decoded memory.
+// A small JPEG file can still expand to hundreds of MB on the server.
+export async function passportUploadCopy(blob) {
+  const source = await readImage(blob);
+  const scale = Math.min(
+    1,
+    2400 / Math.max(source.width, source.height),
+    Math.sqrt(4000000 / (source.width * source.height)),
+  );
+  if (scale === 1 && source.type === "jpeg" && blob.size <= 5 * 1024 * 1024)
+    return blob;
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.floor(source.width * scale);
+  canvas.height = Math.floor(source.height * scale);
+  const context = canvas.getContext("2d", { alpha: false });
+  context.fillStyle = "#fff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(source.image, 0, 0, canvas.width, canvas.height);
+  try {
+    let copy = await jpeg(canvas, 0.9);
+    if (copy.size > 5 * 1024 * 1024) copy = await jpeg(canvas, 0.75);
+    if (copy.size > 5 * 1024 * 1024)
+      throw new Error("Choose a smaller image to save this attachment.");
+    return copy;
+  } finally {
+    canvas.width = canvas.height = 0;
+  }
 }
 export function drawCrop(canvas, source, zoom = 1, x = 50, y = 50) {
   const side = Math.min(source.width, source.height) / zoom;

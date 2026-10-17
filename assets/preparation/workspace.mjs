@@ -1,4 +1,4 @@
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v30";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v31";
 import {
   FORM_VERSION,
   PACKAGES,
@@ -13,29 +13,29 @@ import {
   warnings,
   recommendPackage,
   hasSpouse,
-} from "./schema.mjs?v=20261017-workspace-v30";
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v30";
+} from "./schema.mjs?v=20261017-workspace-v31";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v31";
 import {
   readImage,
   drawCrop,
   photoCopy,
   passportCopy,
   scanPassport,
-} from "./media.mjs?v=20261017-workspace-v30";
+} from "./media.mjs?v=20261017-workspace-v31";
 import {
   CAPABILITIES,
   unavailable,
   capabilities,
-} from "./backend.mjs?v=20261017-workspace-v30";
-import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v30";
-import { accountControl } from "./account-control.mjs?v=20261017-workspace-v30";
-import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v30";
-import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v30";
-import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v30";
-import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v30";
-import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v30";
-import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v30";
-import { dateControl } from "./date-control.mjs?v=20261017-workspace-v30";
+} from "./backend.mjs?v=20261017-workspace-v31";
+import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v31";
+import { accountControl } from "./account-control.mjs?v=20261017-workspace-v31";
+import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v31";
+import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v31";
+import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v31";
+import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v31";
+import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v31";
+import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v31";
+import { dateControl } from "./date-control.mjs?v=20261017-workspace-v31";
 const app = document.querySelector("#workspace");
 let draft = initialDraft();
 const sessionDrafts = [draft];
@@ -46,6 +46,9 @@ const cloud = cloudWorkspace({
   dialog: openDialog,
   close: closeDialog,
   related: (d) => relatedDrafts.get(d),
+  records: () => sessionDrafts,
+  preparations: () => navigate("dashboard"),
+  accountPage: (content) => navigate("account", content),
   accountReady: (account) => profile.update(account),
   accountChanged: (account) => {
     profile.update(account);
@@ -55,6 +58,7 @@ const cloud = cloudWorkspace({
         : "Signed out. Sign in to save your progress.",
     );
     if (view === "dashboard") renderDashboard();
+    if (!account && view === "account") navigate("dashboard");
   },
   status: (text) => {
     cloudStatus = text;
@@ -833,13 +837,29 @@ function mediaControl(field) {
   return area;
 }
 function setAsset(id, value) {
-  if (draft.assets[id]) URL.revokeObjectURL(draft.assets[id].url);
-  draft.assets[id] = { ...value, url: URL.createObjectURL(value.blob) };
+  const old = draft.assets[id];
+  const previous = old?.id
+    ? { id: old.id, confirmed: !!old.confirmed }
+    : old?.previous;
+  if (old) URL.revokeObjectURL(old.url);
+  draft.assets[id] = {
+    ...value,
+    previous,
+    url: URL.createObjectURL(value.blob),
+  };
   changed();
 }
+let dialogScroll = null;
 function openDialog(title, content, cleanup) {
-  closeDialog();
-  dialogTrigger = document.activeElement;
+  const replacing = !!dialog;
+  closeDialog(true);
+  if (!replacing) {
+    dialogTrigger = document.activeElement;
+    dialogScroll = { x: window.scrollX, y: window.scrollY };
+    document.body.style.top = `-${dialogScroll.y}px`;
+    document.body.style.left = `-${dialogScroll.x}px`;
+    document.documentElement.classList.add("modal-open");
+  }
   dialogCleanup = cleanup;
   dialog = el(
     "dialog",
@@ -863,15 +883,28 @@ function openDialog(title, content, cleanup) {
   document.body.classList.add("dialog-open");
   dialog.showModal();
 }
-function closeDialog() {
+function closeDialog(replacing = false) {
+  replacing = replacing === true;
   if (!dialog) return;
   dialogCleanup?.();
   dialogCleanup = null;
   dialog.close();
   dialog.remove();
   dialog = null;
-  document.body.classList.remove("dialog-open");
-  dialogTrigger?.focus?.({ preventScroll: true });
+  if (!replacing) {
+    document.body.classList.remove("dialog-open");
+    document.documentElement.classList.remove("modal-open");
+    document.body.style.top = "";
+    document.body.style.left = "";
+    if (dialogScroll)
+      window.scrollTo({
+        left: dialogScroll.x,
+        top: dialogScroll.y,
+        behavior: "instant",
+      });
+    dialogScroll = null;
+    dialogTrigger?.focus?.({ preventScroll: true });
+  }
 }
 function openCrop(field, source) {
   const canvas = el("canvas", { "aria-label": "Square photo crop preview" });
@@ -2277,10 +2310,10 @@ function renderPreview() {
       );
     });
 }
-function navigate(next) {
+function navigate(next, accountContent) {
   clearPreview();
   if (dialog) closeDialog();
-  if (!["document", "review", "dashboard", "preview"].includes(next))
+  if (!["document", "review", "dashboard", "preview", "account"].includes(next))
     next = "document";
   view = next;
   if (location.hash !== `#${view}`) history.pushState(null, "", `#${view}`);
@@ -2288,8 +2321,32 @@ function navigate(next) {
   if (view === "document") renderDocument();
   else if (view === "review") renderReview();
   else if (view === "preview") renderPreview();
-  else renderDashboard();
-  bottom.hidden = view === "preview";
+  else if (view === "account") {
+    display.replaceChildren(
+      accountContent ||
+        el(
+          "div",
+          {},
+          el("h1", {}, "My account"),
+          el(
+            "p",
+            {},
+            "Sign in to see your saved preparations and account settings.",
+          ),
+          button("Open my account", cloud.dashboard, {
+            class: "button primary",
+          }),
+          button("Back to my preparations", () => navigate("dashboard"), {
+            class: "button",
+          }),
+        ),
+    );
+    if (!accountContent)
+      capabilities().then(() => {
+        if (view === "account") cloud.dashboard();
+      });
+  } else renderDashboard();
+  bottom.hidden = view === "preview" || view === "account";
   sidebar.closest("aside").hidden = view !== "document";
   updateProgress();
   if (view !== "document") {
@@ -2333,13 +2390,9 @@ header.querySelector("a").addEventListener("click", (event) => {
     ),
   );
 });
-const openAccountOnLoad = location.hash === "#account";
-navigate(
-  openAccountOnLoad ? "dashboard" : location.hash.slice(1) || "document",
-);
+navigate(location.hash.slice(1) || "document");
 activate(active, { scroll: false, focus: false });
 
 capabilities().then(() => {
   if (view === "dashboard") renderDashboard();
-  if (openAccountOnLoad) cloud.dashboard();
 });

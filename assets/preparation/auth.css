@@ -63,7 +63,50 @@
   white-space: nowrap;
 }
 .is-signed-in .account-label {
-  color: #217253;
+  display: none;
+}
+.is-signed-in .account-avatar {
+  width: 36px;
+  height: 36px;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px #2866b3;
+}
+.account-control:hover .account-avatar {
+  background: #dce9fc;
+}
+.account-control:focus-visible {
+  outline: 3px solid #2866b3;
+  outline-offset: 3px;
+  border-radius: 50%;
+}
+.account-page {
+  max-width: 760px;
+  margin-inline: auto;
+  padding-bottom: 32px;
+}
+.account-email,
+.account-details dd {
+  overflow-wrap: anywhere;
+}
+.account-navigation {
+  display: flex;
+  gap: 10px;
+  margin-block: 24px;
+}
+.account-navigation .button[aria-pressed="true"],
+.account-navigation .button[aria-pressed="true"]:hover {
+  background: #245ba3;
+  color: white;
+  border-color: #245ba3;
+}
+.account-details dt {
+  color: #53667b;
+  font-size: 0.85rem;
+  margin-top: 12px;
+}
+.account-details dd {
+  margin: 4px 0 0;
 }
 .account-person::before,
 .account-person::after {

@@ -279,16 +279,18 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
           .waitFor();
         assert.equal(tokenCalls, 2);
         await page
-          .getByRole("dialog")
+          .locator("#main")
           .getByText(`Signed in as ${verified.email}`, { exact: true })
           .waitFor();
-        await page.getByRole("button", { name: "Close dialog" }).click();
+        await page
+          .getByRole("button", { name: "Back to my preparations" })
+          .click();
         const profile = page.getByRole("button", {
           name: `Account: ${verified.email}`,
           exact: true,
         });
         await profile.waitFor();
-        assert.equal(await profile.innerText(), "SU\nSigned in");
+        assert.equal(await profile.innerText(), "SU");
         assert.equal(avatarRequests, provider === "google" ? 1 : 0);
         assert.equal(
           await page
@@ -378,6 +380,9 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
           "Returning and opening tabs requires no new OAuth",
         );
         await profile.click();
+        await page
+          .getByRole("button", { name: "Settings", exact: true })
+          .click();
         await page
           .getByRole("button", { name: "Sign out & clear this tab" })
           .click();

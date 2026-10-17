@@ -118,6 +118,42 @@ const printed =
         .getByRole("button", { name: "I reviewed and confirm these details" })
         .waitFor();
       assert.equal(await progress.count(), 0);
+      // The real mobile date/select controls and image must never widen the sheet.
+      for (const width of [320, 390, 430, 768]) {
+        await page.setViewportSize({ width, height: 844 });
+        const geometry = await page.getByRole("dialog").evaluate((dialog) => {
+          dialog.scrollLeft = 100;
+          const bounds = dialog.getBoundingClientRect();
+          return {
+            left: bounds.left,
+            right: bounds.right,
+            clientWidth: dialog.clientWidth,
+            scrollWidth: dialog.scrollWidth,
+            scrollLeft: dialog.scrollLeft,
+            locked: getComputedStyle(document.body).position,
+            overflowingInputs: [
+              ...dialog.querySelectorAll("input,select,img"),
+            ].filter(
+              (input) => input.getBoundingClientRect().right > bounds.right + 1,
+            ).length,
+          };
+        });
+        assert(
+          geometry.left >= 0 && geometry.right <= width + 1,
+          JSON.stringify(geometry),
+        );
+        assert(
+          geometry.scrollWidth <= geometry.clientWidth + 1,
+          JSON.stringify(geometry),
+        );
+        assert.equal(geometry.scrollLeft, 0);
+        assert.equal(geometry.overflowingInputs, 0);
+        assert.equal(geometry.locked, "fixed");
+      }
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.screenshot({
+        path: `/tmp/gcas-v31-scan-review-${engine}.png`,
+      });
       for (const [key, value] of Object.entries({
         firstName: "JANE ANNA",
         lastName: "EXAMPLE",
@@ -150,6 +186,16 @@ const printed =
       assert.equal(
         await page.locator('[id="passport.name"]').inputValue(),
         "JANE ANNA EXAMPLE",
+      );
+      assert.equal(
+        await page.evaluate(() =>
+          document.documentElement.classList.contains("modal-open"),
+        ),
+        false,
+      );
+      assert.notEqual(
+        await page.evaluate(() => getComputedStyle(document.body).position),
+        "fixed",
       );
 
       await upload();
@@ -191,10 +237,39 @@ const printed =
         await page.locator('[id="entrant.firstName"]').inputValue(),
         "JANE",
       );
+      // Keep 12 MP scan detail locally; the separately generated upload must fit
+      // the same bounded decoder used by the backend, in every browser engine.
+      const uploadCopy = await page.evaluate(async () => {
+        const { passportCopy, passportUploadCopy } =
+          await import("/assets/preparation/media.mjs?v=20261017-workspace-v31");
+        const canvas = document.createElement("canvas");
+        canvas.width = 3024;
+        canvas.height = 4032;
+        const context = canvas.getContext("2d");
+        context.fillStyle = "#e8e8e8";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        const source = await new Promise((resolve) =>
+          canvas.toBlob(resolve, "image/jpeg", 0.95),
+        );
+        const scan = await passportCopy(source);
+        const upload = await passportUploadCopy(scan.blob);
+        return {
+          scanWidth: scan.width,
+          scanHeight: scan.height,
+          bytes: Array.from(new Uint8Array(await upload.arrayBuffer())),
+        };
+      });
+      assert.equal(uploadCopy.scanWidth * uploadCopy.scanHeight, 3024 * 4032);
+      const decoded = require("jpeg-js").decode(Buffer.from(uploadCopy.bytes), {
+        useTArray: true,
+        maxMemoryUsageInMB: 128,
+      });
+      assert(decoded.width * decoded.height <= 4000000);
+      assert(Math.max(decoded.width, decoded.height) <= 2400);
       assert.deepEqual(errors, []);
       await context.close();
       console.log(
-        `PASS ${engine}: continuous thin green scan indicator across retries, later printed name correction, review before apply, cancellation, failure and reduced motion.`,
+        `PASS ${engine}: continuous thin green scan indicator across retries, later printed name correction, review before apply, stable mobile dialog bounds, 12 MP upload normalization, cancellation, failure and reduced motion.`,
       );
     } finally {
       await browser.close();

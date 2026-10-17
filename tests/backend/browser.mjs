@@ -15,6 +15,8 @@ const db = createClient(config.API_URL, config.SERVICE_ROLE_KEY, {
   }),
   email = `browser-${randomUUID()}@example.test`;
 let id;
+let rejectImages = false;
+const uploadedDimensions = [];
 const ok = (r) => {
   assert.equal(r.error, null, r.error?.message);
   return r.data;
@@ -27,6 +29,7 @@ const context = await browser.newContext({
 });
 const errors = [];
 let customer;
+let page;
 try {
   customer = ok(
     await db.auth.admin.createUser({
@@ -85,6 +88,22 @@ try {
         );
         return route.fulfill({ json: session });
       }
+      if (url.pathname.endsWith("/upload")) {
+        if (rejectImages)
+          return route.fulfill({
+            status: 400,
+            json: { error: "Synthetic image rejection" },
+          });
+        if (url.searchParams.get("field").startsWith("passport.")) {
+          const decoded = jpeg.decode(request.postDataBuffer(), {
+            useTArray: true,
+            maxMemoryUsageInMB: 128,
+          });
+          uploadedDimensions.push([decoded.width, decoded.height]);
+          assert(decoded.width * decoded.height <= 4000000);
+          assert(Math.max(decoded.width, decoded.height) <= 2400);
+        }
+      }
       const response = await route.fetch({
         url: config.API_URL + url.pathname + url.search,
         headers: { ...request.headers(), apikey: config.ANON_KEY },
@@ -92,7 +111,7 @@ try {
       await route.fulfill({ response });
     },
   );
-  const page = await context.newPage();
+  page = await context.newPage();
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto(`${base}/prepare.html#document`);
   await page.locator('[id="entrant.lastName"]').fill("SYNTHETIC");
@@ -209,6 +228,145 @@ try {
     authorizations,
     1,
     "Restored login reopens real saved data without another OAuth attempt",
+  );
+  // A 12 MP phone photo must survive the real edge decoder, and failed
+  // replacement uploads must not prevent saving answers or erase the old copy.
+  const largePassport = jpeg.encode(
+    { width: 3024, height: 4032, data: Buffer.alloc(3024 * 4032 * 4, 245) },
+    90,
+  ).data;
+  await page.locator('[id="passport.path"]').selectOption("passport");
+  const attachPassport = async () => {
+    await page.locator('[id="file-passport.bio"]').setInputFiles({
+      name: "synthetic-phone.jpg",
+      mimeType: "image/jpeg",
+      buffer: largePassport,
+    });
+    await page
+      .locator('[data-field="passport.bio"] .passport-preview')
+      .waitFor();
+    await page.waitForFunction(() =>
+      document
+        .querySelector('[data-field="passport.bio"] .media-status')
+        ?.textContent.includes("JPEG prepared"),
+    );
+  };
+  const saveNow = async () => {
+    await page.evaluate(() => document.activeElement.blur());
+    await page.getByRole("button", { name: "More preparation actions" }).tap();
+    await page
+      .getByRole("button", { name: "Save Progress", exact: true })
+      .tap();
+  };
+  rejectImages = true;
+  await attachPassport();
+  await saveNow();
+  await page
+    .getByRole("heading", { name: "Answers saved — images need attention" })
+    .waitFor();
+  let row = ok(
+    await db.from("gcas_preparations").select("*").eq("id", id).single(),
+  );
+  assert.equal(
+    row.payload.documents[0].answers["contact.email"],
+    "julia@example.test",
+  );
+  assert.equal(row.payload.documents[0].assets["passport.bio"], undefined);
+  assert.match(
+    await page.getByRole("dialog").innerText(),
+    /Keep this tab open/,
+  );
+  rejectImages = false;
+  await page.getByRole("button", { name: "Retry saving images" }).tap();
+  await page
+    .getByRole("heading", { name: "Progress saved", exact: true })
+    .waitFor();
+  row = ok(
+    await db.from("gcas_preparations").select("*").eq("id", id).single(),
+  );
+  const firstImage = row.payload.documents[0].assets["passport.bio"].id;
+  assert(firstImage);
+  assert(uploadedDimensions.length > 0);
+  await page.getByRole("button", { name: "Close dialog" }).tap();
+  rejectImages = true;
+  await attachPassport();
+  await page.locator('[id="entrant.firstName"]').fill("JULIET");
+  await saveNow();
+  await page
+    .getByRole("heading", { name: "Answers saved — images need attention" })
+    .waitFor();
+  row = ok(
+    await db.from("gcas_preparations").select("*").eq("id", id).single(),
+  );
+  assert.equal(row.payload.documents[0].answers["entrant.firstName"], "JULIET");
+  assert.equal(row.payload.documents[0].assets["passport.bio"].id, firstImage);
+  await page.screenshot({ path: "/tmp/gcas-v31-partial-save.png" });
+  rejectImages = false;
+  await page.getByRole("button", { name: "Retry saving images" }).tap();
+  await page
+    .getByRole("heading", { name: "Progress saved", exact: true })
+    .waitFor();
+  row = ok(
+    await db.from("gcas_preparations").select("*").eq("id", id).single(),
+  );
+  assert.notEqual(
+    row.payload.documents[0].assets["passport.bio"].id,
+    firstImage,
+  );
+  await page.getByRole("button", { name: "Close dialog" }).tap();
+  await page
+    .getByRole("button", { name: `Account: ${email}`, exact: true })
+    .tap();
+  await page
+    .getByRole("heading", { name: "My account", exact: true })
+    .waitFor();
+  await page
+    .getByRole("button", { name: "Open preparation", exact: true })
+    .waitFor();
+  assert.equal(
+    await page.locator(".account-control").innerText(),
+    email[0].toUpperCase(),
+  );
+  await page.getByRole("button", { name: "Settings", exact: true }).tap();
+  await page.getByRole("heading", { name: "Profile", exact: true }).waitFor();
+  assert.match(await page.locator(".account-content").innerText(), /Stripe/);
+  assert.equal(
+    await page.locator(".account-content input").count(),
+    0,
+    "No raw card collection",
+  );
+  await page.screenshot({ path: "/tmp/gcas-v31-account-settings.png" });
+  const { default: AxeBuilder } = await import("@axe-core/playwright");
+  for (const section of ["Settings", "Orders"]) {
+    await page.getByRole("button", { name: section, exact: true }).tap();
+    if (section === "Orders")
+      await page
+        .getByRole("button", { name: "Open preparation", exact: true })
+        .waitFor();
+    const scan = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .analyze();
+    assert.deepEqual(
+      scan.violations.map(({ id, nodes }) => ({
+        id,
+        targets: nodes.map(({ target }) => target),
+      })),
+      [],
+    );
+  }
+  await page.getByRole("button", { name: "Orders", exact: true }).tap();
+  await page
+    .getByRole("button", { name: "Open preparation", exact: true })
+    .tap();
+  assert.equal(
+    await page.locator('[id="entrant.firstName"]').inputValue(),
+    "JULIET",
+  );
+  await page.locator('[data-field="passport.bio"] .passport-preview').waitFor();
+  assert.equal(
+    authorizations,
+    1,
+    "Account navigation retains the same session",
   );
   // Complete a synthetic paid fixture through real local storage/API, then
   // verify that the preview receives a real PDF rather than the unpaid sample.
@@ -347,13 +505,23 @@ try {
   await page.screenshot({ path: "/tmp/gcas-backend-account-mobile.png" });
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: simulated OAuth with a real local Auth session, mobile country taps, free first save and autosave with checkout disabled, pay-later choice, reopening persisted countries/contact, private browser storage, completed paid PDF viewing/downloading and blob cleanup.",
+    "PASS: simulated OAuth with a real local Auth session, mobile country taps, free first save and autosave with checkout disabled, pay-later choice, reopening persisted countries/contact, 12 MP passport upload, partial answer save, preserved prior image, upload retry, account Orders/Settings, private browser storage, completed paid PDF viewing/downloading and blob cleanup.",
   );
+} catch (error) {
+  console.error("Browser failure:", error.message);
+  console.error(
+    "Visible status:",
+    await page
+      ?.locator(".workspace-dialog, .draft-status")
+      .allTextContents()
+      .catch(() => []),
+  );
+  throw error;
 } finally {
   await context.unrouteAll({ behavior: "ignoreErrors" });
   await browser.close();
   if (customer) {
-    ok(await db.from("gcas_preparations").delete().eq("id", id));
+    if (id) ok(await db.from("gcas_preparations").delete().eq("id", id));
     ok(await db.auth.admin.deleteUser(customer.id));
   }
 }

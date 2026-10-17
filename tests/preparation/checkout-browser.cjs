@@ -149,9 +149,9 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         route.fulfill({
           contentType: "text/html",
           body: `<!doctype html><html><body><main></main><section id="dialog"></section><p id="status"></p><script type="module">
-        import {cloudWorkspace} from '/assets/preparation/cloud.mjs?v=20261017-workspace-v30';
-        import {CAPABILITIES, PROVIDERS} from '/assets/preparation/backend.mjs?v=20261017-workspace-v30';
-        import {initialDraft} from '/assets/preparation/schema.mjs?v=20261017-workspace-v30';
+        import {cloudWorkspace} from '/assets/preparation/cloud.mjs?v=20261017-workspace-v31';
+        import {CAPABILITIES, PROVIDERS} from '/assets/preparation/backend.mjs?v=20261017-workspace-v31';
+        import {initialDraft} from '/assets/preparation/schema.mjs?v=20261017-workspace-v31';
         Object.assign(CAPABILITIES,{accounts:true,checkout:true,cloudSave:true,pdfDownload:true}); PROVIDERS.google=true;
         const d=initialDraft(); d.answers={'contact.email':'applicant@example.test','entrant.firstName':'SYNTHETIC'};
         let cleanup;
