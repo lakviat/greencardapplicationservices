@@ -32,7 +32,7 @@ async function action(page, name) {
     }[name];
     await page
       .getByRole("dialog")
-      .getByRole("button", { name: match || /· Package$/, exact: !!match })
+      .getByRole("button", { name: match || "Change package", exact: true })
       .click();
   } else {
     const selector = {

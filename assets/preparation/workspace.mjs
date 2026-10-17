@@ -1,4 +1,4 @@
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v22";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v23";
 import {
   FORM_VERSION,
   PACKAGES,
@@ -13,27 +13,27 @@ import {
   warnings,
   recommendPackage,
   hasSpouse,
-} from "./schema.mjs?v=20261017-workspace-v22";
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v22";
+} from "./schema.mjs?v=20261017-workspace-v23";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v23";
 import {
   readImage,
   drawCrop,
   photoCopy,
   passportCopy,
   scanPassport,
-} from "./media.mjs?v=20261017-workspace-v22";
+} from "./media.mjs?v=20261017-workspace-v23";
 import {
   CAPABILITIES,
   unavailable,
   capabilities,
-} from "./backend.mjs?v=20261017-workspace-v22";
-import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v22";
-import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v22";
-import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v22";
-import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v22";
-import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v22";
-import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v22";
-import { dateControl } from "./date-control.mjs?v=20261017-workspace-v22";
+} from "./backend.mjs?v=20261017-workspace-v23";
+import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v23";
+import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v23";
+import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v23";
+import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v23";
+import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v23";
+import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v23";
+import { dateControl } from "./date-control.mjs?v=20261017-workspace-v23";
 const app = document.querySelector("#workspace");
 let draft = initialDraft();
 const sessionDrafts = [draft];
@@ -538,6 +538,20 @@ function makeField(field) {
       });
     input.id = field.id;
     input.name = field.id;
+    // Explicit contact tokens keep mobile address autofill from guessing that
+    // the email input is another address line. Birth/eligibility stay manual.
+    const autofill = {
+      "address.line1": "section-mailing address-line1",
+      "address.line2": "section-mailing address-line2",
+      "address.city": "section-mailing address-level2",
+      "address.region": "section-mailing address-level1",
+      "address.postal": "section-mailing postal-code",
+      "address.country": "section-mailing country-name",
+      "contact.email": "section-contact email",
+      "contact.emailConfirm": "section-confirm email",
+      "contact.phone": "section-contact tel",
+    }[field.id];
+    if (autofill) input.setAttribute("autocomplete", autofill);
     input.dataset.control = "";
     input.setAttribute(
       "aria-describedby",
@@ -546,7 +560,7 @@ function makeField(field) {
     if (field.required) input.setAttribute("aria-required", "true");
     if (field.type === "country") {
       input.setAttribute("list", "countries");
-      input.setAttribute("autocomplete", "off");
+      if (!autofill) input.setAttribute("autocomplete", "off");
       input.setAttribute("placeholder", "Type to find a country");
     }
     if (field.type === "date")
@@ -558,16 +572,20 @@ function makeField(field) {
     input.addEventListener("focus", () =>
       activate(field.id, { scroll: false, focus: false }),
     );
-    input.addEventListener("input", () => {
-      draft.answers[field.id] =
-        field.type === "checkbox" ? input.checked : input.value;
-      changed();
-    });
+    const recordAnswer = () => {
+      const value = field.type === "checkbox" ? input.checked : input.value;
+      if (draft.answers[field.id] !== value) {
+        draft.answers[field.id] = value;
+        changed();
+      }
+    };
+    input.addEventListener("input", recordAnswer);
     input.addEventListener("blur", () => {
       touched.add(field.id);
       updateProgress();
     });
     input.addEventListener("change", () => {
+      recordAnswer();
       if (
         [
           "entrant.marital",
@@ -849,6 +867,16 @@ function openCrop(field, source) {
       Number(sliders.x.value),
       Number(sliders.y.value),
     );
+    sliders.x.disabled = source.width - side < 1;
+    sliders.y.disabled = source.height - side < 1;
+    positionHelp.textContent =
+      sliders.x.disabled && sliders.y.disabled
+        ? "Zoom in to move the photo left, right, up or down."
+        : sliders.x.disabled
+          ? "Zoom in to adjust the horizontal position. Vertical position is available now."
+          : sliders.y.disabled
+            ? "Zoom in to adjust the vertical position. Horizontal position is available now."
+            : "Adjust the sliders to center your head within the guide.";
     quality.textContent =
       side < 600
         ? "This crop has fewer than 600 source pixels. Choose a higher-resolution photo to avoid enlarging it."
@@ -868,11 +896,18 @@ function openCrop(field, source) {
       step,
       value,
       id: `crop-${key}`,
+      "aria-describedby": key === "zoom" ? null : "crop-position-help",
       oninput: redraw,
+      onchange: redraw,
     });
     sliders[key] = input;
     controls.append(el("label", { for: `crop-${key}` }, label, input));
   }
+  const positionHelp = el("p", {
+    id: "crop-position-help",
+    class: "crop-position-help",
+    "aria-live": "polite",
+  });
   const quality = el("p", { class: "notice" });
   const use = button(
     "Use this photo",
@@ -902,6 +937,16 @@ function openCrop(field, source) {
         el("span", { class: "face-outline", "aria-hidden": "true" }),
       ),
       controls,
+      positionHelp,
+      button(
+        "Reset framing",
+        () => {
+          sliders.zoom.value = 1;
+          sliders.x.value = sliders.y.value = 50;
+          redraw();
+        },
+        { class: "text-button crop-reset" },
+      ),
       quality,
       el(
         "p",
@@ -1467,36 +1512,120 @@ function setDocumentZoom(large) {
   );
 }
 function openActions() {
+  const paid = cloud.info(draft)?.state === "paid";
+  const p = preparationProgress(draft, relatedDrafts.get(draft), countryNames);
+  const action = (label, icon, run, className = "") =>
+    button(
+      [
+        actionIcon(icon),
+        el("span", {}, label),
+        el("span", { class: "action-chevron", "aria-hidden": "true" }, "›"),
+      ],
+      run,
+      { class: `preparation-action ${className}`, "aria-label": label },
+    );
   const body = el(
     "div",
-    { class: "actions-list" },
-    button("Save Progress", () => {
-      closeDialog();
-      openSave();
-    }),
-    button("Review Document", () => navigate("review")),
-    button("Missing Fields", () => {
-      closeDialog();
-      openMissing();
-    }),
-    button(
-      `${PACKAGES[draft.package].label} · ${price(draft.package)} · Package`,
+    { class: "actions-content" },
+    el(
+      "p",
+      { class: "actions-summary" },
+      el("span", { class: "actions-completion" }, `${p.percent}% complete`),
+      `${p.remaining.length} ${p.remaining.length === 1 ? "item" : "items"} remaining`,
+    ),
+    el(
+      "section",
+      { class: "actions-package", "aria-label": "Selected package" },
+      el(
+        "div",
+        { class: "actions-package-heading" },
+        el(
+          "div",
+          {},
+          el(
+            "span",
+            { class: "actions-package-caption" },
+            paid ? "Purchased package" : "Selected package",
+          ),
+          el("h3", {}, `${PACKAGES[draft.package].label} preparation`),
+        ),
+        el(
+          "div",
+          { class: "actions-package-price" },
+          price(draft.package),
+          el("small", {}, "USD · one time"),
+        ),
+      ),
+      !paid
+        ? button(
+            `Buy ${PACKAGES[draft.package].label} · ${price(draft.package)}`,
+            () => {
+              closeDialog();
+              openSave();
+            },
+            { class: "button primary actions-buy" },
+          )
+        : null,
+      button(
+        paid || cloud.info(draft)?.checkoutStarted
+          ? "Package details"
+          : "Change package",
+        () => {
+          closeDialog();
+          openPackages();
+        },
+        { class: "actions-package-change" },
+      ),
+    ),
+    el(
+      "div",
+      { class: "actions-list" },
+      action("Save Progress", "save", () => {
+        closeDialog();
+        openSave();
+      }),
+      action("Review Document", "document", () => navigate("review")),
+      action("Missing Fields", "list", () => {
+        closeDialog();
+        openMissing();
+      }),
+    ),
+    action(
+      "Exit Preparation",
+      "exit",
       () => {
         closeDialog();
-        openPackages();
+        header.querySelector("a").click();
       },
+      "actions-exit",
     ),
-    button("Requirements / Help", () => {
-      closeDialog();
-      openSources();
-    }),
-    button("Exit Preparation", () => {
-      closeDialog();
-      header.querySelector("a").click();
-    }),
   );
   openDialog("Preparation actions", body);
   dialog.classList.add("actions-sheet");
+}
+function actionIcon(name) {
+  const paths = {
+    save: "M5 3h12l4 4v14H3V3h2M7 3v6h10V3M7 21v-8h10v8",
+    document: "M14 2H5v20h14V7l-5-5v5h5M8 12h8M8 16h8",
+    list: "m3 6 1 1 2-2M10 6h11m-18 6 1 1 2-2M10 12h11m-18 6 1 1 2-2M10 18h11",
+    exit: "M9 4H4v16h5m5-13 5 5-5 5m-6-5h11",
+  };
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  for (const [key, value] of Object.entries({
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    "stroke-width": "1.6",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round",
+    "aria-hidden": "true",
+    focusable: "false",
+  }))
+    svg.setAttribute(key, value);
+  const path = document.createElementNS(svg.namespaceURI, "path");
+  path.setAttribute("d", paths[name]);
+  svg.append(path);
+  return el("span", { class: "action-icon" }, svg);
 }
 function openFieldHelp(field) {
   openDialog(

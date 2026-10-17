@@ -24,7 +24,7 @@ for (const file of pages) {
   assert.match(
     html,
     file === "prepare.html"
-      ? /20261017-workspace-v22/
+      ? /20261017-workspace-v23/
       : /20261016-workspace-v1/,
     file + " cache version",
   );

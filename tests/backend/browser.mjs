@@ -24,6 +24,7 @@ const browser = await chromium.launch();
 const context = await browser.newContext({
   ignoreHTTPSErrors: true,
   viewport: { width: 390, height: 844 },
+  hasTouch: true,
 });
 const errors = [];
 let customer;
@@ -78,17 +79,15 @@ try {
     },
   };
   ok(
-    await db
-      .from("gcas_preparations")
-      .insert({
-        id,
-        owner_id: customer.id,
-        package: "single",
-        version: FORM_VERSION.id,
-        year: 2027,
-        state: "paid",
-        payload: { documents: [d] },
-      }),
+    await db.from("gcas_preparations").insert({
+      id,
+      owner_id: customer.id,
+      package: "single",
+      version: FORM_VERSION.id,
+      year: 2027,
+      state: "paid",
+      payload: { documents: [d] },
+    }),
   );
   await page.getByLabel("Sign-in code", { exact: true }).fill(code);
   await page.getByRole("button", { name: "Verify & continue" }).click();
@@ -98,6 +97,16 @@ try {
   const first = page.locator('[data-field="entrant.firstName"] [data-control]');
   assert.equal(await first.inputValue(), "JANE");
   await first.fill("JULIA");
+  for (const [field, query, country] of [
+    ["entrant.birthCountry", "Kyr", "Kyrgyzstan"],
+    ["address.country", "United", "United States"],
+    ["contact.country", "United", "United States"],
+  ]) {
+    await page.locator(`[id="${field}"]`).fill(query);
+    await page.getByRole("option", { name: country, exact: true }).tap();
+    assert.equal(await page.locator(`[id="${field}"]`).inputValue(), country);
+  }
+  await page.locator('[id="contact.email"]').fill("julia@example.test");
   await page
     .getByText("Saved to your account", { exact: true })
     .waitFor({ timeout: 15000 });
@@ -109,12 +118,46 @@ try {
     "JULIA",
   );
   assert(saved.revision > 0);
+  for (const [field, expected] of Object.entries({
+    "entrant.birthCountry": "Kyrgyzstan",
+    "address.country": "United States",
+    "contact.country": "United States",
+    "contact.email": "julia@example.test",
+  }))
+    assert.equal(saved.payload.documents[0].answers[field], expected);
+  await page.getByRole("button", { name: "More preparation actions" }).tap();
+  assert.equal(await page.getByRole("button", { name: /^Buy / }).count(), 0);
+  assert(
+    await page.getByText("Purchased package", { exact: true }).isVisible(),
+  );
+  await page.getByRole("button", { name: "Close dialog" }).tap();
+  await page
+    .getByRole("button", { name: "My preparations", exact: true })
+    .tap();
+  await page
+    .getByRole("button", { name: "Sign in / open saved preparations" })
+    .tap();
+  await page
+    .getByRole("button", { name: "Open preparation", exact: true })
+    .tap();
+  assert.equal(
+    await page.locator('[id="entrant.birthCountry"]').inputValue(),
+    "Kyrgyzstan",
+  );
+  assert.equal(
+    await page.locator('[id="address.country"]').inputValue(),
+    "United States",
+  );
+  assert.equal(
+    await page.locator('[id="contact.email"]').inputValue(),
+    "julia@example.test",
+  );
   assert.equal(await page.evaluate(() => localStorage.length), 0);
   assert.equal(await page.evaluate(() => sessionStorage.length), 0);
   await page.screenshot({ path: "/tmp/gcas-backend-account-mobile.png" });
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: actual OTP delivery and verification, opening a paid fixture, automatic save, private browser storage on mobile.",
+    "PASS: actual OTP delivery and verification, mobile country taps, paid autosave, reopening persisted countries/contact, purchased menu, private browser storage.",
   );
 } finally {
   await browser.close();

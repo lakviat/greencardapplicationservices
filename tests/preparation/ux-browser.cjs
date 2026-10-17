@@ -86,7 +86,18 @@ const engines = { chromium, webkit, firefox };
     await more();
     assert.equal(
       await page.getByRole("dialog").locator(".actions-list button").count(),
-      6,
+      3,
+    );
+    assert.equal(
+      await page
+        .getByRole("button", { name: "Requirements / Help", exact: true })
+        .count(),
+      0,
+    );
+    assert(
+      await page
+        .getByRole("button", { name: "Buy Single · $9.99", exact: true })
+        .isVisible(),
     );
     assert.equal(await page.locator(".workspace-bottom").isVisible(), false);
     await page.screenshot({ path: path.join(output, `actions-${name}.png`) });

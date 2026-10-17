@@ -1,5 +1,5 @@
-import { el } from "./dom.mjs?v=20261017-workspace-v22";
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v22";
+import { el } from "./dom.mjs?v=20261017-workspace-v23";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v23";
 const normalize = (s) =>
   s
     .normalize("NFD")
@@ -46,12 +46,16 @@ export function enhanceCountry(input) {
     list.replaceChildren(
       ...matches.map((c, i) =>
         el(
-          "div",
+          "button",
           {
+            type: "button",
+            tabindex: "-1",
             role: "option",
             id: `${list.id}-${i}`,
             "aria-selected": "false",
-            onpointerdown: (e) => e.preventDefault(),
+            // Keep mouse focus on the combobox. Cancelling pointerdown also
+            // cancels Safari's touch-generated click, losing the selection.
+            onmousedown: (e) => e.preventDefault(),
             onclick: () => choose(i),
           },
           c.name,

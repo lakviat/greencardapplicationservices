@@ -792,6 +792,18 @@ progress::-webkit-progress-value {
   height: 30px;
   accent-color: var(--blue);
 }
+.crop-controls input:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.workspace-dialog .crop-position-help {
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin: -6px 0 0;
+}
+.crop-reset {
+  padding-left: 0;
+}
 .scan-field {
   display: grid;
   gap: 8px;
@@ -1123,9 +1135,15 @@ body:not([data-view="document"]) .workspace-layout {
   border-radius: 0 0 5px 5px;
 }
 .country-options [role="option"] {
+  display: block;
+  width: 100%;
   min-height: 44px;
   padding: 12px;
+  border: 0;
+  border-radius: 0;
+  text-align: left;
   font-size: 0.9rem;
+  font-weight: 400;
   cursor: pointer;
 }
 .country-options [aria-selected="true"],
@@ -1229,11 +1247,146 @@ body:not([data-view="document"]) .workspace-layout {
 }
 .actions-list {
   display: grid;
-  gap: 8px;
+  gap: 0;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
 }
-.actions-list button {
-  min-height: 48px;
+.actions-sheet {
+  max-width: 460px;
+  border: 0;
+  border-radius: 24px;
+  padding: 24px;
+}
+.actions-sheet .dialog-heading {
+  align-items: center;
+  margin-bottom: 8px;
+}
+.actions-sheet .dialog-heading h2 {
+  font:
+    700 1.15rem/1.35 Arial,
+    sans-serif;
+  letter-spacing: -0.02em;
+}
+.actions-sheet .dialog-close {
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  background: #eef2f6;
+}
+.actions-sheet .actions-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  margin: 0 0 20px;
+}
+.actions-completion {
+  color: #215345;
+  background: #eaf4ef;
+  border-radius: 20px;
+  padding: 3px 9px;
+  font-weight: 600;
+}
+.actions-package {
+  background: linear-gradient(125deg, #eef4fc, #f8fafc);
+  border: 1px solid #d5e2f3;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.actions-package-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.actions-package-caption {
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+.actions-package h3 {
+  font-size: 0.95rem;
+  margin: 5px 0 0;
+}
+.actions-package-price {
+  font-weight: 700;
+  font-size: 1.35rem;
+  letter-spacing: -0.03em;
+}
+.actions-package-price small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  margin-top: 3px;
+}
+.actions-sheet .actions-buy {
+  display: block;
+  width: 100%;
+  margin: 0;
+  border-radius: 10px;
+  min-height: 46px;
+  font-size: 0.85rem;
+  box-shadow: 0 3px 8px #2156a01a;
+}
+.actions-package-change {
+  display: block;
+  width: 100%;
+  color: var(--blue);
+  background: transparent;
+  border: 0;
+  font-size: 0.75rem;
+  margin: 4px 0 -8px;
+}
+.preparation-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 58px;
   text-align: left;
+  font-size: 0.83rem;
+  border: 0;
+  border-radius: 0;
+  padding: 10px 14px;
+}
+.actions-list .preparation-action + .preparation-action {
+  border-top: 1px solid #e9eef3;
+}
+.action-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  color: var(--blue);
+  background: #eef4fc;
+}
+.action-icon svg {
+  width: 19px;
+  height: 19px;
+}
+.action-chevron {
+  margin-left: auto;
+  color: #718194;
+  font-size: 1.3rem;
+  font-weight: 400;
+}
+.actions-exit {
+  margin-top: 12px;
+  border-radius: 12px;
+  color: var(--muted);
+}
+.actions-exit .action-icon {
+  background: #f1f4f7;
+  color: var(--muted);
 }
 .dialog-open .workspace-bottom {
   visibility: hidden;
@@ -1492,6 +1645,20 @@ body:not([data-view="document"]) .workspace-layout {
     font:
       700 1.15rem/1.35 Arial,
       sans-serif;
+  }
+  .workspace-dialog.actions-sheet {
+    max-width: none;
+    border-radius: 24px 24px 0 0;
+    padding-top: 12px;
+  }
+  .actions-sheet::before {
+    content: "";
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: 4px;
+    background: #d8e0e7;
+    margin: 0 auto 10px;
   }
   .scan-review {
     grid-template-columns: 1fr;
