@@ -284,8 +284,16 @@ const engines = { chromium, webkit, firefox };
       ),
       "200% text reflows on a small screen",
     );
+    await small.bringToFront();
     await small.locator('[id="entrant.firstName"]').focus();
-    await small.waitForTimeout(200);
+    // Background-page frame throttling varies across WebKit runners. Await the
+    // actual focus/scroll outcome rather than assuming it finishes in 200 ms.
+    await small.locator(".workspace-bottom").waitFor({ state: "hidden" });
+    await small.waitForFunction(
+      () =>
+        document.activeElement.id === "entrant.firstName" &&
+        document.activeElement.getBoundingClientRect().bottom <= innerHeight,
+    );
     const visible = await small.evaluate(() => ({
       field: document.activeElement.getBoundingClientRect().toJSON(),
       bar: document
