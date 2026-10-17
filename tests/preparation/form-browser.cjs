@@ -314,7 +314,7 @@ fs.mkdirSync(output, { recursive: true });
         [],
       );
       await page
-        .getByRole("button", { name: "Buy Single · $9.99", exact: true })
+        .getByRole("button", { name: "Pay now · $9.99", exact: true })
         .tap();
       assert(
         await page

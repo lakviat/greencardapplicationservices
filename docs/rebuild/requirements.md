@@ -1,3 +1,5 @@
+> 2026-10-17 owner amendment: Save Progress, private image storage, edits, and cross-device resumption are free after Google sign-in. Save succeeds before optional Pay now / Continue and pay later choices. Payment unlocks the completed PDF; earlier paid-saving requirements below are superseded.
+
 # MASTER IMPLEMENTATION REQUIREMENTS
 ## Green Card Application Services — Complete Business Model Rebuild v2.0
 

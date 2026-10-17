@@ -32,6 +32,7 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
           }),
         ).toString("base64url") +
         ".c2ln";
+      let revision = 0;
       let challenge,
         paid = false,
         saved = false,
@@ -73,7 +74,12 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
           });
         }
         if (url.pathname.endsWith("/user")) return json(user);
+        if (url.pathname.endsWith("/draft"))
+          return json({
+            preparation: { revision: 0, state: "unpaid", package: "single" },
+          });
         if (url.pathname.endsWith("/checkout")) {
+          assert(saved, "Save completes before checkout");
           const body = request.postDataJSON();
           assert.deepEqual(Object.keys(body).sort(), [
             "contactEmail",
@@ -89,7 +95,7 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         }
         if (url.pathname.endsWith("/get"))
           return json({
-            preparation: { state: paid ? "paid" : "unpaid", revision: 0 },
+            preparation: { state: paid ? "paid" : "unpaid", revision },
           });
         if (url.pathname.endsWith("/save")) {
           saveCalls++;
@@ -106,7 +112,7 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
               status: 500,
               json: { error: "Synthetic save failure. Please retry." },
             });
-          assert(paid, "No answers uploaded before verified payment");
+
           assert.equal(
             request.postDataJSON().payload.documents[0].answers[
               "contact.email"
@@ -115,7 +121,12 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
           );
           saved = true;
           return json({
-            preparation: { revision: 1, updated_at: new Date().toISOString() },
+            preparation: {
+              revision: ++revision,
+              state: paid ? "paid" : "unpaid",
+              package: "single",
+              updated_at: new Date().toISOString(),
+            },
           });
         }
         if (url.pathname.endsWith("/pdf")) {
@@ -138,9 +149,9 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         route.fulfill({
           contentType: "text/html",
           body: `<!doctype html><html><body><main></main><section id="dialog"></section><p id="status"></p><script type="module">
-        import {cloudWorkspace} from '/assets/preparation/cloud.mjs?v=20261017-workspace-v29';
-        import {CAPABILITIES, PROVIDERS} from '/assets/preparation/backend.mjs?v=20261017-workspace-v29';
-        import {initialDraft} from '/assets/preparation/schema.mjs?v=20261017-workspace-v29';
+        import {cloudWorkspace} from '/assets/preparation/cloud.mjs?v=20261017-workspace-v30';
+        import {CAPABILITIES, PROVIDERS} from '/assets/preparation/backend.mjs?v=20261017-workspace-v30';
+        import {initialDraft} from '/assets/preparation/schema.mjs?v=20261017-workspace-v30';
         Object.assign(CAPABILITIES,{accounts:true,checkout:true,cloudSave:true,pdfDownload:true}); PROVIDERS.google=true;
         const d=initialDraft(); d.answers={'contact.email':'applicant@example.test','entrant.firstName':'SYNTHETIC'};
         let cleanup;
@@ -166,10 +177,53 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         })
         .waitFor();
       assert.equal(pdfCalls, 0);
+      saveMode = "fail";
       await page
-        .getByRole("button", { name: "Save & receive PDF", exact: true })
+        .getByRole("button", { name: "Save progress", exact: true })
         .click();
       await page.getByRole("button", { name: "Continue with Google" }).click();
+      await page
+        .getByText("Synthetic save failure. Please retry.", { exact: true })
+        .waitFor();
+      assert.equal(
+        saved,
+        false,
+        "A failed first save is never reported as saved",
+      );
+      assert.equal(checkoutBodies.length, 0);
+      await page
+        .getByRole("button", { name: "Close checkout", exact: true })
+        .click();
+      saveMode = "success";
+      await page
+        .getByRole("button", { name: "Save progress", exact: true })
+        .click();
+      await page
+        .getByRole("heading", { name: "Progress saved", exact: true })
+        .waitFor();
+      assert.equal(
+        checkoutBodies.length,
+        0,
+        "Saving does not automatically start a payment",
+      );
+      assert.equal(saved, true);
+      assert(
+        await page
+          .getByRole("button", { name: "Pay now · $9.99", exact: true })
+          .isEnabled(),
+      );
+      await page
+        .getByRole("button", { name: "Continue and pay later", exact: true })
+        .click();
+      await page
+        .getByRole("button", { name: "Save progress", exact: true })
+        .click();
+      await page
+        .getByRole("heading", { name: "Progress saved", exact: true })
+        .waitFor();
+      await page
+        .getByRole("button", { name: "Pay now · $9.99", exact: true })
+        .click();
       // Popup policies after OAuth vary: the visible retry remains usable.
       await page
         .getByRole("button", { name: "Continue to Stripe · $9.99" })
@@ -181,12 +235,12 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
           .click();
       await page.getByText(/Complete payment in the Stripe tab/).waitFor();
       assert.equal(checkoutBodies.length, 1);
-      assert.equal(saved, false);
+      assert.equal(saved, true);
       await page
-        .getByRole("button", { name: "Check payment & save", exact: true })
+        .getByRole("button", { name: "Check payment", exact: true })
         .click();
       await page.getByText(/Payment has not been confirmed/).waitFor();
-      assert.equal(saved, false);
+      assert.equal(saved, true);
       assert.equal(pdfCalls, 0);
       await page
         .getByRole("button", { name: "Close checkout", exact: true })
@@ -204,7 +258,7 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
       );
       paid = true; // Test-only server fixture, never a browser success URL.
       await page
-        .getByRole("button", { name: "Check payment & save", exact: true })
+        .getByRole("button", { name: "Check payment", exact: true })
         .click();
       await page.getByText("PDF unlocked", { exact: true }).waitFor();
       assert(saved);
@@ -265,7 +319,7 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
       assert.deepEqual(errors, []);
       console.log(
         engine +
-          ": direct checkout, form-email prefill, cancellation recovery, no prepayment uploads/PDF and verified-payment delivery passed (synthetic provider).",
+          ": free save before optional checkout, pay later, form-email prefill, cancellation recovery, paid-only PDF and verified-payment delivery passed (synthetic provider).",
       );
     } finally {
       await browser.close();

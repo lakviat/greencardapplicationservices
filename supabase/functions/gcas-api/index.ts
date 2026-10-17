@@ -64,7 +64,7 @@ async function stripe(
   assert(
     res.ok,
     503,
-    "Payment service unavailable. Your work remains in this tab.",
+    "Payment service unavailable. Your saved preparation is still in your account.",
   );
   return data;
 }
@@ -270,7 +270,8 @@ async function handle(req: Request, url: URL) {
             "id,package,version,year,revision,state,updated_at,expires_at",
           )
           .eq("owner_id", user.id)
-          .eq("state", "paid")
+          .neq("state", "deleted")
+          .or("revision.gt.0,state.eq.paid")
           .gt("expires_at", new Date().toISOString())
           .order("updated_at", { ascending: false }),
       ),
@@ -280,7 +281,7 @@ async function handle(req: Request, url: URL) {
     const id = url.searchParams.get("id") || "",
       documentId = url.searchParams.get("document") || "",
       field = url.searchParams.get("field") || "";
-    await owned(id, user.id, true);
+    await owned(id, user.id);
     assert(
       uuid(documentId) &&
         /^(entrant|spouse|passport|child\.[0-9a-f-]{36})\.[a-zA-Z]+$/.test(
@@ -367,6 +368,34 @@ async function handle(req: Request, url: URL) {
     };
   }
   const body = await bodyJson(req);
+  if (route === "draft") {
+    await limited(`${user.id}:draft`, 30, 3600);
+    assert(uuid(body.id), 400, "Invalid preparation ID.");
+    plan(body.package);
+    const result = await admin.rpc("gcas_draft", {
+      p_id: body.id,
+      p_owner: user.id,
+      p_package: body.package,
+      p_version: FORM_VERSION.id,
+      p_year: FORM_VERSION.year,
+    });
+    if (result.error?.code === "42501")
+      throw new HttpError(404, "Preparation not found or expired.");
+    if (result.error?.code === "54000")
+      throw new HttpError(
+        409,
+        "Your account has 50 active preparations. Delete an unused draft before starting another.",
+      );
+    const p = check(result);
+    return {
+      preparation: {
+        id: p.id,
+        revision: p.revision,
+        state: p.state,
+        package: p.package,
+      },
+    };
+  }
   if (route === "checkout") {
     assert(
       checkoutReady(),
@@ -482,17 +511,14 @@ async function handle(req: Request, url: URL) {
     );
     return { url: session.url };
   }
-  const p = await owned(
-    body.id,
-    user.id,
-    ["save", "asset", "pdf", "email"].includes(route!),
-  );
+  const p = await owned(body.id, user.id, ["pdf", "email"].includes(route!));
   if (route === "get") return { preparation: p };
   if (route === "save") {
     const assets = check(
       await admin.from("gcas_assets").select("*").eq("preparation_id", p.id),
     );
-    const payload = sanitizePayload(body.payload, p.package, assets);
+    const selectedPackage = body.package ?? p.package;
+    const payload = sanitizePayload(body.payload, selectedPackage, assets);
     assert(
       Number.isInteger(body.revision) && body.revision >= 0,
       400,
@@ -503,7 +529,13 @@ async function handle(req: Request, url: URL) {
       p_owner: user.id,
       p_revision: body.revision,
       p_payload: payload,
+      p_package: selectedPackage,
     });
+    if (result.error?.code === "55000")
+      throw new HttpError(
+        409,
+        "This package is locked by a purchase or open checkout. Reopen the preparation to use its saved package.",
+      );
     if (result.error?.code === "40001")
       throw new HttpError(
         409,

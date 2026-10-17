@@ -1,4 +1,4 @@
-import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v29";
+import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v30";
 import {
   api,
   acceptAuth,
@@ -7,9 +7,9 @@ import {
   PROVIDERS,
   CAPABILITIES,
   unavailable,
-} from "./backend.mjs?v=20261017-workspace-v29";
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v29";
-import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v29";
+} from "./backend.mjs?v=20261017-workspace-v30";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v30";
+import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v30";
 const groups = new WeakMap();
 let account = null;
 const pendingSaves = new Set();
@@ -128,7 +128,7 @@ export function cloudWorkspace(ui) {
         el(
           "p",
           {},
-          "Your answers and images are uploaded only when you save after payment. Sign-in opens in a separate tab.",
+          "Save your answers and images privately for free, then pay now or when your worksheet is complete. Sign-in opens in a separate tab.",
         ),
         output,
       ),
@@ -141,7 +141,10 @@ export function cloudWorkspace(ui) {
 
   async function save(d) {
     const g = group(d);
-    if (g.state !== "paid") return checkout(d);
+    if (!CAPABILITIES.cloudSave)
+      throw new Error(
+        "Account saving is temporarily unavailable. Your changes remain in this tab.",
+      );
     if (g.saving) {
       await g.saving;
       return save(d);
@@ -149,17 +152,38 @@ export function cloudWorkspace(ui) {
     clearTimeout(g.timer);
     pendingSaves.delete(g.timer);
     const started = g.changeNumber || 0;
+    const selectedPackage = g.state === "paid" ? g.package : d.package;
+    const related = ui.related(d);
+    if (
+      selectedPackage !== "single" &&
+      related &&
+      !g.documents.includes(related)
+    ) {
+      related.id ||= crypto.randomUUID();
+      g.documents.push(related);
+      groups.set(related, g);
+    }
     ui.status("Saving…");
     g.saving = (async () => {
       // Snapshot answers before asynchronous uploads. Further edits trigger another save.
       const documents = g.documents.map((r) => ({
         ...r,
+        package: selectedPackage,
         answers: { ...r.answers },
         childIds: [...r.childIds],
         assets: Object.fromEntries(
           Object.entries(r.assets).map(([k, a]) => [k, { ...a }]),
         ),
       }));
+      if (!g.registered) {
+        const { preparation: p } = await api("draft", {
+          id: g.id,
+          package: selectedPackage,
+        });
+        g.registered = true;
+        g.revision = p.revision;
+        g.state = p.state;
+      }
       for (const r of documents) {
         for (const [field, a] of Object.entries(r.assets)) {
           if (!a.id) {
@@ -180,10 +204,14 @@ export function cloudWorkspace(ui) {
       const { preparation: p } = await api("save", {
         id: g.id,
         revision: g.revision,
+        package: selectedPackage,
         payload: { documents },
       });
       g.revision = p.revision;
       g.updated_at = p.updated_at;
+      g.state = p.state;
+      g.package = p.package;
+      g.expires_at = p.expires_at;
       if (started === (g.changeNumber || 0)) {
         ui.saved(g.documents);
         ui.status("Saved to your account");
@@ -198,40 +226,89 @@ export function cloudWorkspace(ui) {
     });
     return g.saving;
   }
-  async function saveProgress(d) {
-    let saved;
-    do {
-      saved = await save(d);
-    } while (saved === false);
-    if (saved) {
-      message(
-        "Progress saved",
-        `Your latest changes are saved to ${account.email}. Last saved ${new Date(group(d).updated_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`,
-      );
+  async function saveLatest(d) {
+    while ((await save(d)) === false) {
+      /* Wait for edits made during the save. */
     }
   }
-  async function checkout(d, { receivePdf = false, direct = false } = {}) {
+  async function saveProgress(d) {
+    await saveLatest(d);
     const g = group(d);
-    if (g.package !== d.package && g.state === "unpaid") {
-      g.package = d.package;
-      g.id = crypto.randomUUID();
-      g.documents =
-        d.package === "single" ? [d] : [d, ui.related(d)].filter(Boolean);
-      g.documents.forEach((r) => {
-        r.id ||= crypto.randomUUID();
-        groups.set(r, g);
-      });
-    }
+    const unpaid = g.state !== "paid";
+    ui.dialog(
+      "Progress saved",
+      el(
+        "div",
+        {},
+        el(
+          "p",
+          { role: "status" },
+          `Your latest changes are saved to ${account.email}. Last saved ${new Date(g.updated_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`,
+        ),
+        el(
+          "p",
+          {},
+          "You can close this tab and come back later. Sign in with the same Google account and open My Preparations to continue.",
+        ),
+        unpaid
+          ? el(
+              "p",
+              {},
+              "Saving is free. Pay now or when your worksheet is complete to unlock your preparation PDF.",
+            )
+          : null,
+        unpaid
+          ? button(
+              `Pay now · ${price(g.package)}`,
+              () => checkout(d).catch(error),
+              { class: "button primary", disabled: !CAPABILITIES.checkout },
+            )
+          : null,
+        unpaid && !CAPABILITIES.checkout
+          ? el(
+              "p",
+              {},
+              "Checkout is not available yet. Your progress is saved, and you can pay later.",
+            )
+          : null,
+        button(
+          unpaid ? "Continue and pay later" : "Continue editing",
+          ui.close,
+          {
+            class:
+              unpaid && CAPABILITIES.checkout ? "button" : "button primary",
+          },
+        ),
+        el(
+          "p",
+          { class: "hint" },
+          "Saved drafts are kept for 365 days after your last save. You can delete them in My Preparations.",
+        ),
+      ),
+    );
+  }
+  async function checkout(d, { receivePdf = false, direct = false } = {}) {
+    await saveLatest(d);
+    const g = group(d);
     if (g.state === "paid") {
-      await save(d);
       if (receivePdf) ui.pdfReady(d);
       return;
     }
     if (!CAPABILITIES.checkout) {
-      ui.status("Not saved — checkout is not available yet");
-      return message(
-        "Signed in — saving is not available yet",
-        `You are signed in as ${account.email}. Online saving requires a purchased preparation, and checkout is not available yet. Your changes have not been saved online. Keep this worksheet tab open to retain them.`,
+      return ui.dialog(
+        "Your progress is saved",
+        el(
+          "div",
+          {},
+          el(
+            "p",
+            {},
+            "Checkout is not available yet. Your preparation is saved in your account. You can keep editing and pay later to unlock the PDF.",
+          ),
+          button("Continue and pay later", ui.close, {
+            class: "button primary",
+          }),
+        ),
       );
     }
     const output = el("p", { role: "status" });
@@ -256,9 +333,14 @@ export function cloudWorkspace(ui) {
           if (result.paid) {
             popup.close();
             g.state = "paid";
-            await save(d);
+            await saveLatest(d);
             ui.close();
             if (receivePdf) ui.pdfReady(d);
+            else
+              message(
+                "Payment confirmed",
+                "Your PDF is unlocked. Finish and review your worksheet, then download it whenever you are ready.",
+              );
             return;
           }
           const url = new URL(result.url);
@@ -268,7 +350,7 @@ export function cloudWorkspace(ui) {
           popup.opener = null;
           popup.location.href = url.href;
           output.textContent =
-            "Complete payment in the Stripe tab, then return here. Keep this worksheet tab open. We will check payment automatically and save when it is confirmed.";
+            "Complete payment in the Stripe tab, then return here. Your progress is already saved. We will check payment automatically to unlock your PDF.";
           clearInterval(paymentWatch);
           paymentWatch = setInterval(() => {
             if (!check.disabled) check.click();
@@ -283,7 +365,7 @@ export function cloudWorkspace(ui) {
       { class: "button primary" },
     );
     const check = button(
-      "Check payment & save",
+      "Check payment",
       async () => {
         check.disabled = true;
         try {
@@ -295,18 +377,17 @@ export function cloudWorkspace(ui) {
           }
           if (g.state !== "paid") {
             g.state = "paid";
-            g.revision = p.revision;
           }
           clearInterval(paymentWatch);
-          await save(d);
+          await saveLatest(d);
           ui.close();
           if (receivePdf) {
             ui.pdfReady(d);
             return;
           }
           message(
-            "Saved to your account",
-            "Your preparation and uploaded images are saved. You can sign in from another device to resume.",
+            "Payment confirmed",
+            "Your PDF is unlocked. Your preparation is saved, and you can finish and download it whenever you are ready.",
           );
         } catch (e) {
           output.textContent = e.message;
@@ -317,9 +398,7 @@ export function cloudWorkspace(ui) {
       { class: "button" },
     );
     ui.dialog(
-      receivePdf
-        ? "Secure checkout for your PDF"
-        : "Save your DV preparation and continue anytime",
+      receivePdf ? "Secure checkout for your PDF" : "Pay now or continue later",
       el(
         "div",
         {},
@@ -331,12 +410,12 @@ export function cloudWorkspace(ui) {
         el(
           "p",
           {},
-          "Includes cloud saving, corrections, and PDF downloads for this preparation. Required relatives are included on every plan. Premium is unavailable.",
+          "Unlocks PDF downloads and redownloads for this preparation. Saving and editing are free. Required relatives are included on every plan. Premium is unavailable.",
         ),
         el(
           "p",
           { class: "notice" },
-          "After payment, saving uploads your answers, photos, and passport copies to private storage. Saved files expire after 365 days without a save. You can delete them earlier in My Preparations. Read the privacy notice for details.",
+          "Your saved answers, photos, and passport copies are in private account storage. Saved files expire after 365 days without a save. You can delete them earlier in My Preparations. Read the privacy notice for details.",
         ),
         link("Privacy notice", "/policies/#privacy", {
           target: "_blank",
@@ -345,7 +424,7 @@ export function cloudWorkspace(ui) {
         el(
           "p",
           {},
-          "Keep this worksheet tab open while paying. Unpaid work is not saved online.",
+          "Your progress is already saved. You can close checkout and return to My Preparations anytime to continue or pay later.",
         ),
         el(
           "p",
@@ -355,7 +434,7 @@ export function cloudWorkspace(ui) {
         output,
         confirm,
         check,
-        button("Return to worksheet", ui.close, { class: "button" }),
+        button("Continue and pay later", ui.close, { class: "button" }),
       ),
       () => clearInterval(paymentWatch),
     );
@@ -379,7 +458,7 @@ export function cloudWorkspace(ui) {
         a.url = URL.createObjectURL(a.blob);
       }
     }
-    const g = { ...p, documents: records };
+    const g = { ...p, registered: true, documents: records };
     delete g.payload;
     records.forEach((r) => groups.set(r, g));
     ui.load(records);
@@ -400,7 +479,7 @@ export function cloudWorkspace(ui) {
     if (!CAPABILITIES.pdfDownload) throw new Error(unavailable);
     clearTimeout(g.timer);
     pendingSaves.delete(g.timer);
-    await save(d);
+    await saveLatest(d);
     ui.status("Preparing PDF…");
     return api("pdf", { id: g.id });
   }
@@ -418,12 +497,19 @@ export function cloudWorkspace(ui) {
     },
     changed(d) {
       const g = groups.get(d);
-      if (g) g.changeNumber = (g.changeNumber || 0) + 1;
-      if (account && g?.state === "paid") {
+      if (g) {
+        g.changeNumber = (g.changeNumber || 0) + 1;
+        if (g.state === "unpaid" && !g.checkoutStarted)
+          g.documents.forEach((record) => {
+            record.package = d.package;
+          });
+      }
+      if (account && g?.updated_at && g.state !== "deleted") {
         scheduleSave(g, () => save(d).catch(error), 1800);
       }
     },
     save: (d) => signIn(() => saveProgress(d)).catch(error),
+    checkout: (d) => signIn(() => checkout(d, { direct: true })).catch(error),
     receivePdf: (d) =>
       signIn(() => checkout(d, { receivePdf: true, direct: true })).catch(
         error,
@@ -432,7 +518,7 @@ export function cloudWorkspace(ui) {
     download: (d) => signIn(() => download(d)).catch(error),
     email: (d) =>
       signIn(async () => {
-        await save(d);
+        await saveLatest(d);
         const g = group(d);
         if (g.state !== "paid") return;
         await api("email", { id: g.id });
@@ -444,9 +530,12 @@ export function cloudWorkspace(ui) {
     async remove(d) {
       const g = groups.get(d);
       if (!g) return;
-      const result = await api("delete", { id: g.id });
       clearTimeout(g.timer);
       pendingSaves.delete(g.timer);
+      if (g.saving) await g.saving.catch(() => {});
+      clearTimeout(g.timer);
+      pendingSaves.delete(g.timer);
+      const result = await api("delete", { id: g.id });
       g.state = "deleted";
       for (const r of g.documents) groups.delete(r);
       ui.remove(g.documents);
@@ -473,7 +562,7 @@ export function cloudWorkspace(ui) {
                     el(
                       "p",
                       {},
-                      `DV-${p.year} · ${PACKAGES[p.package].label} · Last saved ${new Date(p.updated_at).toLocaleDateString()}`,
+                      `DV-${p.year} · ${PACKAGES[p.package].label} · ${p.state === "paid" ? "Purchased" : "Saved draft · pay later"} · Last saved ${new Date(p.updated_at).toLocaleDateString()}`,
                     ),
                     button(
                       "Open preparation",
@@ -482,7 +571,7 @@ export function cloudWorkspace(ui) {
                     ),
                   ),
                 )
-              : el("p", {}, "No paid preparations have been saved yet."),
+              : el("p", {}, "No preparations have been saved yet."),
             el(
               "p",
               {},

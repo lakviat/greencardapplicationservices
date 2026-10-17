@@ -103,7 +103,7 @@ const engines = { chromium, webkit, firefox };
     );
     assert(
       await page
-        .getByRole("button", { name: "Buy Single · $9.99", exact: true })
+        .getByRole("button", { name: "Pay now · $9.99", exact: true })
         .isVisible(),
     );
     assert.equal(await page.locator(".workspace-bottom").isVisible(), false);

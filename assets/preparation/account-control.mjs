@@ -1,4 +1,4 @@
-import { el, button } from "./dom.mjs?v=20261017-workspace-v29";
+import { el, button } from "./dom.mjs?v=20261017-workspace-v30";
 
 // Only Google's profile-image CDN may receive an avatar request. Metadata is
 // untrusted; arbitrary remote URLs, credentials and application answers stay out.

@@ -5,11 +5,7 @@ import { randomUUID, createHash } from "node:crypto";
 import assert from "node:assert/strict";
 import jpeg from "jpeg-js";
 import { readFileSync } from "node:fs";
-import {
-  initialDraft,
-  fields,
-  FORM_VERSION,
-} from "../../assets/preparation/schema.mjs";
+import { fields } from "../../assets/preparation/schema.mjs";
 import { localConfig } from "./local-config.mjs";
 const config = localConfig();
 const base = process.env.PREP_BASE_URL || "https://127.0.0.1:8444";
@@ -17,8 +13,8 @@ assert.equal(new URL(base).hostname, "127.0.0.1");
 const db = createClient(config.API_URL, config.SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
   }),
-  email = `browser-${randomUUID()}@example.test`,
-  id = randomUUID();
+  email = `browser-${randomUUID()}@example.test`;
+let id;
 const ok = (r) => {
   assert.equal(r.error, null, r.error?.message);
   return r.data;
@@ -98,35 +94,41 @@ try {
   );
   const page = await context.newPage();
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto(`${base}/prepare.html#dashboard`);
-  await page
-    .getByRole("button", {
-      name: /^(Sign in \/ open|Open) saved preparations$/,
-    })
-    .click();
-  const d = {
-    ...initialDraft(),
-    id: randomUUID(),
-    answers: {
-      "entrant.lastName": "SYNTHETIC",
-      "entrant.firstName": "JANE",
-    },
-  };
-  ok(
-    await db.from("gcas_preparations").insert({
-      id,
-      owner_id: customer.id,
-      package: "single",
-      version: FORM_VERSION.id,
-      year: 2027,
-      state: "paid",
-      payload: { documents: [d] },
-    }),
-  );
+  await page.goto(`${base}/prepare.html#document`);
+  await page.locator('[id="entrant.lastName"]').fill("SYNTHETIC");
+  await page.locator('[id="entrant.firstName"]').fill("JANE");
+  await page.evaluate(() => document.activeElement.blur());
+  await page.getByRole("button", { name: "More preparation actions" }).tap();
+  await page.getByRole("button", { name: "Save Progress", exact: true }).tap();
   await page.getByRole("button", { name: "Continue with Google" }).click();
   await page
-    .getByRole("button", { name: "Open preparation", exact: true })
-    .click();
+    .getByRole("heading", { name: "Progress saved", exact: true })
+    .waitFor();
+  assert(
+    await page
+      .getByRole("button", { name: "Pay now · $9.99", exact: true })
+      .isDisabled(),
+  );
+  assert.match(await page.getByRole("dialog").innerText(), /come back later/);
+  const initialSave = ok(
+    await db
+      .from("gcas_preparations")
+      .select("*")
+      .eq("owner_id", customer.id)
+      .single(),
+  );
+  id = initialSave.id;
+  const d = initialSave.payload.documents[0];
+  assert.equal(initialSave.state, "unpaid");
+  assert.equal(d.answers["entrant.firstName"], "JANE");
+  assert.equal(
+    ok(await db.from("gcas_orders").select().eq("preparation_id", id)).length,
+    0,
+  );
+  await page.screenshot({ path: "/tmp/gcas-free-save-mobile.png" });
+  await page
+    .getByRole("button", { name: "Continue and pay later", exact: true })
+    .tap();
   const first = page.locator('[data-field="entrant.firstName"] [data-control]');
   assert.equal(await first.inputValue(), "JANE");
   await first.fill("JULIA");
@@ -166,9 +168,7 @@ try {
   await page.evaluate(() => document.activeElement.blur());
   await page.getByRole("button", { name: "More preparation actions" }).tap();
   assert.equal(await page.getByRole("button", { name: /^Buy / }).count(), 0);
-  assert(
-    await page.getByText("Purchased package", { exact: true }).isVisible(),
-  );
+  assert(await page.getByText("Selected package", { exact: true }).isVisible());
   await page.getByRole("button", { name: "Save Progress", exact: true }).tap();
   await page
     .getByRole("heading", { name: "Progress saved", exact: true })
@@ -261,7 +261,7 @@ try {
   ok(
     await db
       .from("gcas_preparations")
-      .update({ payload: { documents: [complete] } })
+      .update({ state: "paid", payload: { documents: [complete] } })
       .eq("id", id),
   );
   await page
@@ -347,7 +347,7 @@ try {
   await page.screenshot({ path: "/tmp/gcas-backend-account-mobile.png" });
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: simulated OAuth with a real local Auth session, mobile country taps, paid autosave, reopening persisted countries/contact, purchased menu, private browser storage, completed paid PDF viewing/downloading and blob cleanup.",
+    "PASS: simulated OAuth with a real local Auth session, mobile country taps, free first save and autosave with checkout disabled, pay-later choice, reopening persisted countries/contact, private browser storage, completed paid PDF viewing/downloading and blob cleanup.",
   );
 } finally {
   await context.unrouteAll({ behavior: "ignoreErrors" });

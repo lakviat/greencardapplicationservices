@@ -30,13 +30,13 @@ export const PACKAGES = Object.freeze({
     label: "Single",
     cents: 999,
     description:
-      "One principal worksheet, including every required spouse and child. Planned: secure saving, corrections, and PDF delivery.",
+      "One principal worksheet, including every required spouse and child. Free saving and editing; one-time payment for PDF downloads.",
   },
   couple: {
     label: "Couple",
     cents: 1999,
     description:
-      "Two independently eligible principal worksheets, with confirmed household-detail reuse. Planned bundled organization, saving, and PDFs.",
+      "Two independently eligible principal worksheets, with confirmed household-detail reuse. Free saving and editing; one-time payment for both PDFs.",
   },
   family: {
     label: "Family",
@@ -382,7 +382,7 @@ export function sections(d) {
         }),
         f("passport.bio", "Passport biographic page", "passportPhoto", {
           visible: hasPassport,
-          help: "JPEG only, up to 5 MB. Keep every edge and all printed information visible. Kept in this tab until you save; paid saving includes the image in private account storage.",
+          help: "JPEG only, up to 5 MB. Keep every edge and all printed information visible. Kept in this tab until you save; free saving includes the image in private account storage.",
         }),
         f(
           "passport.samePage",

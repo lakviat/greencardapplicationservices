@@ -126,6 +126,19 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
           }
           if (url.pathname.endsWith("/user")) return json(verified);
           if (url.pathname.endsWith("/list")) return json({ preparations: [] });
+          if (url.pathname.endsWith("/draft"))
+            return json({
+              preparation: { revision: 0, state: "unpaid", package: "single" },
+            });
+          if (url.pathname.endsWith("/save"))
+            return json({
+              preparation: {
+                revision: 1,
+                state: "unpaid",
+                package: "single",
+                updated_at: new Date().toISOString(),
+              },
+            });
           if (url.pathname.endsWith("/logout"))
             return provider === "apple"
               ? route.fulfill({
@@ -320,7 +333,7 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
             .click();
           await page
             .getByRole("heading", {
-              name: "Signed in — saving is not available yet",
+              name: "Progress saved",
               exact: true,
             })
             .waitFor();

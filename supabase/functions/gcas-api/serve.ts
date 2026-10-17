@@ -32,12 +32,12 @@ var PACKAGES = Object.freeze({
   single: {
     label: "Single",
     cents: 999,
-    description: "One principal worksheet, including every required spouse and child. Planned: secure saving, corrections, and PDF delivery."
+    description: "One principal worksheet, including every required spouse and child. Free saving and editing; one-time payment for PDF downloads."
   },
   couple: {
     label: "Couple",
     cents: 1999,
-    description: "Two independently eligible principal worksheets, with confirmed household-detail reuse. Planned bundled organization, saving, and PDFs."
+    description: "Two independently eligible principal worksheets, with confirmed household-detail reuse. Free saving and editing; one-time payment for both PDFs."
   },
   family: {
     label: "Family",
@@ -371,7 +371,7 @@ function sections(d) {
         }),
         f("passport.bio", "Passport biographic page", "passportPhoto", {
           visible: hasPassport,
-          help: "JPEG only, up to 5 MB. Keep every edge and all printed information visible. Kept in this tab until you save; paid saving includes the image in private account storage."
+          help: "JPEG only, up to 5 MB. Keep every edge and all printed information visible. Kept in this tab until you save; free saving includes the image in private account storage."
         }),
         f(
           "passport.samePage",
@@ -2087,7 +2087,7 @@ async function stripe(path, body, idempotency) {
   assert(
     res.ok,
     503,
-    "Payment service unavailable. Your work remains in this tab."
+    "Payment service unavailable. Your saved preparation is still in your account."
   );
   return data;
 }
@@ -2259,13 +2259,13 @@ async function handle(req, url) {
       preparations: check(
         await admin.from("gcas_preparations").select(
           "id,package,version,year,revision,state,updated_at,expires_at"
-        ).eq("owner_id", user.id).eq("state", "paid").gt("expires_at", (/* @__PURE__ */ new Date()).toISOString()).order("updated_at", { ascending: false })
+        ).eq("owner_id", user.id).neq("state", "deleted").or("revision.gt.0,state.eq.paid").gt("expires_at", (/* @__PURE__ */ new Date()).toISOString()).order("updated_at", { ascending: false })
       )
     };
   if (route === "upload") {
     await limited(`${user.id}:upload`, 20);
     const id = url.searchParams.get("id") || "", documentId = url.searchParams.get("document") || "", field = url.searchParams.get("field") || "";
-    await owned(id, user.id, true);
+    await owned(id, user.id);
     assert(
       uuid(documentId) && /^(entrant|spouse|passport|child\.[0-9a-f-]{36})\.[a-zA-Z]+$/.test(
         field
@@ -2344,6 +2344,34 @@ async function handle(req, url) {
     };
   }
   const body = await bodyJson(req);
+  if (route === "draft") {
+    await limited(`${user.id}:draft`, 30, 3600);
+    assert(uuid(body.id), 400, "Invalid preparation ID.");
+    plan(body.package);
+    const result = await admin.rpc("gcas_draft", {
+      p_id: body.id,
+      p_owner: user.id,
+      p_package: body.package,
+      p_version: FORM_VERSION.id,
+      p_year: FORM_VERSION.year
+    });
+    if (result.error?.code === "42501")
+      throw new HttpError(404, "Preparation not found or expired.");
+    if (result.error?.code === "54000")
+      throw new HttpError(
+        409,
+        "Your account has 50 active preparations. Delete an unused draft before starting another."
+      );
+    const p2 = check(result);
+    return {
+      preparation: {
+        id: p2.id,
+        revision: p2.revision,
+        state: p2.state,
+        package: p2.package
+      }
+    };
+  }
   if (route === "checkout") {
     assert(
       checkoutReady(),
@@ -2433,17 +2461,14 @@ async function handle(req, url) {
     );
     return { url: session.url };
   }
-  const p = await owned(
-    body.id,
-    user.id,
-    ["save", "asset", "pdf", "email"].includes(route)
-  );
+  const p = await owned(body.id, user.id, ["pdf", "email"].includes(route));
   if (route === "get") return { preparation: p };
   if (route === "save") {
     const assets = check(
       await admin.from("gcas_assets").select("*").eq("preparation_id", p.id)
     );
-    const payload = sanitizePayload(body.payload, p.package, assets);
+    const selectedPackage = body.package ?? p.package;
+    const payload = sanitizePayload(body.payload, selectedPackage, assets);
     assert(
       Number.isInteger(body.revision) && body.revision >= 0,
       400,
@@ -2453,8 +2478,14 @@ async function handle(req, url) {
       p_id: p.id,
       p_owner: user.id,
       p_revision: body.revision,
-      p_payload: payload
+      p_payload: payload,
+      p_package: selectedPackage
     });
+    if (result.error?.code === "55000")
+      throw new HttpError(
+        409,
+        "This package is locked by a purchase or open checkout. Reopen the preparation to use its saved package."
+      );
     if (result.error?.code === "40001")
       throw new HttpError(
         409,

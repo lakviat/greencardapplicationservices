@@ -1,4 +1,4 @@
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v29";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v30";
 import {
   FORM_VERSION,
   PACKAGES,
@@ -13,29 +13,29 @@ import {
   warnings,
   recommendPackage,
   hasSpouse,
-} from "./schema.mjs?v=20261017-workspace-v29";
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v29";
+} from "./schema.mjs?v=20261017-workspace-v30";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v30";
 import {
   readImage,
   drawCrop,
   photoCopy,
   passportCopy,
   scanPassport,
-} from "./media.mjs?v=20261017-workspace-v29";
+} from "./media.mjs?v=20261017-workspace-v30";
 import {
   CAPABILITIES,
   unavailable,
   capabilities,
-} from "./backend.mjs?v=20261017-workspace-v29";
-import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v29";
-import { accountControl } from "./account-control.mjs?v=20261017-workspace-v29";
-import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v29";
-import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v29";
-import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v29";
-import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v29";
-import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v29";
-import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v29";
-import { dateControl } from "./date-control.mjs?v=20261017-workspace-v29";
+} from "./backend.mjs?v=20261017-workspace-v30";
+import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v30";
+import { accountControl } from "./account-control.mjs?v=20261017-workspace-v30";
+import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v30";
+import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v30";
+import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v30";
+import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v30";
+import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v30";
+import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v30";
+import { dateControl } from "./date-control.mjs?v=20261017-workspace-v30";
 const app = document.querySelector("#workspace");
 let draft = initialDraft();
 const sessionDrafts = [draft];
@@ -1066,7 +1066,7 @@ function startPassportScan() {
       el(
         "p",
         { class: "notice" },
-        "Reading happens on this device. Only after you confirm will the image join this worksheet. Paid saving uploads the copy to your private account. You can replace or remove it. No advertising or external AI receives this scan.",
+        "Reading happens on this device. Only after you confirm will the image join this worksheet. Saving uploads the copy to your private account for free. You can replace or remove it. No advertising or external AI receives this scan.",
       ),
       el(
         "label",
@@ -1641,10 +1641,10 @@ function openActions() {
       ),
       !paid
         ? button(
-            `Buy ${PACKAGES[draft.package].label} · ${price(draft.package)}`,
+            `Pay now · ${price(draft.package)}`,
             () => {
               closeDialog();
-              openSave();
+              cloud.checkout(draft);
             },
             { class: "button primary actions-buy" },
           )
@@ -1791,7 +1791,7 @@ function openSources() {
       el(
         "p",
         {},
-        "Unsaved answers and images stay in this tab. After payment and your consent, Save Progress sends them to private account storage. Saved files expire after 365 days without a save. You can delete them earlier.",
+        "Unsaved answers and images stay in this tab. Save Progress sends them to private account storage for free after sign-in. Saved files expire after 365 days without a save. You can delete them earlier.",
       ),
       link("Privacy notice", "/policies/#privacy", {
         target: "_blank",
@@ -1850,7 +1850,9 @@ function openPackages() {
             !!p.disabled ||
             key === draft.package ||
             cloud.info(draft)?.state === "paid" ||
-            !!cloud.info(draft)?.checkoutStarted,
+            !!cloud.info(draft)?.checkoutStarted ||
+            (key === "single" &&
+              (cloud.info(draft)?.documents.length || 0) > 1),
         },
       ),
     ),
@@ -1983,7 +1985,7 @@ function renderReview() {
       el(
         "p",
         { class: "purchase-summary" },
-        "One-time package price. Sign in, pay securely with Stripe, then view and download your completed preparation PDF. Your worksheet email prefills checkout; saved work belongs to your signed-in account.",
+        "Saving and editing are free. Pay the one-time package price with Stripe when you are ready to view and download your completed preparation PDF. Your worksheet email prefills checkout; saved work belongs to your signed-in account.",
       ),
     ),
   );
@@ -2038,7 +2040,9 @@ function renderDashboard() {
         { class: "edition-badge" },
         cloud.info(record)?.state === "paid"
           ? "Purchased preparation"
-          : "Current session · unsaved",
+          : cloud.info(record)?.updated_at
+            ? "Saved draft · pay later"
+            : "Current session · unsaved",
       ),
       el(
         "h2",
@@ -2060,7 +2064,7 @@ function renderDashboard() {
         {},
         cloud.info(record)?.updated_at
           ? `Last cloud save: ${new Date(cloud.info(record).updated_at).toLocaleString()}`
-          : "Last cloud save: never · No saved purchase",
+          : "Not saved yet · Save Progress is free",
       ),
       el(
         "div",
@@ -2077,11 +2081,13 @@ function renderDashboard() {
         ),
         button("Download PDF", () => cloud.download(record), {
           class: "button",
-          disabled: !CAPABILITIES.pdfDownload,
+          disabled:
+            !CAPABILITIES.pdfDownload || cloud.info(record)?.state !== "paid",
         }),
         button("Email secure link", () => cloud.email(record), {
           class: "button",
-          disabled: !CAPABILITIES.emailDelivery,
+          disabled:
+            !CAPABILITIES.emailDelivery || cloud.info(record)?.state !== "paid",
         }),
         button(
           "Review package",
@@ -2095,7 +2101,7 @@ function renderDashboard() {
           "Delete this draft",
           () =>
             openDialog(
-              cloud.info(record)?.state === "paid"
+              cloud.info(record)?.registered
                 ? "Delete this saved preparation?"
                 : "Delete this unsaved draft?",
               el(
@@ -2104,15 +2110,15 @@ function renderDashboard() {
                 el(
                   "p",
                   {},
-                  cloud.info(record)?.state === "paid"
-                    ? "This permanently removes all worksheets and passport/photo copies in this purchased bundle. Financial references remain for payment records. This cannot be undone."
+                  cloud.info(record)?.registered
+                    ? "This permanently removes all worksheets and passport/photo copies in this saved preparation. Any financial references remain for payment records. This cannot be undone."
                     : "This removes this worksheet’s answers and images from this tab. There is no cloud copy to recover. Other worksheets remain.",
                 ),
                 button("Keep draft", closeDialog, { class: "button" }),
                 button(
                   "Delete draft",
                   async () => {
-                    if (cloud.info(record)?.state === "paid") {
+                    if (cloud.info(record)?.registered) {
                       try {
                         await cloud.remove(record);
                         closeDialog();
@@ -2161,7 +2167,7 @@ function renderDashboard() {
       el(
         "p",
         {},
-        "Each principal entrant has a separate worksheet. Your work remains available while this tab stays open.",
+        "Save your progress for free and return here anytime to continue. Pay when you are ready for your completed PDF.",
       ),
     ),
     el(
@@ -2180,7 +2186,7 @@ function renderDashboard() {
         CAPABILITIES.accounts
           ? cloud.account()
             ? `Signed in as ${cloud.account().email}`
-            : "Sign in to open purchased preparations."
+            : "Sign in to continue your saved preparations. Saving is free."
           : unavailable,
       ),
       button(
