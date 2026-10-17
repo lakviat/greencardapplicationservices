@@ -1,4 +1,4 @@
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v25";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v26";
 import {
   FORM_VERSION,
   PACKAGES,
@@ -13,29 +13,29 @@ import {
   warnings,
   recommendPackage,
   hasSpouse,
-} from "./schema.mjs?v=20261017-workspace-v25";
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v25";
+} from "./schema.mjs?v=20261017-workspace-v26";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v26";
 import {
   readImage,
   drawCrop,
   photoCopy,
   passportCopy,
   scanPassport,
-} from "./media.mjs?v=20261017-workspace-v25";
+} from "./media.mjs?v=20261017-workspace-v26";
 import {
   CAPABILITIES,
   unavailable,
   capabilities,
-} from "./backend.mjs?v=20261017-workspace-v25";
-import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v25";
-import { accountControl } from "./account-control.mjs?v=20261017-workspace-v25";
-import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v25";
-import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v25";
-import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v25";
-import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v25";
-import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v25";
-import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v25";
-import { dateControl } from "./date-control.mjs?v=20261017-workspace-v25";
+} from "./backend.mjs?v=20261017-workspace-v26";
+import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v26";
+import { accountControl } from "./account-control.mjs?v=20261017-workspace-v26";
+import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v26";
+import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v26";
+import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v26";
+import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v26";
+import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v26";
+import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v26";
+import { dateControl } from "./date-control.mjs?v=20261017-workspace-v26";
 const app = document.querySelector("#workspace");
 let draft = initialDraft();
 const sessionDrafts = [draft];
@@ -46,6 +46,7 @@ const cloud = cloudWorkspace({
   dialog: openDialog,
   close: closeDialog,
   related: (d) => relatedDrafts.get(d),
+  accountReady: (account) => profile.update(account),
   accountChanged: (account) => {
     profile.update(account);
     announce(

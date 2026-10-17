@@ -1,4 +1,4 @@
-import { el, button } from "./dom.mjs?v=20261017-workspace-v25";
+import { el, button } from "./dom.mjs?v=20261017-workspace-v26";
 
 // Only Google's profile-image CDN may receive an avatar request. Metadata is
 // untrusted; arbitrary remote URLs, credentials and application answers stay out.
@@ -64,5 +64,7 @@ export function accountControl(open) {
     }
   };
   update(null);
+  label.textContent = "Checking account…";
+  node.setAttribute("aria-label", "Checking account");
   return { node, update };
 }

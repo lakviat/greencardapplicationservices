@@ -52,7 +52,8 @@ try {
     }),
   ).session;
   const authCode = randomUUID();
-  let challenge;
+  let challenge,
+    authorizations = 0;
   await context.route(
     "https://wofazcvfvazfkvujwwcw.supabase.co/**",
     async (route) => {
@@ -63,7 +64,9 @@ try {
           json: { external: { google: true, apple: true } },
         });
       if (url.pathname.endsWith("/authorize")) {
+        authorizations++;
         assert.equal(url.searchParams.get("provider"), "google");
+        assert.equal(url.searchParams.get("prompt"), "select_account");
         assert.equal(url.searchParams.get("code_challenge_method"), "s256");
         challenge = url.searchParams.get("code_challenge");
         const redirect = new URL(url.searchParams.get("redirect_to"));
@@ -172,6 +175,10 @@ try {
     /Your latest changes are saved to/,
   );
   await page.getByRole("button", { name: "Close dialog" }).tap();
+  await page.reload();
+  await page
+    .getByRole("button", { name: `Account: ${email}`, exact: true })
+    .waitFor();
   await page
     .getByRole("button", { name: "My preparations", exact: true })
     .tap();
@@ -194,6 +201,11 @@ try {
   assert.equal(
     await page.locator('[id="contact.email"]').inputValue(),
     "julia@example.test",
+  );
+  assert.equal(
+    authorizations,
+    1,
+    "Restored login reopens real saved data without another OAuth attempt",
   );
   // Complete a synthetic paid fixture through real local storage/API, then
   // verify that the preview receives a real PDF rather than the unpaid sample.
@@ -318,7 +330,16 @@ try {
     true,
     "Leaving preview revokes the private PDF URL",
   );
-  assert.equal(await page.evaluate(() => localStorage.length), 0);
+  assert.deepEqual(
+    await page.evaluate(() => Object.keys(localStorage).sort()),
+    ["gcas.auth.activity.v1", "gcas.auth.v1"],
+  );
+  assert.equal(
+    await page.evaluate(() =>
+      JSON.stringify(localStorage).includes("contact.email"),
+    ),
+    false,
+  );
   assert.equal(await page.evaluate(() => sessionStorage.length), 0);
   await page.screenshot({ path: "/tmp/gcas-backend-account-mobile.png" });
   assert.deepEqual(errors, []);

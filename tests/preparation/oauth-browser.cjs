@@ -44,7 +44,7 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
               exp: Math.floor(Date.now() / 1000) + 3600,
             }),
           ).toString("base64url"),
-          "synthetic",
+          "c2ln",
         ].join(".");
         let avatarRequests = 0;
         await context.route("https://lh3.googleusercontent.com/**", (route) => {
@@ -71,6 +71,8 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
           if (url.pathname.endsWith("/authorize")) {
             authorizeCalls++;
             assert.equal(url.searchParams.get("provider"), provider);
+            if (provider === "google")
+              assert.equal(url.searchParams.get("prompt"), "select_account");
             assert.equal(url.searchParams.get("code_challenge_method"), "s256");
             const redirect = new URL(url.searchParams.get("redirect_to"));
             assert.equal(redirect.origin, base);
@@ -116,6 +118,7 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
             return json({
               access_token: token,
               refresh_token: "synthetic-refresh",
+              provider_token: "synthetic-google-provider-token",
               expires_in: 3600,
               token_type: "bearer",
               user: verified,
@@ -123,7 +126,13 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
           }
           if (url.pathname.endsWith("/user")) return json(verified);
           if (url.pathname.endsWith("/list")) return json({ preparations: [] });
-          if (url.pathname.endsWith("/logout")) return json({});
+          if (url.pathname.endsWith("/logout"))
+            return provider === "apple"
+              ? route.fulfill({
+                  status: 503,
+                  json: { message: "Synthetic offline logout" },
+                })
+              : json({});
           throw new Error(`Unexpected auth request: ${url.pathname}`);
         });
         const page = await context.newPage();
@@ -244,6 +253,11 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         await page.getByRole("button", { name: "Close dialog" }).click();
         releaseToken();
         await open();
+        assert.equal(
+          await page.evaluate(() => localStorage.length),
+          0,
+          "Canceled sign-in cannot persist credentials",
+        );
         // Retry with a new verifier and receive through BroadcastChannel, no opener.
         mode = "success";
         await begin();
@@ -278,12 +292,20 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         await page
           .getByRole("heading", { name: "UNSAVED", exact: true })
           .waitFor();
-        assert.equal(
-          await page.evaluate(
-            () => localStorage.length + sessionStorage.length,
-          ),
-          0,
+        const stored = await page.evaluate(() => ({ ...localStorage }));
+        assert.deepEqual(Object.keys(stored).sort(), [
+          "gcas.auth.activity.v1",
+          "gcas.auth.v1",
+        ]);
+        assert(
+          !JSON.stringify(stored).includes("UNSAVED"),
+          "Worksheet is not stored with login",
         );
+        assert(
+          !JSON.stringify(stored).includes("synthetic-google-provider-token"),
+          "Google provider tokens are not persisted",
+        );
+        assert.equal(await page.evaluate(() => sessionStorage.length), 0);
         assert.deepEqual(errors, []);
         if (provider === "google") {
           // A successful login must remain visible when saving still needs consent.
@@ -337,24 +359,56 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
             4,
             "Saving again does not repeat Google sign-in",
           );
-          await profile.click();
-          await page
-            .getByRole("button", { name: "Sign out & clear this tab" })
-            .click();
-          await page
-            .getByRole("button", {
-              name: "Sign in to your account",
-              exact: true,
-            })
-            .waitFor();
-          await page
-            .getByRole("button", { name: "My preparations", exact: true })
-            .click();
-          await open();
-          await page.screenshot({
-            path: `/tmp/gcas-social-sign-in-${engine}.png`,
-          });
         }
+        // Leaving/discarding a worksheet must not discard the account session.
+        page.on("dialog", (dialog) => dialog.accept());
+        await page.goto(`${base}/`);
+        await page.goto(`${base}/prepare.html`);
+        await profile.waitFor();
+        await page.reload();
+        await profile.waitFor();
+        await page.screenshot({
+          path: `/tmp/gcas-session-restored-${provider}-${engine}.png`,
+        });
+        const secondTab = await context.newPage();
+        await secondTab.goto(`${base}/prepare.html`);
+        await secondTab
+          .getByRole("button", {
+            name: `Account: ${verified.email}`,
+            exact: true,
+          })
+          .waitFor();
+        assert.equal(
+          authorizeCalls,
+          4,
+          "Returning and opening tabs requires no new OAuth",
+        );
+        await profile.click();
+        await page
+          .getByRole("button", { name: "Sign out & clear this tab" })
+          .click();
+        await page
+          .getByRole("button", {
+            name: "Sign in to your account",
+            exact: true,
+          })
+          .waitFor();
+        await secondTab
+          .getByRole("button", { name: "Sign in to your account", exact: true })
+          .waitFor();
+        assert.equal(
+          await page.evaluate(() => localStorage.length),
+          0,
+          "Logout clears credentials and activity",
+        );
+        await secondTab.close();
+        await page
+          .getByRole("button", { name: "My preparations", exact: true })
+          .click();
+        await open();
+        await page.screenshot({
+          path: `/tmp/gcas-social-sign-in-${engine}.png`,
+        });
         enabled = false;
         await page.reload();
         const unavailable = page.getByRole("button", {

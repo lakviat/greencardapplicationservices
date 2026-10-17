@@ -1,17 +1,17 @@
-import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v25";
+import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v26";
 import {
   api,
   auth,
   acceptAuth,
+  signOut,
   PROVIDERS,
   CAPABILITIES,
   unavailable,
-} from "./backend.mjs?v=20261017-workspace-v25";
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v25";
-import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v25";
+} from "./backend.mjs?v=20261017-workspace-v26";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v26";
+import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v26";
 const groups = new WeakMap();
 let account = null;
-let authSubscription;
 const pendingSaves = new Set();
 function scheduleSave(g, action, delay) {
   clearTimeout(g.timer);
@@ -23,6 +23,25 @@ function scheduleSave(g, action, delay) {
   pendingSaves.add(g.timer);
 }
 export function cloudWorkspace(ui) {
+  const updateAccount = (session) => {
+    const next = session?.user || null;
+    const changed = JSON.stringify(account) !== JSON.stringify(next);
+    account = next;
+    if (!account) {
+      for (const timer of pendingSaves) clearTimeout(timer);
+      pendingSaves.clear();
+    }
+    if (changed) ui.accountChanged?.(account);
+  };
+  const ready = auth().then(async (client) => {
+    client.onAuthStateChange((_event, session) => updateAccount(session));
+    const { data } = await client.getSession();
+    updateAccount(data.session);
+    ui.accountReady?.(account);
+    return client;
+  });
+  // Preserve the free worksheet even when browser account storage is blocked.
+  ready.catch(() => ui.accountReady?.(null));
   const message = (title, text) =>
     ui.dialog(title, el("p", { role: "status" }, text));
   const error = (e) => {
@@ -85,6 +104,8 @@ export function cloudWorkspace(ui) {
     return g;
   };
   async function signIn(next) {
+    const client = await ready;
+    updateAccount((await client.getSession()).data.session);
     if (account) return next();
     if (!CAPABILITIES.accounts) {
       message("Account setup in progress", unavailable);
@@ -93,6 +114,7 @@ export function cloudWorkspace(ui) {
     const output = el("p", { role: "status", "aria-live": "polite" });
     let attempt;
     let closed = false;
+    let adopting = false;
     const choices = Object.entries({ google: "Google", apple: "Apple" })
       .filter(([provider]) => PROVIDERS[provider])
       .map(([provider, label]) =>
@@ -106,23 +128,16 @@ export function cloudWorkspace(ui) {
             try {
               // beginSignIn opens the tab immediately, before any asynchronous work.
               attempt = beginSignIn(provider);
-              const { candidate, user: verified } = await attempt.result;
+              const { candidate } = await attempt.result;
               if (closed) return;
-              acceptAuth(candidate);
-              account = verified;
+              adopting = true;
               ui.close();
-              ui.accountChanged?.(account);
-              authSubscription?.unsubscribe();
-              authSubscription = candidate.onAuthStateChange((event) => {
-                if (event === "SIGNED_OUT") {
-                  account = null;
-                  ui.accountChanged?.(null);
-                }
-              }).data.subscription;
+              await acceptAuth(candidate);
               await next();
             } catch (e) {
               if (account) error(e);
               else if (!closed) output.textContent = e.message;
+              else if (adopting) message("Sign-in could not finish", e.message);
             } finally {
               choices.forEach((choice) => {
                 choice.disabled = false;
@@ -439,7 +454,7 @@ export function cloudWorkspace(ui) {
     changed(d) {
       const g = groups.get(d);
       if (g) g.changeNumber = (g.changeNumber || 0) + 1;
-      if (g?.state === "paid") {
+      if (account && g?.state === "paid") {
         scheduleSave(g, () => save(d).catch(error), 1800);
       }
     },
@@ -513,7 +528,7 @@ export function cloudWorkspace(ui) {
               async () => {
                 for (const timer of pendingSaves) clearTimeout(timer);
                 pendingSaves.clear();
-                await (await auth()).signOut();
+                await signOut();
                 account = null;
                 ui.close();
                 ui.signOut();

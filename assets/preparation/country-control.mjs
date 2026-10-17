@@ -1,5 +1,5 @@
-import { el } from "./dom.mjs?v=20261017-workspace-v25";
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v25";
+import { el } from "./dom.mjs?v=20261017-workspace-v26";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v26";
 const normalize = (s) =>
   s
     .normalize("NFD")

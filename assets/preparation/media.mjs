@@ -1,4 +1,4 @@
-import { parseMRZ, scanSuggestions } from "./mrz.mjs?v=20261017-workspace-v25";
+import { parseMRZ, scanSuggestions } from "./mrz.mjs?v=20261017-workspace-v26";
 // Sensitive image data and object URLs live only in memory. Nothing is uploaded here.
 export const MAX_SOURCE_BYTES = 20 * 1024 * 1024;
 export async function imageType(file) {

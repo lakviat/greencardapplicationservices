@@ -1,4 +1,12 @@
 // Public project configuration only. Secret keys belong in server secret stores.
+import {
+  SESSION_KEY,
+  accountStorage,
+  beginSession,
+  clearStoredSession,
+  pruneExpiredSession,
+  watchSessionActivity,
+} from "./auth-session.mjs?v=20261017-workspace-v26";
 export const SUPABASE_URL = "https://wofazcvfvazfkvujwwcw.supabase.co";
 const PUBLIC_KEY = "sb_publishable_qPtFiEot3EAVlP3HftCm1g_4odarxBw";
 export const CAPABILITIES = {
@@ -13,6 +21,7 @@ export const unavailable =
   "Account saving and checkout are awaiting activation. No payment is collected until checkout is available. Keep this tab open to retain unsaved work.";
 export const PROVIDERS = { google: false, apple: false };
 let activeAuth;
+let activity;
 export async function createAuth() {
   const { createClient } = await import("../vendor/supabase.mjs");
   return createClient(SUPABASE_URL, PUBLIC_KEY, {
@@ -25,15 +34,59 @@ export async function createAuth() {
   }).auth;
 }
 export async function auth() {
-  activeAuth ||= await createAuth();
+  activeAuth ||= (async () => {
+    pruneExpiredSession();
+    const { createClient } = await import("../vendor/supabase.mjs");
+    const client = createClient(SUPABASE_URL, PUBLIC_KEY, {
+      auth: {
+        flowType: "pkce",
+        storageKey: SESSION_KEY,
+        storage: accountStorage,
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false,
+      },
+    }).auth;
+    activity = watchSessionActivity(() => {
+      // SDK listeners are synchronous: schedule SDK calls outside their lock.
+      setTimeout(() => client.signOut({ scope: "local" }).catch(() => {}), 0);
+    });
+    client.onAuthStateChange((event, session) =>
+      activity.update(session, event),
+    );
+    return client;
+  })();
   return activeAuth;
 }
 // Adopt only after a completed, verified OAuth attempt. Canceled attempts keep
 // their verifier/session in their own short-lived client and cannot log us in.
-export function acceptAuth(candidate) {
-  activeAuth?.stopAutoRefresh();
-  activeAuth = candidate;
-  activeAuth.startAutoRefresh();
+export async function acceptAuth(candidate) {
+  const client = await auth();
+  const { data } = await candidate.getSession();
+  if (!data.session) throw new Error("Please try signing in again.");
+  beginSession();
+  try {
+    const { error } = await client.setSession({
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+    });
+    if (error) throw error;
+  } catch (error) {
+    clearStoredSession();
+    throw error;
+  } finally {
+    candidate.stopAutoRefresh();
+  }
+}
+export async function signOut() {
+  const client = await auth();
+  try {
+    await client.signOut({ scope: "local" });
+  } finally {
+    // Local logout still works if the revocation request fails offline.
+    clearStoredSession();
+    await client.signOut({ scope: "local" });
+  }
 }
 export async function capabilities() {
   try {
@@ -66,7 +119,10 @@ export async function user() {
   return (await (await auth()).getUser()).data.user;
 }
 export async function api(route, body = {}, query = "") {
-  const { data } = await (await auth()).getSession();
+  const client = await auth();
+  if (!activity.check())
+    throw new Error("Your session ended. Sign in to continue.");
+  const { data } = await client.getSession();
   if (!data.session) throw new Error("Sign in to continue.");
   const isImage = body instanceof Blob;
   const res = await fetch(

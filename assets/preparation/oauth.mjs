@@ -1,10 +1,11 @@
 import {
   createAuth,
   SUPABASE_URL,
-} from "./backend.mjs?v=20261017-workspace-v25";
+} from "./backend.mjs?v=20261017-workspace-v26";
 
 // The worksheet never navigates away. Only a single-use authorization code
-// crosses tabs; the PKCE verifier and session stay in memory in this tab.
+// crosses tabs; each attempt keeps its PKCE verifier and candidate in memory.
+// Only a completed, verified attempt is adopted into the persistent account.
 export function beginSignIn(provider) {
   if (!["google", "apple"].includes(provider))
     throw new Error("Choose Google or Apple to continue.");
@@ -114,7 +115,12 @@ export function beginSignIn(provider) {
       redirectTo.searchParams.set("attempt", attempt);
       const { data, error } = await candidate.signInWithOAuth({
         provider,
-        options: { redirectTo: redirectTo.href, skipBrowserRedirect: true },
+        options: {
+          redirectTo: redirectTo.href,
+          skipBrowserRedirect: true,
+          queryParams:
+            provider === "google" ? { prompt: "select_account" } : {},
+        },
       });
       if (settled) return;
       if (error || !data.url) throw new Error();

@@ -31,7 +31,7 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
             exp: Math.floor(Date.now() / 1000) + 3600,
           }),
         ).toString("base64url") +
-        ".synthetic";
+        ".c2ln";
       let challenge,
         paid = false,
         saved = false,
@@ -138,9 +138,9 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         route.fulfill({
           contentType: "text/html",
           body: `<!doctype html><html><body><main></main><section id="dialog"></section><p id="status"></p><script type="module">
-        import {cloudWorkspace} from '/assets/preparation/cloud.mjs?v=20261017-workspace-v25';
-        import {CAPABILITIES, PROVIDERS} from '/assets/preparation/backend.mjs?v=20261017-workspace-v25';
-        import {initialDraft} from '/assets/preparation/schema.mjs?v=20261017-workspace-v25';
+        import {cloudWorkspace} from '/assets/preparation/cloud.mjs?v=20261017-workspace-v26';
+        import {CAPABILITIES, PROVIDERS} from '/assets/preparation/backend.mjs?v=20261017-workspace-v26';
+        import {initialDraft} from '/assets/preparation/schema.mjs?v=20261017-workspace-v26';
         Object.assign(CAPABILITIES,{accounts:true,checkout:true,cloudSave:true,pdfDownload:true}); PROVIDERS.google=true;
         const d=initialDraft(); d.answers={'preparation.consent':true,'contact.email':'applicant@example.test','entrant.firstName':'SYNTHETIC'};
         let cleanup;

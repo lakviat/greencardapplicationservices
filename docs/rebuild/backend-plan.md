@@ -4,7 +4,7 @@ Updated 2026-10-17. The owner authorized Supabase backend work and deployment to
 
 ## Implemented
 
-The static website uses a bundled Supabase browser SDK with in-memory passwordless sessions. No applicant answers, photos, tokens, or passports are persisted in browser storage. Supabase Edge Functions verify each private request using Auth `getUser`. Clients cannot write tables directly or assign payment entitlements. The public health response advertises capabilities only when the corresponding server configuration is activated.
+The static website uses a bundled Supabase browser SDK with persistent Google sessions and automatic access-token refresh. Only account credentials, basic profile, and the last activity timestamp enter browser storage. Five hours of inactivity or explicit logout clears the browser login. No applicant answers, photos, or passports are persisted in browser storage. Supabase Edge Functions verify each private request using Auth `getUser`. Clients cannot write tables directly or assign payment entitlements. The public health response advertises capabilities only when the corresponding server configuration is activated.
 
 Versioned SQL migrations create preparations, orders, private assets, webhook receipts, rate limits, delivery attempts and a storage cleanup queue. RLS restricts authenticated direct reads to the owner's active paid preparation. Anonymous clients cannot read preparation data; all client mutation grants are revoked. The private bucket has no browser access policies. The API streams images and PDFs only after checking owner and active payment.
 
@@ -71,7 +71,7 @@ Provider activation still requires the Gmail App Password in `SMTP_PASSWORD`, a 
 
 The owner chose Google first, with Apple deferred until the Apple Developer membership is ready. The account UI no longer accepts arbitrary email addresses, passwords, or phone numbers. Supabase still stores the provider-verified email for account identity and requested preparation notifications. Different Google and Apple identities (particularly Apple Hide My Email) can be different accounts; customers are prompted to use the same provider/account each time. There were no production customer accounts or paid preparations when the change began.
 
-The OAuth client uses PKCE with an in-memory verifier and session. An isolated sign-in tab returns only its one-use code through a per-attempt same-origin channel; the original worksheet never navigates. Canceled or timed-out attempts cannot adopt a session. The callback strips its URL and loads no analytics. Public provider settings and the backend readiness gate must both allow a provider before sign-in is offered. See [setup and verification](social-sign-in.md).
+The OAuth client uses PKCE with an isolated in-memory verifier and candidate session. A verified completed attempt is transferred into the persistent account client. An isolated sign-in tab returns only its one-use code through a per-attempt same-origin channel; the original worksheet never navigates. Canceled or timed-out attempts cannot adopt a session. The callback strips its URL and loads no analytics. Public provider settings and the backend readiness gate must both allow a provider before sign-in is offered. See [setup and verification](social-sign-in.md).
 
 ## Google activation — 2026-10-17
 

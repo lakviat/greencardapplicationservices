@@ -1,5 +1,5 @@
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v25";
-import { PASSPORT_COUNTRIES } from "./passport-countries.mjs?v=20261017-workspace-v25";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v26";
+import { PASSPORT_COUNTRIES } from "./passport-countries.mjs?v=20261017-workspace-v26";
 // ICAO TD3 only. Checksums validate transcription, never identity or eligibility.
 // Keep raw OCR/MRZ text out of drafts, analytics and storage.
 const digit = (s) =>

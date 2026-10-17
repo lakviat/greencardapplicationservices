@@ -24,7 +24,7 @@ for (const file of pages) {
   assert.match(
     html,
     ["prepare.html", "auth-callback.html"].includes(file)
-      ? /20261017-workspace-v25/
+      ? /20261017-workspace-v26/
       : /20261016-workspace-v1/,
     file + " cache version",
   );
@@ -56,11 +56,12 @@ for (const name of fs
     /\.(?:innerHTML|outerHTML)\s*=|\beval\s*\(|document\.write\s*\(/,
     name + " unsafe DOM",
   );
-  assert.doesNotMatch(
-    source,
-    /(?:localStorage|sessionStorage)\.(?:setItem|getItem)|indexedDB\.open/,
-    name + " sensitive persistence",
-  );
+  if (name !== "auth-session.mjs")
+    assert.doesNotMatch(
+      source,
+      /(?:localStorage|sessionStorage)\.(?:setItem|getItem)|indexedDB\.open/,
+      name + " sensitive persistence",
+    );
 }
 assert.deepEqual(
   Object.values(PACKAGES).map((p) => p.cents),
@@ -69,6 +70,8 @@ assert.deepEqual(
 assert(PACKAGES.premium.disabled);
 const backend = fs.readFileSync("assets/preparation/backend.mjs", "utf8");
 assert.match(backend, /persistSession:\s*false/);
+assert.match(backend, /persistSession:\s*true/);
+assert.match(backend, /autoRefreshToken:\s*true/);
 assert.doesNotMatch(backend, /sb_secret_|sk_live_/);
 assert.match(backend, /key\s*!==\s*"premium"/);
 console.log(
