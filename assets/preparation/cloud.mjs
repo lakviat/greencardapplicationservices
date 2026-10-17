@@ -1,6 +1,12 @@
-import { api, auth, user, CAPABILITIES, unavailable } from "./backend.mjs";
-import { el, button, link } from "./dom.mjs";
-import { price, PACKAGES } from "./schema.mjs";
+import {
+  api,
+  auth,
+  user,
+  CAPABILITIES,
+  unavailable,
+} from "./backend.mjs?v=20261017-workspace-v22";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v22";
+import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v22";
 const groups = new WeakMap();
 let account = null;
 const pendingSaves = new Set();

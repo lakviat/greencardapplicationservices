@@ -1,4 +1,4 @@
-import { el, button, link } from "./dom.mjs";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v22";
 import {
   FORM_VERSION,
   PACKAGES,
@@ -13,23 +13,27 @@ import {
   warnings,
   recommendPackage,
   hasSpouse,
-} from "./schema.mjs";
-import { COUNTRIES } from "./countries.mjs";
+} from "./schema.mjs?v=20261017-workspace-v22";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v22";
 import {
   readImage,
   drawCrop,
   photoCopy,
   passportCopy,
   scanPassport,
-} from "./media.mjs";
-import { CAPABILITIES, unavailable, capabilities } from "./backend.mjs";
-import { cloudWorkspace } from "./cloud.mjs";
-import { worksheet } from "./worksheet.mjs";
-import { spouseWorksheet } from "./household.mjs";
-import { enhanceCountry } from "./country-control.mjs";
-import { attachViewport } from "./viewport.mjs";
-import { questionGroups } from "./presentation.mjs";
-import { dateControl } from "./date-control.mjs";
+} from "./media.mjs?v=20261017-workspace-v22";
+import {
+  CAPABILITIES,
+  unavailable,
+  capabilities,
+} from "./backend.mjs?v=20261017-workspace-v22";
+import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v22";
+import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v22";
+import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v22";
+import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v22";
+import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v22";
+import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v22";
+import { dateControl } from "./date-control.mjs?v=20261017-workspace-v22";
 const app = document.querySelector("#workspace");
 let draft = initialDraft();
 const sessionDrafts = [draft];
@@ -1435,7 +1439,6 @@ function renderDocument() {
       "div",
       { class: "workspace-intro" },
       el("h1", {}, "Guided DV Entry Preparation"),
-      el("p", {}, "Complete every field with guidance and automatic checks."),
       el(
         "div",
         { class: "document-options" },
