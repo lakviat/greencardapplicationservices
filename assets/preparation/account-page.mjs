@@ -1,7 +1,7 @@
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v35";
-import { PACKAGES } from "./schema.mjs?v=20261017-workspace-v35";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v36";
+import { PACKAGES } from "./schema.mjs?v=20261017-workspace-v36";
 
-import { savedAt } from "./save-feedback.mjs?v=20261017-workspace-v35";
+import { savedAt } from "./save-feedback.mjs?v=20261017-workspace-v36";
 
 export function accountPage({
   account,

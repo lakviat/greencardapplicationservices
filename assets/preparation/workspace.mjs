@@ -1,4 +1,4 @@
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v35";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v36";
 import {
   FORM_VERSION,
   PACKAGES,
@@ -13,33 +13,33 @@ import {
   warnings,
   recommendPackage,
   hasSpouse,
-} from "./schema.mjs?v=20261017-workspace-v35";
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v35";
+} from "./schema.mjs?v=20261017-workspace-v36";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v36";
 import {
   readImage,
   drawCrop,
   photoCopy,
   passportCopy,
   scanPassport,
-} from "./media.mjs?v=20261017-workspace-v35";
+} from "./media.mjs?v=20261017-workspace-v36";
 import {
   CAPABILITIES,
   unavailable,
   capabilities,
-} from "./backend.mjs?v=20261017-workspace-v35";
-import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v35";
-import { accountControl } from "./account-control.mjs?v=20261017-workspace-v35";
-import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v35";
-import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v35";
-import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v35";
-import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v35";
-import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v35";
-import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v35";
-import { dateControl } from "./date-control.mjs?v=20261017-workspace-v35";
+} from "./backend.mjs?v=20261017-workspace-v36";
+import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v36";
+import { accountControl } from "./account-control.mjs?v=20261017-workspace-v36";
+import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v36";
+import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v36";
+import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v36";
+import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v36";
+import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v36";
+import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v36";
+import { dateControl } from "./date-control.mjs?v=20261017-workspace-v36";
 import {
   saveIndicator,
   savedAt,
-} from "./save-feedback.mjs?v=20261017-workspace-v35";
+} from "./save-feedback.mjs?v=20261017-workspace-v36";
 const app = document.querySelector("#workspace");
 const saveFeedback = saveIndicator();
 const saveStates = new WeakMap();

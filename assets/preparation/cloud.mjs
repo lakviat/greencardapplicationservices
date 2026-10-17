@@ -1,4 +1,4 @@
-import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v35";
+import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v36";
 import {
   api,
   acceptAuth,
@@ -8,21 +8,22 @@ import {
   CAPABILITIES,
   capabilities,
   unavailable,
-} from "./backend.mjs?v=20261017-workspace-v35";
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v35";
+} from "./backend.mjs?v=20261017-workspace-v36";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v36";
 import {
   price,
   PACKAGES,
   preparationProgress,
   checkoutEmail,
-} from "./schema.mjs?v=20261017-workspace-v35";
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v35";
-import { passportUploadCopy } from "./media.mjs?v=20261017-workspace-v35";
-import { accountPage } from "./account-page.mjs?v=20261017-workspace-v35";
+} from "./schema.mjs?v=20261017-workspace-v36";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v36";
+import { passportUploadCopy } from "./media.mjs?v=20261017-workspace-v36";
+import { accountPage } from "./account-page.mjs?v=20261017-workspace-v36";
+import { checkoutDestination } from "./payment-links.mjs?v=20261017-workspace-v36";
 import {
   savedAt,
   savingBar,
-} from "./save-feedback.mjs?v=20261017-workspace-v35";
+} from "./save-feedback.mjs?v=20261017-workspace-v36";
 const groups = new WeakMap();
 let account = null;
 const pendingSaves = new Set();
@@ -587,9 +588,7 @@ export function cloudWorkspace(ui) {
               );
             return;
           }
-          const url = new URL(result.url);
-          if (url.origin !== "https://checkout.stripe.com")
-            throw new Error("Unexpected checkout destination.");
+          const url = checkoutDestination(result.url);
           g.checkoutStarted = true;
           popup.opener = null;
           popup.location.href = url.href;
@@ -651,7 +650,7 @@ export function cloudWorkspace(ui) {
         el(
           "p",
           { class: "save-price" },
-          `${PACKAGES[g.package].label} · ${price(g.package)} USD · one time`,
+          `${PACKAGES[g.package].label} · ${price(g.package)} USD · one time, plus applicable tax shown by Stripe`,
         ),
         el(
           "p",

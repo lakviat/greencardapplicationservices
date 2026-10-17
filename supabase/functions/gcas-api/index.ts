@@ -17,6 +17,7 @@ import {
 } from "./core.mjs";
 import { makePdf } from "./pdf.mjs";
 import { emailReady, sendReadyEmail } from "./email.mjs";
+import { PAYMENT_LINKS } from "../../../assets/preparation/payment-links.mjs";
 const env = (name: string) => Deno.env.get(name) || "";
 const origin =
   env("PUBLIC_APP_ORIGIN") || "https://greencardapplicationservices.com";
@@ -183,16 +184,39 @@ async function webhook(req: Request) {
     const session = await stripe(
       `checkout/sessions/${encodeURIComponent(event.data.object.id)}?expand[]=payment_intent.latest_charge`,
     );
-    const orderId = session.metadata?.gcas_order;
+    const orderId = session.metadata?.gcas_order || session.client_reference_id;
     if (!uuid(orderId)) return { received: true, ignored: true };
     const order = check(
-      await admin.from("gcas_orders").select("*").eq("id", orderId).single(),
+      await admin
+        .from("gcas_orders")
+        .select("*")
+        .eq("id", orderId)
+        .maybeSingle(),
     );
+    if (!order) return { received: true, ignored: true };
+    const link = Object.entries(PAYMENT_LINKS).find(
+      ([key]) => plan(key).cents === order.amount,
+    )?.[1];
+    const linkedPayment =
+      session.payment_link === link?.id &&
+      session.client_reference_id === order.id;
+    const legacyPayment =
+      !session.payment_link &&
+      session.metadata?.gcas_order === order.id &&
+      session.client_reference_id === order.preparation_id;
+    const tax = session.total_details?.amount_tax || 0;
+    const total = linkedPayment ? order.amount + tax : order.amount;
     assert(
       session.mode === "payment" &&
         session.currency === "usd" &&
-        session.amount_total === order.amount &&
-        session.client_reference_id === order.preparation_id &&
+        (linkedPayment || legacyPayment) &&
+        (!linkedPayment ||
+          (session.amount_subtotal === order.amount &&
+            Number.isSafeInteger(tax) &&
+            tax >= 0 &&
+            !session.total_details?.amount_discount &&
+            !session.total_details?.amount_shipping)) &&
+        session.amount_total === total &&
         session.livemode === /^(sk|rk)_live_/.test(stripeKey()),
       400,
       "Payment details do not match.",
@@ -201,9 +225,7 @@ async function webhook(req: Request) {
       return { received: true, pending: true };
     const pi = session.payment_intent;
     assert(
-      pi?.id &&
-        pi.status === "succeeded" &&
-        pi.amount_received === order.amount,
+      pi?.id && pi.status === "succeeded" && pi.amount_received === total,
       400,
       "Payment is not complete.",
     );
@@ -477,27 +499,8 @@ async function handle(req: Request, url: URL) {
       );
       order = null;
     }
-    // A failed Stripe request can leave an order without a session. Once its
-    // fixed session lifetime has elapsed, retry with a fresh order/key rather
-    // than sending Stripe an expires_at timestamp in the past forever.
-    if (
-      order &&
-      !order.session_id &&
-      Date.parse(order.created_at) + 82800000 <= Date.now()
-    ) {
-      check(
-        await admin
-          .from("gcas_orders")
-          .update({ state: "expired" })
-          .eq("id", order.id)
-          .eq("state", "pending"),
-      );
-      order = null;
-    }
-    // Reopening an existing Checkout or an already-purchased preparation above
-    // does not consume the new-payment creation allowance.
-    await limited(`${user.id}:checkout`, 5, 3600);
     if (!order) {
+      await limited(`${user.id}:checkout`, 5, 3600);
       const insert = await admin
         .from("gcas_orders")
         .insert({ preparation_id: p.id, amount: selected.cents })
@@ -514,35 +517,36 @@ async function handle(req: Request, url: URL) {
         );
       else order = check(insert);
     }
-    const params = new URLSearchParams({
-      mode: "payment",
-      "payment_method_types[0]": "card",
-      expires_at: String(
-        Math.floor(Date.parse(order.created_at) / 1000) + 82800,
-      ),
-      client_reference_id: p.id,
-      customer_email: contactEmail,
-      "line_items[0][price_data][currency]": "usd",
-      "line_items[0][price_data][unit_amount]": String(selected.cents),
-      "line_items[0][price_data][product_data][name]": `${selected.label} DV-${FORM_VERSION.year} preparation — unofficial`,
-      "line_items[0][quantity]": "1",
-      "metadata[gcas_order]": order.id,
-      "payment_intent_data[metadata][gcas_order]": order.id,
-      success_url: `${origin}/payment-return.html?result=success`,
-      cancel_url: `${origin}/payment-return.html?result=canceled`,
+    const link = PAYMENT_LINKS[body.package];
+    const query = new URLSearchParams({
+      payment_link: link.id,
+      limit: "100",
+      "created[gte]": String(Math.floor(Date.parse(order.created_at) / 1000)),
     });
-    const session = await stripe(
-      "checkout/sessions",
-      params,
-      `gcas-${order.id}`,
-    );
-    check(
-      await admin
-        .from("gcas_orders")
-        .update({ session_id: session.id, checkout_url: session.url })
-        .eq("id", order.id),
-    );
-    return { url: session.url };
+    // Payment Links create a hosted session when opened. Find a previous visit
+    // before returning the link again, so cancel/back/retry reuses that session.
+    let more = true;
+    while (more) {
+      const page = await stripe("checkout/sessions?" + query);
+      const session = page.data.find(
+        (s: any) =>
+          s.client_reference_id === order.id && s.status !== "expired",
+      );
+      if (session) {
+        assert(
+          session.status === "open",
+          409,
+          "Payment is being verified. Check again shortly.",
+        );
+        return { url: session.url };
+      }
+      more = page.has_more && page.data.length > 0;
+      if (more) query.set("starting_after", page.data.at(-1).id);
+    }
+    const url = new URL(link.url);
+    url.searchParams.set("client_reference_id", order.id);
+    url.searchParams.set("prefilled_email", contactEmail);
+    return { url: url.href };
   }
   const p = await owned(body.id, user.id, ["pdf", "email"].includes(route!));
   if (route === "get") return { preparation: p };

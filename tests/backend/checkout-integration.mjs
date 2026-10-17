@@ -9,7 +9,10 @@ import { build } from "esbuild";
 import { createClient } from "@supabase/supabase-js";
 import { localConfig } from "./local-config.mjs";
 import { initialDraft } from "../../assets/preparation/schema.mjs";
-
+import {
+  PAYMENT_LINKS,
+  checkoutDestination,
+} from "../../assets/preparation/payment-links.mjs";
 const config = localConfig();
 const admin = createClient(config.API_URL, config.SERVICE_ROLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
@@ -26,57 +29,50 @@ const env = {
   STRIPE_SECRET_KEY: "sk_" + "test_" + "synthetic".repeat(4),
   STRIPE_WEBHOOK_SECRET: "synthetic-webhook-only",
 };
-let handler;
+let handler,
+  failStripe = false;
 globalThis.Deno = {
   env: { get: (key) => env[key] },
   serve: (callback) => {
     handler = callback;
   },
 };
-const realFetch = globalThis.fetch;
-const sessions = new Map(),
-  requests = [],
+const realFetch = globalThis.fetch,
+  sessions = new Map(),
   users = [],
-  ids = [];
-let failStripe = false;
+  ids = [],
+  requests = [];
 globalThis.fetch = async (input, init) => {
   const url = new URL(input instanceof Request ? input.url : input);
   if (url.origin !== "https://api.stripe.com") {
-    assert.equal(url.hostname, "127.0.0.1", "No external service is called");
+    assert.equal(url.hostname, "127.0.0.1");
     return realFetch(input, init);
   }
+  requests.push(url);
+  assert.equal(
+    init.method,
+    "GET",
+    "Existing payment links never create Stripe products, prices, links or sessions through the API",
+  );
   if (failStripe)
-    return Response.json(
-      { error: { message: "synthetic unavailable" } },
-      { status: 503 },
+    return Response.json({ error: { type: "api_error" } }, { status: 503 });
+  if (url.pathname === "/v1/checkout/sessions") {
+    assert(
+      Object.values(PAYMENT_LINKS).some(
+        (l) => l.id === url.searchParams.get("payment_link"),
+      ),
     );
-  if (init.method === "POST") {
-    const params = new URLSearchParams(init.body);
-    const key = init.headers["Idempotency-Key"];
-    requests.push({ params, key });
-    let session = [...sessions.values()].find((s) => s.key === key);
-    if (!session) {
-      session = {
-        id: "cs_test_" + randomUUID(),
-        key,
-        status: "open",
-        mode: "payment",
-        livemode: false,
-        payment_status: "unpaid",
-        currency: "usd",
-        amount_total: Number(
-          params.get("line_items[0][price_data][unit_amount]"),
-        ),
-        client_reference_id: params.get("client_reference_id"),
-        metadata: { gcas_order: params.get("metadata[gcas_order]") },
-      };
-      session.url = "https://checkout.stripe.com/c/pay/" + session.id;
-      sessions.set(session.id, session);
-    }
-    return Response.json(session);
+    return Response.json({
+      data: [...sessions.values()].filter(
+        (s) =>
+          s.payment_link === url.searchParams.get("payment_link") &&
+          s.created >= Number(url.searchParams.get("created[gte]")),
+      ),
+      has_more: false,
+    });
   }
   const session = sessions.get(url.pathname.split("/").at(-1));
-  assert(session, "Only known checkout sessions are retrieved");
+  assert(session, "Only known sessions are retrieved");
   return Response.json(session);
 };
 const dir = await mkdtemp(resolve("node_modules/.gcas-checkout-"));
@@ -90,6 +86,20 @@ try {
     packages: "external",
   });
   await import(pathToFileURL(resolve(dir, "handler.mjs")));
+  const configuredKey = env.STRIPE_SECRET_KEY;
+  env.STRIPE_SECRET_KEY = "pending";
+  assert.equal(
+    (
+      await (
+        await handler(
+          new Request(config.API_URL + "/functions/v1/gcas-api/health"),
+        )
+      ).json()
+    ).checkout,
+    false,
+    "A placeholder cannot advertise working checkout",
+  );
+  env.STRIPE_SECRET_KEY = configuredKey;
   async function user() {
     const email = `synthetic-${randomUUID()}@example.test`,
       password = randomUUID() + "aA1!";
@@ -104,10 +114,11 @@ try {
     const client = createClient(config.API_URL, config.ANON_KEY, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
-    const token = check(
-      await client.auth.signInWithPassword({ email, password }),
-    ).session.access_token;
-    return { ...u, token };
+    return {
+      ...u,
+      token: check(await client.auth.signInWithPassword({ email, password }))
+        .session.access_token,
+    };
   }
   async function call(u, route, body) {
     const response = await handler(
@@ -137,73 +148,82 @@ try {
     return id;
   }
   async function event(session, id = "evt_" + randomUUID()) {
-    const body = JSON.stringify({
-      id,
-      type: "checkout.session.completed",
-      data: { object: { id: session.id } },
-    });
-    const timestamp = Math.floor(Date.now() / 1000);
+    const raw = JSON.stringify({
+        id,
+        type: "checkout.session.completed",
+        data: { object: { id: session.id } },
+      }),
+      timestamp = Math.floor(Date.now() / 1000);
     const signature = createHmac("sha256", env.STRIPE_WEBHOOK_SECRET)
-      .update(timestamp + "." + body)
+      .update(timestamp + "." + raw)
       .digest("hex");
     const response = await handler(
       new Request(config.API_URL + "/functions/v1/gcas-api/webhook", {
         method: "POST",
         headers: { "stripe-signature": `t=${timestamp},v1=${signature}` },
-        body,
+        body: raw,
       }),
     );
     return { status: response.status, data: await response.json() };
   }
-  for (const [plan, amount, email] of [
-    ["single", 999, "unfinished"],
-    ["couple", 1999, ""],
-    ["family", 2999, "applicant@example.test"],
+  function visit(url, plan, amount, tax = 0) {
+    const s = {
+      id: "cs_test_" + randomUUID(),
+      created: Math.floor(Date.now() / 1000),
+      status: "open",
+      mode: "payment",
+      livemode: false,
+      payment_status: "unpaid",
+      currency: "usd",
+      amount_subtotal: amount,
+      amount_total: amount + tax,
+      total_details: {
+        amount_tax: tax,
+        amount_shipping: 0,
+        amount_discount: 0,
+      },
+      client_reference_id: new URL(url).searchParams.get("client_reference_id"),
+      payment_link: PAYMENT_LINKS[plan].id,
+      metadata: {},
+    };
+    s.url = "https://checkout.stripe.com/c/pay/" + s.id;
+    sessions.set(s.id, s);
+    return s;
+  }
+  for (const [plan, amount, email, tax] of [
+    ["single", 999, "unfinished", 0],
+    ["couple", 1999, "", 0],
+    ["family", 2999, "applicant@example.test", 213],
   ]) {
     const u = await user(),
-      id = await draft(u, plan);
-    const body = { id, package: plan, contactEmail: email };
+      id = await draft(u, plan),
+      body = { id, package: plan, contactEmail: email };
     const first = await call(u, "checkout", body);
     assert.equal(first.status, 200, JSON.stringify(first.data));
-    assert.match(first.data.url, /^https:\/\/checkout.stripe.com\//);
-    const { params, key } = requests.at(-1);
+    const url = checkoutDestination(first.data.url);
+    assert.equal(url.origin + url.pathname, PAYMENT_LINKS[plan].url);
     assert.equal(
-      params.get("line_items[0][price_data][unit_amount]"),
-      String(amount),
-    );
-    assert.equal(
-      params.get("customer_email"),
+      url.searchParams.get("prefilled_email"),
       email.includes("@") ? email : u.email,
     );
-    assert.equal(
-      params.get("success_url"),
-      "https://greencardapplicationservices.com/payment-return.html?result=success",
+    const orderId = url.searchParams.get("client_reference_id");
+    assert.notEqual(
+      orderId,
+      id,
+      "Public reference maps to a server-owned order",
     );
-    assert.equal(
-      params.get("cancel_url"),
-      "https://greencardapplicationservices.com/payment-return.html?result=canceled",
+    const order = check(
+      await admin.from("gcas_orders").select("*").eq("id", orderId).single(),
     );
-    assert.equal(params.get("client_reference_id"), id);
-    assert(![...params.values()].some((v) => v.includes("passport")));
-    assert(key.startsWith("gcas-"));
-    const count = requests.length;
-    for (let attempt = 0; attempt < 6; attempt++)
+    assert.equal(order.preparation_id, id);
+    assert.equal(order.amount, amount);
+    let s = visit(url, plan, amount, tax);
+    for (let n = 0; n < 7; n++)
       assert.equal(
         (await call(u, "checkout", body)).data.url,
-        first.data.url,
-        "Existing Checkout remains reusable beyond the new-session rate allowance",
+        s.url,
+        "Cancellation/retry reuses an existing hosted session without exhausting the new-order allowance",
       );
-    const again = await call(u, "checkout", body);
-    assert.equal(
-      again.data.url,
-      first.data.url,
-      "Cancellation/retry reuses open Stripe session",
-    );
-    assert.equal(
-      requests.length,
-      count,
-      "Retry does not create a second payment",
-    );
     const stranger = await user();
     assert.equal((await call(stranger, "checkout", body)).status, 409);
     assert.equal(
@@ -215,40 +235,59 @@ try {
       ).status,
       409,
     );
-    const s = [...sessions.values()].find((s) => s.url === first.data.url);
-    assert.equal(
-      (await event(s)).data.pending,
-      true,
-      "Pending payment never unlocks PDF",
-    );
+    assert.equal((await event(s)).data.pending, true);
     assert.equal(
       (await call(u, "get", { id })).data.preparation.state,
       "unpaid",
     );
+    s.status = "expired";
+    const resumed = await call(u, "checkout", body);
+    assert.equal(
+      new URL(resumed.data.url).searchParams.get("client_reference_id"),
+      orderId,
+      "Expired sessions retain the same saved preparation and order",
+    );
+    s = visit(resumed.data.url, plan, amount, tax);
     s.status = "complete";
     s.payment_status = "paid";
     s.payment_intent = {
       id: "pi_" + randomUUID(),
       status: "succeeded",
-      amount_received: amount,
+      amount_received: amount + tax,
       latest_charge: { refunded: false, disputed: false, amount_refunded: 0 },
     };
-    const eventId = "evt_" + randomUUID();
-    assert.equal((await event(s, eventId)).status, 200);
+    s.amount_subtotal++;
     assert.equal(
-      (await event(s, eventId)).status,
+      (await event(s)).status,
+      400,
+      "Incorrect base prices cannot unlock a PDF",
+    );
+    s.amount_subtotal--;
+    const realLink = s.payment_link;
+    s.payment_link = "plink_unrelated";
+    assert.equal(
+      (await event(s)).status,
+      400,
+      "Unrelated payment links cannot unlock a preparation",
+    );
+    s.payment_link = realLink;
+    const eid = "evt_" + randomUUID();
+    assert.equal((await event(s, eid)).status, 200);
+    assert.equal(
+      (await event(s, eid)).status,
       200,
-      "Webhook duplicates are idempotent",
+      "Duplicate webhooks are idempotent",
     );
     assert.equal((await call(u, "get", { id })).data.preparation.state, "paid");
-    // PDF completion checks remain separate from payment permission.
-    assert.equal((await call(u, "pdf", { id })).status, 422);
-    const bought = await call(u, "checkout", body);
-    assert.deepEqual(bought.data, { paid: true });
     assert.equal(
-      requests.length,
-      count,
-      "Paid preparation cannot create another charge",
+      (await call(u, "pdf", { id })).status,
+      422,
+      "PDF completeness is independent of early payment",
+    );
+    assert.deepEqual(
+      (await call(u, "checkout", body)).data,
+      { paid: true },
+      "Purchased preparations cannot start another payment",
     );
     const d = initialDraft();
     d.id = randomUUID();
@@ -259,23 +298,53 @@ try {
       revision: 1,
       payload: { documents: [d] },
     });
-    assert.equal(saved.status, 200, JSON.stringify(saved.data));
+    assert.equal(saved.status, 200);
     assert.equal(
       saved.data.preparation.state,
       "paid",
-      "Editing preserves purchase",
+      "Edits preserve purchase",
     );
   }
+  const oldOwner = await user(),
+    oldId = await draft(oldOwner, "single");
+  const oldOrder = check(
+    await admin
+      .from("gcas_orders")
+      .insert({ preparation_id: oldId, amount: 999 })
+      .select()
+      .single(),
+  );
+  const oldSession = visit(
+    new URL(PAYMENT_LINKS.single.url + "?client_reference_id=" + oldId),
+    "single",
+    999,
+  );
+  oldSession.payment_link = null;
+  oldSession.metadata = { gcas_order: oldOrder.id };
+  oldSession.status = "complete";
+  oldSession.payment_status = "paid";
+  oldSession.payment_intent = {
+    id: "pi_" + randomUUID(),
+    status: "succeeded",
+    amount_received: 999,
+    latest_charge: { refunded: false, disputed: false, amount_refunded: 0 },
+  };
+  assert.equal(
+    (await event(oldSession)).status,
+    200,
+    "Previously issued checkout sessions still fulfill correctly",
+  );
+  assert.equal(
+    (await call(oldOwner, "get", { id: oldId })).data.preparation.state,
+    "paid",
+  );
   const u = await user(),
-    id = await draft(u, "single");
-  const body = { id, package: "single" };
+    id = await draft(u, "single"),
+    body = { id, package: "single" };
   failStripe = true;
   assert.equal((await call(u, "checkout", body)).status, 503);
-  assert.equal(
-    (await call(u, "get", { id })).data.preparation.revision,
-    1,
-    "Stripe outage preserves saved answers",
-  );
+  assert.equal((await call(u, "get", { id })).data.preparation.revision, 1);
+  failStripe = false;
   const stale = check(
     await admin
       .from("gcas_orders")
@@ -289,25 +358,22 @@ try {
       .update({ created_at: new Date(Date.now() - 86400000).toISOString() })
       .eq("id", stale.id),
   );
-  failStripe = false;
+  const retry = await call(u, "checkout", body);
+  assert.equal(retry.status, 200);
   assert.equal(
-    (await call(u, "checkout", body)).status,
-    200,
-    "Payment can retry after Stripe outage even on the next day",
+    new URL(retry.data.url).searchParams.get("client_reference_id"),
+    stale.id,
+    "Next-day retries reuse the existing order and existing Payment Link",
   );
-  assert.notEqual(requests.at(-1).params.get("metadata[gcas_order]"), stale.id);
-  assert.equal(
-    check(
-      await admin
-        .from("gcas_orders")
-        .select("state")
-        .eq("id", stale.id)
-        .single(),
-    ).state,
-    "expired",
-  );
+  for (const bad of [
+    "https://evil.example/",
+    "https://checkout.stripe.com.evil.example/c/pay/test",
+    "https://buy.stripe.com/unknown?client_reference_id=" + randomUUID(),
+    PAYMENT_LINKS.single.url,
+  ])
+    assert.throws(() => checkoutDestination(bad));
   console.log(
-    "PASS: actual checkout handler with local Auth/Postgres: incomplete Single/Couple/Family, server prices, email fallback, cancel/retry reuse, ownership, webhook pending/paid/duplicate, paid editing, no repeat charge and outage recovery (simulated Stripe HTTP).",
+    "PASS: existing Single/Couple/Family Payment Links, incomplete checkout, valid receipt fallback, server-owned order references, cancellation/retry/expiry reuse, ownership, signed webhook pending/paid/duplicate, strict link/base-price/tax validation, paid editing, no repeat checkout, outage/next-day recovery and destination allowlist (real local Auth/Postgres; simulated Stripe HTTP).",
   );
 } finally {
   for (const id of ids) {

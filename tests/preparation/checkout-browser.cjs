@@ -111,8 +111,18 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
           );
           assert.equal(body.package, expectedPackage);
           checkoutBodies.push(body);
+          const links = {
+            couple: "https://buy.stripe.com/28E28t5JI4SH1dt1ic0Ny06",
+            family: "https://buy.stripe.com/eVqbJ34FE98X6xN6Cw0Ny07",
+          };
           return json({
-            url: "https://checkout.stripe.com/c/pay/synthetic-local-only",
+            url: links[expectedPackage]
+              ? links[expectedPackage] +
+                "?client_reference_id=" +
+                randomUUID() +
+                "&prefilled_email=" +
+                encodeURIComponent(body.contactEmail)
+              : "https://checkout.stripe.com/c/pay/synthetic-local-only",
           });
         }
         if (url.pathname.endsWith("/get"))
@@ -171,14 +181,20 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
           body: "<h1>Synthetic checkout — no payment</h1>",
         }),
       );
+      await context.route("https://buy.stripe.com/**", (route) =>
+        route.fulfill({
+          contentType: "text/html",
+          body: "<h1>Synthetic existing payment link — no payment</h1>",
+        }),
+      );
       await context.route(base + "/checkout-test*", (route) =>
         route.fulfill({
           contentType: "text/html",
-          body: `<!doctype html><html><head><link rel="stylesheet" href="/assets/preparation/workspace.css?v=20261017-workspace-v35"></head><body><main></main><section id="dialog"></section><p id="status"></p><script type="module">
-        import {cloudWorkspace} from '/assets/preparation/cloud.mjs?v=20261017-workspace-v35';
-        import {CAPABILITIES, PROVIDERS} from '/assets/preparation/backend.mjs?v=20261017-workspace-v35';
-        import {initialDraft} from '/assets/preparation/schema.mjs?v=20261017-workspace-v35';
-        import {saveIndicator} from '/assets/preparation/save-feedback.mjs?v=20261017-workspace-v35';
+          body: `<!doctype html><html><head><link rel="stylesheet" href="/assets/preparation/workspace.css?v=20261017-workspace-v36"></head><body><main></main><section id="dialog"></section><p id="status"></p><script type="module">
+        import {cloudWorkspace} from '/assets/preparation/cloud.mjs?v=20261017-workspace-v36';
+        import {CAPABILITIES, PROVIDERS} from '/assets/preparation/backend.mjs?v=20261017-workspace-v36';
+        import {initialDraft} from '/assets/preparation/schema.mjs?v=20261017-workspace-v36';
+        import {saveIndicator} from '/assets/preparation/save-feedback.mjs?v=20261017-workspace-v36';
         const indicator=saveIndicator(); document.body.append(indicator.node);
         Object.assign(CAPABILITIES,{accounts:true,checkout:true,cloudSave:true,pdfDownload:true}); PROVIDERS.google=true;
         const scenario=new URLSearchParams(location.search);

@@ -2046,6 +2046,22 @@ You can correct and download your purchased preparation again without another ch
   return response.ok;
 }
 
+// assets/preparation/payment-links.mjs
+var PAYMENT_LINKS = Object.freeze({
+  single: Object.freeze({
+    id: "plink_1U0mXFPPnLl3qhjKqmsP17oS",
+    url: "https://buy.stripe.com/9B614p5JI4SH6xNd0U0Ny05"
+  }),
+  couple: Object.freeze({
+    id: "plink_1U0mYfPPnLl3qhjKlSNenRts",
+    url: "https://buy.stripe.com/28E28t5JI4SH1dt1ic0Ny06"
+  }),
+  family: Object.freeze({
+    id: "plink_1U0mZOPPnLl3qhjKtlqZpD0T",
+    url: "https://buy.stripe.com/eVqbJ34FE98X6xN6Cw0Ny07"
+  })
+});
+
 // supabase/functions/gcas-api/index.ts
 var env = (name) => Deno.env.get(name) || "";
 var origin = env("PUBLIC_APP_ORIGIN") || "https://greencardapplicationservices.com";
@@ -2188,13 +2204,21 @@ async function webhook(req) {
     const session = await stripe(
       `checkout/sessions/${encodeURIComponent(event.data.object.id)}?expand[]=payment_intent.latest_charge`
     );
-    const orderId = session.metadata?.gcas_order;
+    const orderId = session.metadata?.gcas_order || session.client_reference_id;
     if (!uuid(orderId)) return { received: true, ignored: true };
     const order = check(
-      await admin.from("gcas_orders").select("*").eq("id", orderId).single()
+      await admin.from("gcas_orders").select("*").eq("id", orderId).maybeSingle()
     );
+    if (!order) return { received: true, ignored: true };
+    const link = Object.entries(PAYMENT_LINKS).find(
+      ([key]) => plan(key).cents === order.amount
+    )?.[1];
+    const linkedPayment = session.payment_link === link?.id && session.client_reference_id === order.id;
+    const legacyPayment = !session.payment_link && session.metadata?.gcas_order === order.id && session.client_reference_id === order.preparation_id;
+    const tax = session.total_details?.amount_tax || 0;
+    const total = linkedPayment ? order.amount + tax : order.amount;
     assert(
-      session.mode === "payment" && session.currency === "usd" && session.amount_total === order.amount && session.client_reference_id === order.preparation_id && session.livemode === /^(sk|rk)_live_/.test(stripeKey()),
+      session.mode === "payment" && session.currency === "usd" && (linkedPayment || legacyPayment) && (!linkedPayment || session.amount_subtotal === order.amount && Number.isSafeInteger(tax) && tax >= 0 && !session.total_details?.amount_discount && !session.total_details?.amount_shipping) && session.amount_total === total && session.livemode === /^(sk|rk)_live_/.test(stripeKey()),
       400,
       "Payment details do not match."
     );
@@ -2202,7 +2226,7 @@ async function webhook(req) {
       return { received: true, pending: true };
     const pi = session.payment_intent;
     assert(
-      pi?.id && pi.status === "succeeded" && pi.amount_received === order.amount,
+      pi?.id && pi.status === "succeeded" && pi.amount_received === total,
       400,
       "Payment is not complete."
     );
@@ -2418,12 +2442,12 @@ async function handle(req, url) {
       await admin.from("gcas_orders").select("*").eq("preparation_id", p2.id).eq("state", "pending").maybeSingle()
     );
     if (order?.session_id) {
-      const session2 = await stripe(
+      const session = await stripe(
         `checkout/sessions/${encodeURIComponent(order.session_id)}`
       );
-      if (session2.status === "open") return { url: session2.url };
+      if (session.status === "open") return { url: session.url };
       assert(
-        session2.status === "expired",
+        session.status === "expired",
         409,
         "Payment is being verified. Check again shortly."
       );
@@ -2432,14 +2456,8 @@ async function handle(req, url) {
       );
       order = null;
     }
-    if (order && !order.session_id && Date.parse(order.created_at) + 828e5 <= Date.now()) {
-      check(
-        await admin.from("gcas_orders").update({ state: "expired" }).eq("id", order.id).eq("state", "pending")
-      );
-      order = null;
-    }
-    await limited(`${user.id}:checkout`, 5, 3600);
     if (!order) {
+      await limited(`${user.id}:checkout`, 5, 3600);
       const insert = await admin.from("gcas_orders").insert({ preparation_id: p2.id, amount: selected.cents }).select().single();
       if (insert.error?.code === "23505")
         order = check(
@@ -2447,32 +2465,33 @@ async function handle(req, url) {
         );
       else order = check(insert);
     }
-    const params = new URLSearchParams({
-      mode: "payment",
-      "payment_method_types[0]": "card",
-      expires_at: String(
-        Math.floor(Date.parse(order.created_at) / 1e3) + 82800
-      ),
-      client_reference_id: p2.id,
-      customer_email: contactEmail,
-      "line_items[0][price_data][currency]": "usd",
-      "line_items[0][price_data][unit_amount]": String(selected.cents),
-      "line_items[0][price_data][product_data][name]": `${selected.label} DV-${FORM_VERSION.year} preparation \u2014 unofficial`,
-      "line_items[0][quantity]": "1",
-      "metadata[gcas_order]": order.id,
-      "payment_intent_data[metadata][gcas_order]": order.id,
-      success_url: `${origin}/payment-return.html?result=success`,
-      cancel_url: `${origin}/payment-return.html?result=canceled`
+    const link = PAYMENT_LINKS[body.package];
+    const query = new URLSearchParams({
+      payment_link: link.id,
+      limit: "100",
+      "created[gte]": String(Math.floor(Date.parse(order.created_at) / 1e3))
     });
-    const session = await stripe(
-      "checkout/sessions",
-      params,
-      `gcas-${order.id}`
-    );
-    check(
-      await admin.from("gcas_orders").update({ session_id: session.id, checkout_url: session.url }).eq("id", order.id)
-    );
-    return { url: session.url };
+    let more = true;
+    while (more) {
+      const page = await stripe("checkout/sessions?" + query);
+      const session = page.data.find(
+        (s) => s.client_reference_id === order.id && s.status !== "expired"
+      );
+      if (session) {
+        assert(
+          session.status === "open",
+          409,
+          "Payment is being verified. Check again shortly."
+        );
+        return { url: session.url };
+      }
+      more = page.has_more && page.data.length > 0;
+      if (more) query.set("starting_after", page.data.at(-1).id);
+    }
+    const url2 = new URL(link.url);
+    url2.searchParams.set("client_reference_id", order.id);
+    url2.searchParams.set("prefilled_email", contactEmail);
+    return { url: url2.href };
   }
   const p = await owned(body.id, user.id, ["pdf", "email"].includes(route));
   if (route === "get") return { preparation: p };
