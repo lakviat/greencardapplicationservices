@@ -1,4 +1,4 @@
-import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v28";
+import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v29";
 import {
   api,
   acceptAuth,
@@ -7,9 +7,9 @@ import {
   PROVIDERS,
   CAPABILITIES,
   unavailable,
-} from "./backend.mjs?v=20261017-workspace-v28";
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v28";
-import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v28";
+} from "./backend.mjs?v=20261017-workspace-v29";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v29";
+import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v29";
 const groups = new WeakMap();
 let account = null;
 const pendingSaves = new Set();
@@ -43,43 +43,7 @@ export function cloudWorkspace(ui) {
     ui.dialog(title, el("p", { role: "status" }, text));
   const error = (e) => {
     ui.status(`Not saved: ${e.message}`);
-    if (e.code === "processing-consent") {
-      ui.dialog(
-        "Permission needed to save",
-        el(
-          "div",
-          {},
-          el(
-            "p",
-            {},
-            `Signed in as ${account.email}. Your progress has not been saved yet.`,
-          ),
-          el("p", {}, e.message),
-          button(
-            "Review processing permission",
-            () => {
-              ui.close();
-              ui.reviewConsent(e.record);
-            },
-            { class: "button primary" },
-          ),
-        ),
-      );
-      return;
-    }
     message("Please check this step", e.message);
-  };
-  const requireConsent = (g) => {
-    const record = g.documents.find(
-      (r) => r.answers["preparation.consent"] !== true,
-    );
-    if (record) {
-      const e = new Error(
-        "Confirm processing permission in the final section of each worksheet before saving or checkout.",
-      );
-      Object.assign(e, { code: "processing-consent", record });
-      throw e;
-    }
   };
   const group = (d) => {
     let g = groups.get(d);
@@ -177,7 +141,6 @@ export function cloudWorkspace(ui) {
 
   async function save(d) {
     const g = group(d);
-    requireConsent(g);
     if (g.state !== "paid") return checkout(d);
     if (g.saving) {
       await g.saving;
@@ -264,7 +227,6 @@ export function cloudWorkspace(ui) {
       if (receivePdf) ui.pdfReady(d);
       return;
     }
-    requireConsent(g);
     if (!CAPABILITIES.checkout) {
       ui.status("Not saved — checkout is not available yet");
       return message(
@@ -374,7 +336,7 @@ export function cloudWorkspace(ui) {
         el(
           "p",
           { class: "notice" },
-          "After payment, saving uploads your answers, photos, and passport copies to private storage. Saved files expire after 365 days without a save. You can delete them earlier in My Preparations. Check the privacy notice and confirm the document’s processing permission before saving.",
+          "After payment, saving uploads your answers, photos, and passport copies to private storage. Saved files expire after 365 days without a save. You can delete them earlier in My Preparations. Read the privacy notice for details.",
         ),
         link("Privacy notice", "/policies/#privacy", {
           target: "_blank",

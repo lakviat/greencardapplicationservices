@@ -1065,9 +1065,6 @@ body:not([data-view="document"]) .workspace-layout {
 .field-help {
   display: none;
 }
-.field-help.mandatory-help {
-  display: block;
-}
 
 .field-help-toggle {
   position: absolute;

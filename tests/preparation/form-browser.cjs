@@ -156,7 +156,6 @@ fs.mkdirSync(output, { recursive: true });
       await input("contact.consulate").fill(
         "Example consular office — test only",
       );
-      await input("preparation.consent").check();
       const pixels = await page.evaluate(() => {
         const c = document.createElement("canvas");
         c.width = c.height = 1600;

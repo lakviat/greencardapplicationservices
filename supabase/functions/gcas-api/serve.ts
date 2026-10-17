@@ -422,23 +422,6 @@ function sections(d) {
       fields: person(`child.${id}`, "14")
     })
   );
-  result.push({
-    id: "consent",
-    page: 6 + d.childIds.length,
-    part: "Private preparation checklist",
-    title: "Permission & personal information",
-    fields: [
-      f(
-        "preparation.consent",
-        "I am entering my own information or have permission to prepare this person\u2019s information, including authority for any children listed.",
-        "checkbox",
-        {
-          reference: "Service consent",
-          help: "I authorize processing and, when I choose paid saving, private storage of these answers, photos, passport copies, and authorized family information. Saved files expire after 365 days without a save. I can delete my preparation earlier. Read the privacy notice."
-        }
-      )
-    ]
-  });
   const pages = [...new Set(result.map((s) => s.page))];
   return result.map((s) => ({
     ...s,
@@ -1698,11 +1681,6 @@ function sanitizePayload(input, pack, storedAssets = []) {
           };
         }
       }
-      assert(
-        d.answers["preparation.consent"] === true,
-        400,
-        "Confirm permission to store and process this preparation."
-      );
       return d;
     })
   };

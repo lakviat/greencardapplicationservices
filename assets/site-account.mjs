@@ -1,5 +1,5 @@
-import { observeSession } from "./preparation/backend.mjs?v=20261017-workspace-v28";
-import { accountControl } from "./preparation/account-control.mjs?v=20261017-workspace-v28";
+import { observeSession } from "./preparation/backend.mjs?v=20261017-workspace-v29";
+import { accountControl } from "./preparation/account-control.mjs?v=20261017-workspace-v29";
 
 // The same Auth client and activity policy runs on every public page. Never
 // pass account/profile information to the separate public-page analytics code.

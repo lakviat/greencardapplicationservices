@@ -36,6 +36,30 @@ test("starts empty, Single, versioned, zero percent; all baseline groups present
     );
   }
 });
+test("worksheet, progress and PDF omit the retired service consent section", () => {
+  for (const family of [false, true]) {
+    const d = initialDraft();
+    if (family) {
+      d.answers["entrant.marital"] = "married";
+      d.childIds = ["sample-child"];
+    }
+    // Older saved answers must not bring the removed page or PDF row back.
+    d.answers["preparation.consent"] = false;
+    assert(!sections(d).some((s) => s.id === "consent"));
+    assert(!fields(d).some((f) => f.id === "preparation.consent"));
+    assert(
+      !progress(d, countries).remaining.some(
+        (r) => r.field.id === "preparation.consent",
+      ),
+    );
+    assert(!JSON.stringify(worksheetRows(d)).includes("preparation.consent"));
+    const pages = [...new Set(sections(d).map((s) => s.page))];
+    assert.deepEqual(
+      pages,
+      pages.map((_, i) => i + 1),
+    );
+  }
+});
 test("names require real input or explicit absence; rejecting absence of every name", () => {
   const d = initialDraft();
   assert(validate(field(d, "entrant.middleName"), d));

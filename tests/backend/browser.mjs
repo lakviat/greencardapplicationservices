@@ -108,7 +108,6 @@ try {
     ...initialDraft(),
     id: randomUUID(),
     answers: {
-      "preparation.consent": true,
       "entrant.lastName": "SYNTHETIC",
       "entrant.firstName": "JANE",
     },
@@ -153,6 +152,10 @@ try {
     "JULIA",
   );
   assert(saved.revision > 0);
+  assert(
+    !Object.hasOwn(saved.payload.documents[0].answers, "preparation.consent"),
+  );
+  assert.equal(await page.locator('[id="preparation.consent"]').count(), 0);
   for (const [field, expected] of Object.entries({
     "entrant.birthCountry": "Kyrgyzstan",
     "address.country": "United States",

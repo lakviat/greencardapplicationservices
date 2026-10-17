@@ -308,39 +308,10 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         assert.equal(await page.evaluate(() => sessionStorage.length), 0);
         assert.deepEqual(errors, []);
         if (provider === "google") {
-          // A successful login must remain visible when saving still needs consent.
+          // Save goes directly to the account/payment state without a consent detour.
           await page
             .getByRole("button", { name: "Edit document", exact: true })
             .click();
-          await page
-            .getByRole("button", { name: "More preparation actions" })
-            .click();
-          await page
-            .getByRole("button", { name: "Save Progress", exact: true })
-            .click();
-          await page
-            .getByRole("heading", {
-              name: "Permission needed to save",
-              exact: true,
-            })
-            .waitFor();
-          await page
-            .getByText(
-              `Signed in as ${verified.email}. Your progress has not been saved yet.`,
-              { exact: true },
-            )
-            .waitFor();
-          await page
-            .getByRole("button", {
-              name: "Review processing permission",
-              exact: true,
-            })
-            .click();
-          assert.equal(
-            await page.evaluate(() => document.activeElement.id),
-            "preparation.consent",
-          );
-          await page.locator('[id="preparation.consent"]').check();
           await page
             .getByRole("button", { name: "More preparation actions" })
             .click();
@@ -353,6 +324,16 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
               exact: true,
             })
             .waitFor();
+          assert.equal(
+            await page.locator('[id="preparation.consent"]').count(),
+            0,
+          );
+          assert.equal(
+            await page
+              .getByText("Permission & personal information", { exact: true })
+              .count(),
+            0,
+          );
           await page.getByRole("button", { name: "Close dialog" }).click();
           assert.equal(
             authorizeCalls,

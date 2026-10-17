@@ -118,7 +118,6 @@ assert.equal(
   1,
 );
 const d = { ...initialDraft(), id: randomUUID() };
-d.answers["preparation.consent"] = true;
 d.answers["entrant.lastName"] = "EXAMPLE";
 let saved = await call(a, "save", {
   id,

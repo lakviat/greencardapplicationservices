@@ -14,14 +14,14 @@ import {
 const document = () => ({
   ...initialDraft(),
   id: randomUUID(),
-  answers: { "preparation.consent": true, "entrant.lastName": "EXAMPLE" },
+  answers: { "entrant.lastName": "EXAMPLE" },
 });
 test("server owns prices and rejects Premium and prototype plan names", () => {
   assert.equal(plan("single").cents, 999);
   for (const key of ["premium", "__proto__", "constructor", "free"])
     assert.throws(() => plan(key));
 });
-test("save rejects forged assets, missing consent, extra worksheets and invalid versions", () => {
+test("save rejects forged assets, extra worksheets and invalid versions", () => {
   const d = document();
   assert.equal(
     sanitizePayload({ documents: [d] }, "single").documents[0].answers[
@@ -38,14 +38,18 @@ test("save rejects forged assets, missing consent, extra worksheets and invalid 
   assert.throws(() =>
     sanitizePayload({ documents: [d, document()] }, "single"),
   );
-  d.answers["preparation.consent"] = false;
-  assert.throws(
-    () => sanitizePayload({ documents: [d] }, "single"),
-    /permission/,
-  );
-  d.answers["preparation.consent"] = true;
   d.version = "old";
   assert.throws(() => sanitizePayload({ documents: [d] }, "single"), /version/);
+});
+test("partial saves need no consent field and discard legacy consent answers", () => {
+  for (const value of [undefined, false, true]) {
+    const d = document();
+    if (value !== undefined) d.answers["preparation.consent"] = value;
+    const saved = sanitizePayload({ documents: [d] }, "single").documents[0];
+    assert.deepEqual(saved.answers, { "entrant.lastName": "EXAMPLE" });
+  }
+  const documents = [document(), document()];
+  assert.equal(sanitizePayload({ documents }, "family").documents.length, 2);
 });
 test("save preserves dormant answers but strips runtime image URLs and preserves legitimate asset identity", () => {
   const d = document(),

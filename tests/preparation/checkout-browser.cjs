@@ -138,11 +138,11 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         route.fulfill({
           contentType: "text/html",
           body: `<!doctype html><html><body><main></main><section id="dialog"></section><p id="status"></p><script type="module">
-        import {cloudWorkspace} from '/assets/preparation/cloud.mjs?v=20261017-workspace-v28';
-        import {CAPABILITIES, PROVIDERS} from '/assets/preparation/backend.mjs?v=20261017-workspace-v28';
-        import {initialDraft} from '/assets/preparation/schema.mjs?v=20261017-workspace-v28';
+        import {cloudWorkspace} from '/assets/preparation/cloud.mjs?v=20261017-workspace-v29';
+        import {CAPABILITIES, PROVIDERS} from '/assets/preparation/backend.mjs?v=20261017-workspace-v29';
+        import {initialDraft} from '/assets/preparation/schema.mjs?v=20261017-workspace-v29';
         Object.assign(CAPABILITIES,{accounts:true,checkout:true,cloudSave:true,pdfDownload:true}); PROVIDERS.google=true;
-        const d=initialDraft(); d.answers={'preparation.consent':true,'contact.email':'applicant@example.test','entrant.firstName':'SYNTHETIC'};
+        const d=initialDraft(); d.answers={'contact.email':'applicant@example.test','entrant.firstName':'SYNTHETIC'};
         let cleanup;
         const close=()=>{const fn=cleanup;cleanup=null;fn?.();document.querySelector('#dialog').replaceChildren();};
         const cloud=cloudWorkspace({related:()=>null,dialog:(title,node,onClose)=>{close();cleanup=onClose;const heading=document.createElement('h2');heading.textContent=title;document.querySelector('#dialog').replaceChildren(heading,node);},close,status:text=>document.querySelector('#status').textContent=text,saved:()=>{},pdfReady:()=>{document.querySelector('#status').textContent='PDF unlocked';}});

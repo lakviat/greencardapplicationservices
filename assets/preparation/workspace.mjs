@@ -1,4 +1,4 @@
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v28";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v29";
 import {
   FORM_VERSION,
   PACKAGES,
@@ -13,29 +13,29 @@ import {
   warnings,
   recommendPackage,
   hasSpouse,
-} from "./schema.mjs?v=20261017-workspace-v28";
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v28";
+} from "./schema.mjs?v=20261017-workspace-v29";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v29";
 import {
   readImage,
   drawCrop,
   photoCopy,
   passportCopy,
   scanPassport,
-} from "./media.mjs?v=20261017-workspace-v28";
+} from "./media.mjs?v=20261017-workspace-v29";
 import {
   CAPABILITIES,
   unavailable,
   capabilities,
-} from "./backend.mjs?v=20261017-workspace-v28";
-import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v28";
-import { accountControl } from "./account-control.mjs?v=20261017-workspace-v28";
-import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v28";
-import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v28";
-import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v28";
-import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v28";
-import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v28";
-import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v28";
-import { dateControl } from "./date-control.mjs?v=20261017-workspace-v28";
+} from "./backend.mjs?v=20261017-workspace-v29";
+import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v29";
+import { accountControl } from "./account-control.mjs?v=20261017-workspace-v29";
+import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v29";
+import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v29";
+import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v29";
+import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v29";
+import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v29";
+import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v29";
+import { dateControl } from "./date-control.mjs?v=20261017-workspace-v29";
 const app = document.querySelector("#workspace");
 let draft = initialDraft();
 const sessionDrafts = [draft];
@@ -55,11 +55,6 @@ const cloud = cloudWorkspace({
         : "Signed out. Sign in to save your progress.",
     );
     if (view === "dashboard") renderDashboard();
-  },
-  reviewConsent: (record) => {
-    draft = record;
-    navigate("document");
-    activate("preparation.consent");
   },
   status: (text) => {
     cloudStatus = text;
@@ -453,25 +448,23 @@ function makeField(field) {
   );
   wrap.append(label);
   if (field.help) {
-    const mandatory = field.id === "preparation.consent";
     wrap.append(
       el(
         "p",
         {
-          class: `field-help ${mandatory ? "mandatory-help" : ""}`,
+          class: "field-help",
           id: `help-${field.id}`,
         },
         field.help,
       ),
     );
-    if (!mandatory)
-      wrap.append(
-        button("?", () => openFieldHelp(field), {
-          class: "field-help-toggle",
-          "aria-label": `Help: ${field.label}`,
-          "aria-haspopup": "dialog",
-        }),
-      );
+    wrap.append(
+      button("?", () => openFieldHelp(field), {
+        class: "field-help-toggle",
+        "aria-label": `Help: ${field.label}`,
+        "aria-haspopup": "dialog",
+      }),
+    );
   }
   if (["photo", "passportPhoto"].includes(field.type)) {
     wrap.append(mediaControl(field));

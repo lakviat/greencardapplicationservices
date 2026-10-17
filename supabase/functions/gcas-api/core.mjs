@@ -153,11 +153,6 @@ export function sanitizePayload(input, pack, storedAssets = []) {
           };
         }
       }
-      assert(
-        d.answers["preparation.consent"] === true,
-        400,
-        "Confirm permission to store and process this preparation.",
-      );
       return d;
     }),
   };
