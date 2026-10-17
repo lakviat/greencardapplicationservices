@@ -265,6 +265,15 @@ const pdf = await call(a, "pdf", { id });
 assert.equal(pdf.status, 200, JSON.stringify(pdf.data));
 assert.equal(Buffer.from(pdf.data).subarray(0, 4).toString(), "%PDF");
 writeFileSync("/tmp/gcas-backend-synthetic.pdf", Buffer.from(pdf.data));
+for (let download = 0; download < 2; download++) {
+  const repeat = await call(a, "pdf", { id });
+  assert.equal(
+    repeat.status,
+    200,
+    "A paid preparation can download again without another payment",
+  );
+  assert.equal(Buffer.from(repeat.data).subarray(0, 4).toString(), "%PDF");
+}
 assert.equal((await call(a, "email", { id })).status, 503);
 check(
   await admin.rpc("gcas_payment", {

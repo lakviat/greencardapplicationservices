@@ -380,7 +380,7 @@ const printed =
       // the same bounded decoder used by the backend, in every browser engine.
       const uploadCopy = await page.evaluate(async () => {
         const { passportCopy, passportUploadCopy } =
-          await import("/assets/preparation/media.mjs?v=20261017-workspace-v34");
+          await import("/assets/preparation/media.mjs?v=20261017-workspace-v35");
         const canvas = document.createElement("canvas");
         canvas.width = 3024;
         canvas.height = 4032;
@@ -409,7 +409,7 @@ const printed =
       // both the native-first path and the local decoder fallback on real bytes.
       const heic = await page.evaluate(async () => {
         const { readImage, passportCopy } =
-          await import("/assets/preparation/media.mjs?v=20261017-workspace-v34");
+          await import("/assets/preparation/media.mjs?v=20261017-workspace-v35");
         const source = await (
           await fetch("/tests/preparation/fixtures/synthetic-td3.heic")
         ).blob();

@@ -52,6 +52,16 @@ export const PACKAGES = Object.freeze({
   },
 });
 export const price = (key) => `$${(PACKAGES[key].cents / 100).toFixed(2)}`;
+// An unfinished worksheet email must not block a purchase. The verified account
+// remains the owner; a valid worksheet email is only a Stripe receipt prefill.
+export function checkoutEmail(value, verifiedEmail) {
+  const email = typeof value === "string" ? value.trim() : "";
+  return email.length <= 254 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) &&
+    !/[\r\n\x00-\x1f\x7f]/.test(value)
+    ? email
+    : verifiedEmail;
+}
 export const initialDraft = () => ({
   version: FORM_VERSION.id,
   year: FORM_VERSION.year,

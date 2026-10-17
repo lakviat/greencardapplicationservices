@@ -169,8 +169,8 @@ test("checkout prefills worksheet email without changing verified account identi
     "a@example.test\r\nBcc:x@y.test",
     "a".repeat(255) + "@example.test",
   ])
-    assert.throws(
-      () => checkoutEmail(value, "owner@example.test"),
-      /valid worksheet email/,
+    assert.equal(
+      checkoutEmail(value, "owner@example.test"),
+      "owner@example.test",
     );
 });

@@ -1,4 +1,4 @@
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v34";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v35";
 import {
   FORM_VERSION,
   PACKAGES,
@@ -13,33 +13,33 @@ import {
   warnings,
   recommendPackage,
   hasSpouse,
-} from "./schema.mjs?v=20261017-workspace-v34";
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v34";
+} from "./schema.mjs?v=20261017-workspace-v35";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v35";
 import {
   readImage,
   drawCrop,
   photoCopy,
   passportCopy,
   scanPassport,
-} from "./media.mjs?v=20261017-workspace-v34";
+} from "./media.mjs?v=20261017-workspace-v35";
 import {
   CAPABILITIES,
   unavailable,
   capabilities,
-} from "./backend.mjs?v=20261017-workspace-v34";
-import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v34";
-import { accountControl } from "./account-control.mjs?v=20261017-workspace-v34";
-import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v34";
-import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v34";
-import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v34";
-import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v34";
-import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v34";
-import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v34";
-import { dateControl } from "./date-control.mjs?v=20261017-workspace-v34";
+} from "./backend.mjs?v=20261017-workspace-v35";
+import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v35";
+import { accountControl } from "./account-control.mjs?v=20261017-workspace-v35";
+import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v35";
+import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v35";
+import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v35";
+import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v35";
+import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v35";
+import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v35";
+import { dateControl } from "./date-control.mjs?v=20261017-workspace-v35";
 import {
   saveIndicator,
   savedAt,
-} from "./save-feedback.mjs?v=20261017-workspace-v34";
+} from "./save-feedback.mjs?v=20261017-workspace-v35";
 const app = document.querySelector("#workspace");
 const saveFeedback = saveIndicator();
 const saveStates = new WeakMap();
@@ -140,6 +140,28 @@ const cloud = cloudWorkspace({
   },
   pdfReady: (record) => {
     draft = record;
+    if (
+      preparationProgress(record, relatedDrafts.get(record), countryNames)
+        .remaining.length
+    ) {
+      navigate("document");
+      openDialog(
+        "Payment confirmed",
+        el(
+          "div",
+          {},
+          el(
+            "p",
+            {},
+            "Your preparation is purchased and saved. Keep editing now or return anytime. Finish the remaining items, then download your completed PDF as often as you need.",
+          ),
+          button("Continue preparation", closeDialog, {
+            class: "button primary",
+          }),
+        ),
+      );
+      return;
+    }
     navigate("preview");
   },
 });
@@ -1983,6 +2005,7 @@ function openSave() {
 }
 function openReceivePdf() {
   if (
+    cloud.info(draft)?.state === "paid" &&
     preparationProgress(draft, relatedDrafts.get(draft), countryNames).remaining
       .length
   ) {
@@ -2080,14 +2103,14 @@ function renderReview() {
       button(
         cloud.info(draft)?.state === "paid"
           ? "Open your PDF"
-          : `Save & receive PDF · ${price(draft.package)}`,
+          : `Pay now · ${price(draft.package)}`,
         openReceivePdf,
         { class: "button primary" },
       ),
       el(
         "p",
         { class: "purchase-summary" },
-        "Saving and editing are free. Pay the one-time package price with Stripe when you are ready to view and download your completed preparation PDF. Your worksheet email prefills checkout; saved work belongs to your signed-in account.",
+        "Pay now or finish later. One payment unlocks repeat PDF downloads for this preparation. Saving and editing stay free.",
       ),
     ),
   );

@@ -1,4 +1,4 @@
-import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v34";
+import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v35";
 import {
   api,
   acceptAuth,
@@ -8,15 +8,21 @@ import {
   CAPABILITIES,
   capabilities,
   unavailable,
-} from "./backend.mjs?v=20261017-workspace-v34";
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v34";
-import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v34";
-import { passportUploadCopy } from "./media.mjs?v=20261017-workspace-v34";
-import { accountPage } from "./account-page.mjs?v=20261017-workspace-v34";
+} from "./backend.mjs?v=20261017-workspace-v35";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v35";
+import {
+  price,
+  PACKAGES,
+  preparationProgress,
+  checkoutEmail,
+} from "./schema.mjs?v=20261017-workspace-v35";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v35";
+import { passportUploadCopy } from "./media.mjs?v=20261017-workspace-v35";
+import { accountPage } from "./account-page.mjs?v=20261017-workspace-v35";
 import {
   savedAt,
   savingBar,
-} from "./save-feedback.mjs?v=20261017-workspace-v34";
+} from "./save-feedback.mjs?v=20261017-workspace-v35";
 const groups = new WeakMap();
 let account = null;
 const pendingSaves = new Set();
@@ -442,6 +448,15 @@ export function cloudWorkspace(ui) {
           button("Retry saving images", () => startSave(d), {
             class: "button primary",
           }),
+          g.state !== "paid" && CAPABILITIES.checkout
+            ? button(
+                `Pay now · ${price(g.package)}`,
+                () => checkout(d).catch(error),
+                {
+                  class: "button",
+                },
+              )
+            : null,
           button("Continue editing", ui.close, { class: "button" }),
         ),
       );
@@ -501,13 +516,28 @@ export function cloudWorkspace(ui) {
     );
   }
   async function checkout(d, { receivePdf = false, direct = false } = {}) {
-    await saveLatest(d);
     const g = group(d);
-    if (g.pendingImages?.length) return saveProgress(d);
+    showSaving(g, "Saving before checkout…");
+    await saveLatest(d);
     if (g.state === "paid") {
+      ui.close();
       if (receivePdf) ui.pdfReady(d);
+      else
+        message(
+          "Already purchased",
+          "You can keep editing this preparation and download your completed PDF again without paying again.",
+        );
       return;
     }
+    const remaining = preparationProgress(
+      d,
+      g.documents.find((record) => record !== d),
+      COUNTRIES.map((country) => country.name),
+    ).remaining.length;
+    const receiptEmail = checkoutEmail(
+      d.answers["contact.email"],
+      account.email,
+    );
     if (!CAPABILITIES.checkout) {
       return ui.dialog(
         "Your progress is saved",
@@ -542,7 +572,7 @@ export function cloudWorkspace(ui) {
           const result = await api("checkout", {
             id: g.id,
             package: g.package,
-            contactEmail: d.answers["contact.email"],
+            contactEmail: receiptEmail,
           });
           if (result.paid) {
             popup.close();
@@ -563,6 +593,7 @@ export function cloudWorkspace(ui) {
           g.checkoutStarted = true;
           popup.opener = null;
           popup.location.href = url.href;
+          check.hidden = false;
           output.textContent =
             "Complete payment in the Stripe tab, then return here. Your progress is already saved. We will check payment automatically to unlock your PDF.";
           clearInterval(paymentWatch);
@@ -611,6 +642,7 @@ export function cloudWorkspace(ui) {
       },
       { class: "button" },
     );
+    check.hidden = true;
     ui.dialog(
       receivePdf ? "Secure checkout for your PDF" : "Pay now or continue later",
       el(
@@ -624,14 +656,23 @@ export function cloudWorkspace(ui) {
         el(
           "p",
           {},
-          "Unlocks PDF downloads and redownloads for this preparation. Saving and editing are free. Required relatives are included on every plan. Premium is unavailable.",
+          "Pay once for this preparation. Keep editing and download your completed PDF as often as you need.",
         ),
-        el(
-          "p",
-          { class: "notice" },
-          "Your saved answers, photos, and passport copies are in private account storage. Saved files expire after 365 days without a save. You can delete them earlier in My Preparations. Read the privacy notice for details.",
-        ),
-        link("Privacy notice", "/policies/#privacy", {
+        remaining
+          ? el(
+              "p",
+              { class: "notice checkout-incomplete" },
+              `${remaining} required ${remaining === 1 ? "item still needs" : "items still need"} finishing. You can pay now and complete them later.`,
+            )
+          : null,
+        g.pendingImages?.length
+          ? el(
+              "p",
+              { class: "notice" },
+              "Some photos still need saving. Your answers are saved; you can pay now and retry the photos later.",
+            )
+          : null,
+        link("Privacy & storage", "/policies/#privacy", {
           target: "_blank",
           rel: "noopener noreferrer",
         }),
@@ -640,11 +681,7 @@ export function cloudWorkspace(ui) {
           {},
           "Your progress is already saved. You can close checkout and return to My Preparations anytime to continue or pay later.",
         ),
-        el(
-          "p",
-          {},
-          `Receipt email: ${d.answers["contact.email"] || account.email}. Your saved preparation stays in your signed-in account (${account.email}).`,
-        ),
+        el("p", {}, `Receipt email: ${receiptEmail}.`),
         output,
         confirm,
         check,
@@ -654,7 +691,9 @@ export function cloudWorkspace(ui) {
     );
     // A signed-in user goes straight to Stripe from the PDF button. After an
     // OAuth round-trip, browsers may require the visible Continue button again.
-    if (direct) confirm.click();
+    // An unfinished worksheet always gets the short, non-blocking notice and
+    // an explicit Continue button. That tap also works with mobile popup rules.
+    if (direct && !remaining && !g.pendingImages?.length) confirm.click();
   }
   async function load(id) {
     const { preparation: p } = await api("get", { id });

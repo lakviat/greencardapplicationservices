@@ -5,6 +5,7 @@ import {
   storedFields,
   initialDraft,
   progress,
+  checkoutEmail as receiptEmail,
 } from "../../../assets/preparation/schema.mjs";
 import { COUNTRIES } from "../../../assets/preparation/countries.mjs";
 export class HttpError extends Error {
@@ -32,16 +33,7 @@ export function plan(key) {
 // Checkout contact information never grants access to a preparation. Ownership
 // and all delivery links remain tied to the authenticated, verified account.
 export function checkoutEmail(value, verifiedEmail) {
-  if (value === undefined || value === "") return verifiedEmail;
-  assert(
-    typeof value === "string" &&
-      value.length <= 254 &&
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()) &&
-      !/[\r\n\x00-\x1f\x7f]/.test(value),
-    400,
-    "Enter a valid worksheet email before checkout.",
-  );
-  return value.trim();
+  return receiptEmail(value, verifiedEmail);
 }
 export function sanitizePayload(input, pack, storedAssets = []) {
   plan(pack);

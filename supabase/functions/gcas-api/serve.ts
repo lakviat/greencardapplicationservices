@@ -51,6 +51,10 @@ var PACKAGES = Object.freeze({
     disabled: true
   }
 });
+function checkoutEmail(value, verifiedEmail) {
+  const email = typeof value === "string" ? value.trim() : "";
+  return email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && !/[\r\n\x00-\x1f\x7f]/.test(value) ? email : verifiedEmail;
+}
 var initialDraft = () => ({
   version: FORM_VERSION.id,
   year: FORM_VERSION.year,
@@ -1578,14 +1582,8 @@ function plan(key) {
   );
   return PACKAGES[key];
 }
-function checkoutEmail(value, verifiedEmail) {
-  if (value === void 0 || value === "") return verifiedEmail;
-  assert(
-    typeof value === "string" && value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()) && !/[\r\n\x00-\x1f\x7f]/.test(value),
-    400,
-    "Enter a valid worksheet email before checkout."
-  );
-  return value.trim();
+function checkoutEmail2(value, verifiedEmail) {
+  return checkoutEmail(value, verifiedEmail);
 }
 function sanitizePayload(input, pack, storedAssets = []) {
   plan(pack);
@@ -2061,9 +2059,9 @@ var admin = createClient(
   { auth: { persistSession: false, autoRefreshToken: false } }
 );
 var bucket = admin.storage.from("gcas-private");
-var stripeKey = () => env("STRIPE_SECRET_KEY");
+var stripeKey = () => env("STRIPE_SECRET_KEY").trim();
 var ready = () => env("GCAS_AUTH_READY") === "true";
-var checkoutReady = () => ready() && env("GCAS_CHECKOUT_ENABLED") === "true" && !!stripeKey() && !!env("STRIPE_WEBHOOK_SECRET");
+var checkoutReady = () => ready() && env("GCAS_CHECKOUT_ENABLED") === "true" && /^(sk|rk)_(live|test)_[A-Za-z0-9]{20,}$/.test(stripeKey()) && !!env("STRIPE_WEBHOOK_SECRET");
 function check(result) {
   if (result.error)
     throw new HttpError(
@@ -2084,6 +2082,15 @@ async function stripe(path, body, idempotency) {
     body
   });
   const data = await res.json();
+  if (!res.ok) {
+    const safe = (value) => typeof value === "string" && /^[A-Za-z0-9_]{1,80}$/.test(value) ? value : void 0;
+    console.error("stripe_request_failed", {
+      status: res.status,
+      type: safe(data.error?.type),
+      code: safe(data.error?.code),
+      request: safe(res.headers.get("request-id"))
+    });
+  }
   assert(
     res.ok,
     503,
@@ -2378,10 +2385,9 @@ async function handle(req, url) {
       503,
       "Checkout is awaiting activation. No payment was taken."
     );
-    await limited(`${user.id}:checkout`, 5, 3600);
     assert(uuid(body.id), 400, "Invalid preparation ID.");
     const selected = plan(body.package);
-    const contactEmail = checkoutEmail(body.contactEmail, user.email);
+    const contactEmail = checkoutEmail2(body.contactEmail, user.email);
     let p2 = check(
       await admin.from("gcas_preparations").select("*").eq("id", body.id).maybeSingle()
     );
@@ -2426,6 +2432,13 @@ async function handle(req, url) {
       );
       order = null;
     }
+    if (order && !order.session_id && Date.parse(order.created_at) + 828e5 <= Date.now()) {
+      check(
+        await admin.from("gcas_orders").update({ state: "expired" }).eq("id", order.id).eq("state", "pending")
+      );
+      order = null;
+    }
+    await limited(`${user.id}:checkout`, 5, 3600);
     if (!order) {
       const insert = await admin.from("gcas_orders").insert({ preparation_id: p2.id, amount: selected.cents }).select().single();
       if (insert.error?.code === "23505")

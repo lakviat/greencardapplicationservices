@@ -30,12 +30,12 @@ const admin = createClient(
   { auth: { persistSession: false, autoRefreshToken: false } },
 );
 const bucket = admin.storage.from("gcas-private");
-const stripeKey = () => env("STRIPE_SECRET_KEY");
+const stripeKey = () => env("STRIPE_SECRET_KEY").trim();
 const ready = () => env("GCAS_AUTH_READY") === "true";
 const checkoutReady = () =>
   ready() &&
   env("GCAS_CHECKOUT_ENABLED") === "true" &&
-  !!stripeKey() &&
+  /^(sk|rk)_(live|test)_[A-Za-z0-9]{20,}$/.test(stripeKey()) &&
   !!env("STRIPE_WEBHOOK_SECRET");
 function check(result: any) {
   if (result.error)
@@ -61,6 +61,20 @@ async function stripe(
     body,
   });
   const data = await res.json();
+  if (!res.ok) {
+    // Keep credentials, receipt emails, card data and provider messages out of
+    // logs. Safe identifiers let the owner find the failed call in Workbench.
+    const safe = (value: unknown) =>
+      typeof value === "string" && /^[A-Za-z0-9_]{1,80}$/.test(value)
+        ? value
+        : undefined;
+    console.error("stripe_request_failed", {
+      status: res.status,
+      type: safe(data.error?.type),
+      code: safe(data.error?.code),
+      request: safe(res.headers.get("request-id")),
+    });
+  }
   assert(
     res.ok,
     503,
@@ -402,7 +416,6 @@ async function handle(req: Request, url: URL) {
       503,
       "Checkout is awaiting activation. No payment was taken.",
     );
-    await limited(`${user.id}:checkout`, 5, 3600);
     assert(uuid(body.id), 400, "Invalid preparation ID.");
     const selected = plan(body.package);
     const contactEmail = checkoutEmail(body.contactEmail, user.email!);
@@ -464,6 +477,26 @@ async function handle(req: Request, url: URL) {
       );
       order = null;
     }
+    // A failed Stripe request can leave an order without a session. Once its
+    // fixed session lifetime has elapsed, retry with a fresh order/key rather
+    // than sending Stripe an expires_at timestamp in the past forever.
+    if (
+      order &&
+      !order.session_id &&
+      Date.parse(order.created_at) + 82800000 <= Date.now()
+    ) {
+      check(
+        await admin
+          .from("gcas_orders")
+          .update({ state: "expired" })
+          .eq("id", order.id)
+          .eq("state", "pending"),
+      );
+      order = null;
+    }
+    // Reopening an existing Checkout or an already-purchased preparation above
+    // does not consume the new-payment creation allowance.
+    await limited(`${user.id}:checkout`, 5, 3600);
     if (!order) {
       const insert = await admin
         .from("gcas_orders")

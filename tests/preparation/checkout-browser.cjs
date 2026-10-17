@@ -45,6 +45,8 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         saveCalls = 0,
         lastSavedName;
       let lastSavedAt;
+      let expectedEmail = "applicant@example.test",
+        expectedPackage = "single";
       const saveIds = new Set();
       await context.route(`${project}/**`, async (route) => {
         const request = route.request(),
@@ -78,9 +80,22 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
           });
         }
         if (url.pathname.endsWith("/user")) return json(user);
+        if (url.pathname.endsWith("/health"))
+          return json({
+            accounts: true,
+            cloudSave: true,
+            checkout: true,
+            pdfDownload: true,
+          });
+        if (url.pathname.endsWith("/settings"))
+          return json({ external: { google: true } });
         if (url.pathname.endsWith("/draft"))
           return json({
-            preparation: { revision: 0, state: "unpaid", package: "single" },
+            preparation: {
+              revision: 0,
+              state: "unpaid",
+              package: expectedPackage,
+            },
           });
         if (url.pathname.endsWith("/checkout")) {
           assert(saved, "Save completes before checkout");
@@ -90,8 +105,11 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
             "id",
             "package",
           ]);
-          assert.equal(body.contactEmail, "applicant@example.test");
-          assert.equal(body.package, "single");
+          assert.equal(
+            body.contactEmail,
+            expectedEmail?.includes("@") ? expectedEmail : user.email,
+          );
+          assert.equal(body.package, expectedPackage);
           checkoutBodies.push(body);
           return json({
             url: "https://checkout.stripe.com/c/pay/synthetic-local-only",
@@ -122,7 +140,7 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
             request.postDataJSON().payload.documents[0].answers[
               "contact.email"
             ],
-            "applicant@example.test",
+            expectedEmail,
           );
           saved = true;
           lastSavedAt = new Date(
@@ -132,7 +150,7 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
             preparation: {
               revision: ++revision,
               state: paid ? "paid" : "unpaid",
-              package: "single",
+              package: expectedPackage,
               updated_at: lastSavedAt,
             },
           });
@@ -153,17 +171,19 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
           body: "<h1>Synthetic checkout — no payment</h1>",
         }),
       );
-      await context.route(base + "/checkout-test", (route) =>
+      await context.route(base + "/checkout-test*", (route) =>
         route.fulfill({
           contentType: "text/html",
-          body: `<!doctype html><html><head><link rel="stylesheet" href="/assets/preparation/workspace.css?v=20261017-workspace-v34"></head><body><main></main><section id="dialog"></section><p id="status"></p><script type="module">
-        import {cloudWorkspace} from '/assets/preparation/cloud.mjs?v=20261017-workspace-v34';
-        import {CAPABILITIES, PROVIDERS} from '/assets/preparation/backend.mjs?v=20261017-workspace-v34';
-        import {initialDraft} from '/assets/preparation/schema.mjs?v=20261017-workspace-v34';
-        import {saveIndicator} from '/assets/preparation/save-feedback.mjs?v=20261017-workspace-v34';
+          body: `<!doctype html><html><head><link rel="stylesheet" href="/assets/preparation/workspace.css?v=20261017-workspace-v35"></head><body><main></main><section id="dialog"></section><p id="status"></p><script type="module">
+        import {cloudWorkspace} from '/assets/preparation/cloud.mjs?v=20261017-workspace-v35';
+        import {CAPABILITIES, PROVIDERS} from '/assets/preparation/backend.mjs?v=20261017-workspace-v35';
+        import {initialDraft} from '/assets/preparation/schema.mjs?v=20261017-workspace-v35';
+        import {saveIndicator} from '/assets/preparation/save-feedback.mjs?v=20261017-workspace-v35';
         const indicator=saveIndicator(); document.body.append(indicator.node);
         Object.assign(CAPABILITIES,{accounts:true,checkout:true,cloudSave:true,pdfDownload:true}); PROVIDERS.google=true;
-        const d=initialDraft(); d.answers={'contact.email':'applicant@example.test','entrant.firstName':'SYNTHETIC'};
+        const scenario=new URLSearchParams(location.search);
+        const d=initialDraft(); d.package=scenario.get('package') || 'single'; d.answers={'contact.email':scenario.has('email') ? scenario.get('email') : 'applicant@example.test','entrant.firstName':'SYNTHETIC'};
+        if(scenario.has('image')) d.assets['passport.bio']={blob:new Blob(['not an image'],{type:'image/jpeg'}),confirmed:true};
         let cleanup;
         const close=()=>{const fn=cleanup;cleanup=null;fn?.();document.querySelector('#dialog').replaceChildren();};
         const cloud=cloudWorkspace({related:()=>null,saveState:(_records,state)=>indicator.update(state),dialog:(title,node,onClose)=>{close();cleanup=onClose;const heading=document.createElement('h2');heading.textContent=title;document.querySelector('#dialog').replaceChildren(heading,node);},close,status:text=>document.querySelector('#status').textContent=text,saved:()=>{},pdfReady:()=>{document.querySelector('#status').textContent='PDF unlocked';}});
@@ -255,9 +275,24 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
       await page
         .getByRole("button", { name: "Close checkout", exact: true })
         .click();
-      // Now signed in: one click opens checkout without another confirmation.
+      // Incomplete signed-in worksheets get a brief notice, never a validation gate.
       await page
         .getByRole("button", { name: "Save & receive PDF", exact: true })
+        .click();
+      await page.locator(".checkout-incomplete").waitFor();
+      assert.equal(
+        checkoutBodies.length,
+        1,
+        "Notice precedes checkout for unfinished fields",
+      );
+      assert.equal(
+        await page
+          .getByRole("button", { name: "Check payment", exact: true })
+          .isVisible(),
+        false,
+      );
+      await page
+        .getByRole("button", { name: "Continue to Stripe · $9.99" })
         .click();
       await page.getByText(/Complete payment in the Stripe tab/).waitFor();
       assert.equal(checkoutBodies.length, 2);
@@ -277,6 +312,18 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         .getByText("%PDF-synthetic-local-test", { exact: true })
         .waitFor();
       assert.equal(pdfCalls, 1);
+      await page.getByRole("button", { name: "Try PDF", exact: true }).click();
+      await page.waitForFunction(
+        () =>
+          document.querySelector("#status").textContent ===
+          "%PDF-synthetic-local-test",
+      );
+      assert.equal(pdfCalls, 2, "Paid preparations support repeat downloads");
+      assert.equal(
+        checkoutBodies.length,
+        2,
+        "Repeat downloads never start another payment",
+      );
       // A manual save acknowledges the server response, including edits made
       // while the preceding request was still in flight. It never reauthenticates.
       await page
@@ -409,6 +456,101 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         await page.locator('.save-feedback [role="progressbar"]').isVisible(),
         false,
       );
+      assert.deepEqual(errors, []);
+      // Empty/partial contact fields and failed image conversion cannot block payment.
+      for (const [plan, amount, email] of [
+        ["couple", "$19.99", "partial"],
+        ["family", "$29.99", ""],
+      ]) {
+        saveMode = "success";
+        expectedPackage = plan;
+        expectedEmail = email;
+        paid = false;
+        const partial = await context.newPage();
+        partial.on("pageerror", (e) => errors.push(e.message));
+        await partial.goto(
+          base +
+            "/checkout-test?package=" +
+            plan +
+            "&email=" +
+            email +
+            "&image=1",
+        );
+        await partial
+          .getByRole("button", { name: "Save progress", exact: true })
+          .click();
+        await partial
+          .getByRole("heading", {
+            name: "Answers saved — images need attention",
+            exact: true,
+          })
+          .waitFor();
+        await partial
+          .getByRole("button", { name: "Pay now · " + amount, exact: true })
+          .click();
+        await partial.locator(".checkout-incomplete").waitFor();
+        await partial
+          .getByText(
+            "Some photos still need saving. Your answers are saved; you can pay now and retry the photos later.",
+            { exact: true },
+          )
+          .waitFor();
+        await partial
+          .getByText("Receipt email: " + user.email + ".", { exact: true })
+          .waitFor();
+        const count = checkoutBodies.length;
+        await partial
+          .getByRole("button", {
+            name: "Continue to Stripe · " + amount,
+            exact: true,
+          })
+          .click();
+        await partial.getByText(/Complete payment in the Stripe tab/).waitFor();
+        assert.equal(checkoutBodies.length, count + 1);
+        await partial.close();
+      }
+      expectedPackage = "single";
+      expectedEmail = undefined;
+      paid = false;
+      const review = await context.newPage();
+      review.on("pageerror", (e) => errors.push(e.message));
+      await review.goto(base + "/prepare.html#review");
+      await review
+        .getByRole("button", { name: "Pay now · $9.99", exact: true })
+        .click();
+      await review.locator(".checkout-incomplete").waitFor();
+      const count = checkoutBodies.length;
+      await review.screenshot({
+        path: "/tmp/gcas-v35-incomplete-checkout-" + engine + ".png",
+      });
+      await review
+        .getByRole("button", {
+          name: "Continue to Stripe · $9.99",
+          exact: true,
+        })
+        .click();
+      await review.getByText(/Complete payment in the Stripe tab/).waitFor();
+      assert.equal(
+        checkoutBodies.length,
+        count + 1,
+        "Real review screen allows incomplete checkout",
+      );
+      paid = true;
+      await review
+        .getByRole("button", { name: "Check payment", exact: true })
+        .click();
+      await review
+        .getByRole("heading", { name: "Payment confirmed", exact: true })
+        .waitFor();
+      assert.equal(
+        new URL(review.url()).hash,
+        "#document",
+        "Early payment returns to editing, not an incomplete PDF error",
+      );
+      await review
+        .getByRole("button", { name: "Continue preparation", exact: true })
+        .click();
+      await review.close();
       assert.deepEqual(errors, []);
       console.log(
         engine +
