@@ -11,19 +11,29 @@ export const CAPABILITIES = {
 };
 export const unavailable =
   "Account saving and checkout are awaiting activation. No payment is collected until checkout is available. Keep this tab open to retain unsaved work.";
-let client;
+export const PROVIDERS = { google: false, apple: false };
+let activeAuth;
+export async function createAuth() {
+  const { createClient } = await import("../vendor/supabase.mjs");
+  return createClient(SUPABASE_URL, PUBLIC_KEY, {
+    auth: {
+      flowType: "pkce",
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  }).auth;
+}
 export async function auth() {
-  if (!client) {
-    const { createClient } = await import("../vendor/supabase.mjs");
-    client = createClient(SUPABASE_URL, PUBLIC_KEY, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: true,
-        detectSessionInUrl: false,
-      },
-    });
-  }
-  return client.auth;
+  activeAuth ||= await createAuth();
+  return activeAuth;
+}
+// Adopt only after a completed, verified OAuth attempt. Canceled attempts keep
+// their verifier/session in their own short-lived client and cannot log us in.
+export function acceptAuth(candidate) {
+  activeAuth?.stopAutoRefresh();
+  activeAuth = candidate;
+  activeAuth.startAutoRefresh();
 }
 export async function capabilities() {
   try {
@@ -33,6 +43,19 @@ export async function capabilities() {
     });
     if (!res.ok) return;
     const value = await res.json();
+    for (const provider of Object.keys(PROVIDERS)) PROVIDERS[provider] = false;
+    if (value.accounts === true) {
+      const settings = await fetch(`${SUPABASE_URL}/auth/v1/settings`, {
+        headers: { apikey: PUBLIC_KEY },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!settings.ok) return;
+      const { external } = await settings.json();
+      for (const provider of Object.keys(PROVIDERS))
+        PROVIDERS[provider] = external?.[provider] === true;
+    }
+    value.accounts =
+      value.accounts === true && Object.values(PROVIDERS).some(Boolean);
     for (const key of Object.keys(CAPABILITIES))
       CAPABILITIES[key] = key !== "premium" && value[key] === true;
   } catch {

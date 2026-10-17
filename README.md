@@ -2,12 +2,12 @@
 
 Independent DV Lottery preparation: a responsive document workspace on GitHub Pages with a Supabase backend. No government entry is submitted or confirmed by this service.
 
-The owner authorized backend integration and deployment to main on 2026-10-16. **Live paid capabilities remain disabled until Stripe, customer email, and retention maintenance are configured and verified.** Premium remains disabled pending owner review. Local tests are not evidence of production activation.
+The owner authorized backend integration and deployment to main on 2026-10-16. **Live paid capabilities remain disabled until OAuth sign-in, Stripe, customer email, and retention maintenance are configured and verified.** Premium remains disabled pending owner review. Local tests are not evidence of production activation.
 
 ## Features
 
 - Versioned principal, spouse and child fields, document guidance, completeness checks, explicit household reuse and mobile photo/passport tools.
-- Private Supabase account storage, verified email sign-in, paid save/resume, revision conflict protection, server-validated JPEGs and deletion.
+- Private Supabase account storage, Google/Apple sign-in (provider activation required), paid save/resume, revision conflict protection, server-validated JPEGs and deletion.
 - Server-priced Stripe Checkout and signature-verified, idempotent payment handling. Required derivatives remain included on every plan.
 - Server-generated preparation PDFs and email with authenticated account links. No passport or applicant-record email attachments.
 - In-memory free preparation, with no sensitive browser persistence or workspace analytics. Keep the original worksheet tab open during checkout; it is not saved until payment is verified and Save completes.
@@ -34,7 +34,7 @@ npm run test:browser
 npm run test:backend
 ```
 
-The free workflow is checked in Chromium, WebKit and Firefox at 320/390/430/1440 pixels. Backend integration tests use real local Auth, PostgreSQL, private Storage and Edge Functions with synthetic users; no live charge or external email is sent. `tests/backend/browser.mjs` additionally tests OTP delivery through local Mailpit and automatic paid saving. Its setup is in the CI workflow.
+The free workflow is checked in Chromium, WebKit and Firefox at 320/390/430/1440 pixels. Backend integration tests use real local Auth, PostgreSQL, private Storage and Edge Functions with synthetic users; no live charge or external email is sent. `tests/backend/browser.mjs` additionally tests the OAuth callback with simulated provider responses, a real local Auth session, and automatic paid saving. `tests/preparation/oauth-browser.cjs` covers PKCE and canceled/openerless flows in all three browsers. Real Google/Apple credentials are verified separately. Its setup is in the CI workflow.
 
 ## Deployment and secrets
 

@@ -4,7 +4,7 @@ verify_jwt = false
 entrypoint = "./functions/gcas-api/serve.ts"
 # Every private operation verifies its Bearer token with Auth.getUser in the handler.
 [auth.email]
-# Match production so local OTP tests exercise first-time confirmation emails too.
+# Email is enabled only for loopback integration fixtures; production uses OAuth.
 enable_confirmations = true
 [auth.email.template.confirmation]
 subject = "Your Green Card preparation sign-in code"
@@ -18,9 +18,12 @@ content_path = "./supabase/templates/magic-link.html"
 project_id = "wofazcvfvazfkvujwwcw"
 [remotes.production.auth]
 site_url = "https://greencardapplicationservices.com/prepare.html"
-additional_redirect_urls = ["https://greencardapplicationservices.com/prepare.html"]
+additional_redirect_urls = ['https://greencardapplicationservices.com/auth-callback.html\?attempt=*']
 [remotes.production.auth.email]
+enable_signup = false
 enable_confirmations = true
+[remotes.production.auth.sms]
+enable_signup = false
 [remotes.production.auth.email.template.confirmation]
 subject = "Your Green Card preparation sign-in code"
 content_path = "./supabase/templates/magic-link.html"

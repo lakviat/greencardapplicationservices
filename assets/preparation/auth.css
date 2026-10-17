@@ -1,0 +1,14 @@
+.social-sign-in {
+  display: grid;
+  gap: 12px;
+  margin-block: 20px;
+}
+.social-sign-in .button {
+  width: 100%;
+  min-height: 44px;
+}
+.auth-return {
+  max-width: 32rem;
+  margin: 10vh auto;
+  padding: 24px;
+}

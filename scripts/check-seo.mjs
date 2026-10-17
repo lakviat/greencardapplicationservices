@@ -215,7 +215,7 @@ for (const [relativePath, limit] of [["assets/styles.css", 140000], ["assets/app
 
 for (const file of htmlFiles) {
   const html = fs.readFileSync(path.join(root, file), "utf8");
-  if (["prepare.html", "payment-return.html"].includes(file)) continue; // Noindex application; independently validated by platform checks.
+  if (["prepare.html", "payment-return.html", "auth-callback.html"].includes(file)) continue; // Noindex application; independently validated by platform checks.
   const publicPath = toPublicPath(file);
   const titleBlocks = blocks(html, "title").map(stripMarkup).filter(Boolean);
   if (titleBlocks.length !== 1) {

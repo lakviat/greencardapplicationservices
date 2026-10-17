@@ -26,8 +26,8 @@ import {
   CAPABILITIES,
   unavailable,
   capabilities,
-} from "./backend.mjs?v=20261017-workspace-v23";
-import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v23";
+} from "./backend.mjs?v=20261017-social-auth-v1";
+import { cloudWorkspace } from "./cloud.mjs?v=20261017-social-auth-v1";
 import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v23";
 import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v23";
 import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v23";
@@ -2078,13 +2078,13 @@ function renderDashboard() {
         "p",
         {},
         CAPABILITIES.accounts
-          ? "Sign in with your verified email to open purchased preparations."
+          ? "Sign in with Google or Apple to open purchased preparations."
           : unavailable,
       ),
       button(
         CAPABILITIES.accounts
           ? "Sign in / open saved preparations"
-          : "Email sign-in unavailable",
+          : "Account sign-in unavailable",
         cloud.dashboard,
         {
           class: "button",

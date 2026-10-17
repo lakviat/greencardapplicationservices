@@ -59,7 +59,7 @@ jobs:
         run: npx supabase start > /tmp/gcas-local-start.log 2>&1
       - run: npm run test:backend
       - run: npx playwright install --with-deps chromium
-      - name: Test OTP and paid save in a mobile browser
+      - name: Test OAuth callback and real paid save in a mobile browser
         run: |
           set -euo pipefail
           printf 'GCAS_AUTH_READY=true\nGCAS_EXTRA_ORIGINS=https://127.0.0.1:8444\n' > .env.backend-test

@@ -1,10 +1,12 @@
+import { beginSignIn } from "./oauth.mjs?v=20261017-social-auth-v1";
 import {
   api,
   auth,
-  user,
+  acceptAuth,
+  PROVIDERS,
   CAPABILITIES,
   unavailable,
-} from "./backend.mjs?v=20261017-workspace-v23";
+} from "./backend.mjs?v=20261017-social-auth-v1";
 import { el, button, link } from "./dom.mjs?v=20261017-workspace-v23";
 import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v23";
 const groups = new WeakMap();
@@ -51,78 +53,40 @@ export function cloudWorkspace(ui) {
       message("Account setup in progress", unavailable);
       return;
     }
-    const email = el("input", {
-      type: "email",
-      autocomplete: "email",
-      id: "account-email",
-      required: true,
-    });
-    const output = el("p", { role: "status" });
-    const send = button(
-      "Send sign-in code",
-      async () => {
-        send.disabled = true;
-        try {
-          const a = await auth();
-          const { error: e } = await a.signInWithOtp({
-            email: email.value.trim(),
-            options: { shouldCreateUser: true },
-          });
-          if (e) throw e;
-          const code = el("input", {
-            type: "text",
-            inputmode: "numeric",
-            autocomplete: "one-time-code",
-            id: "account-code",
-            maxlength: 8,
-          });
-          const verify = button(
-            "Verify & continue",
-            async () => {
-              verify.disabled = true;
-              try {
-                const { data, error: e } = await a.verifyOtp({
-                  email: email.value.trim(),
-                  token: code.value.trim(),
-                  type: "email",
-                });
-                if (e) throw e;
-                account = data.user;
-                ui.close();
-                await next();
-              } catch (e) {
-                if (account) error(e);
-                else output.textContent = e.message;
-              } finally {
-                verify.disabled = false;
-              }
-            },
-            { class: "button primary" },
-          );
-          ui.dialog(
-            "Check your email",
-            el(
-              "div",
-              {},
-              el(
-                "p",
-                {},
-                "Enter the sign-in code sent to your email. Keep this worksheet tab open.",
-              ),
-              el("label", { for: "account-code" }, "Sign-in code"),
-              code,
-              output,
-              verify,
-            ),
-          );
-        } catch (e) {
-          output.textContent = e.message;
-        } finally {
-          send.disabled = false;
-        }
-      },
-      { class: "button primary" },
-    );
+    const output = el("p", { role: "status", "aria-live": "polite" });
+    let attempt;
+    let closed = false;
+    const choices = Object.entries({ google: "Google", apple: "Apple" })
+      .filter(([provider]) => PROVIDERS[provider])
+      .map(([provider, label]) =>
+        button(
+          `Continue with ${label}`,
+          async () => {
+            choices.forEach((choice) => {
+              choice.disabled = true;
+            });
+            output.textContent = `Finish signing in with ${label} in the new tab. Keep this worksheet open.`;
+            try {
+              // beginSignIn opens the tab immediately, before any asynchronous work.
+              attempt = beginSignIn(provider);
+              const { candidate, user: verified } = await attempt.result;
+              if (closed) return;
+              acceptAuth(candidate);
+              account = verified;
+              ui.close();
+              await next();
+            } catch (e) {
+              if (account) error(e);
+              else if (!closed) output.textContent = e.message;
+            } finally {
+              choices.forEach((choice) => {
+                choice.disabled = false;
+              });
+            }
+          },
+          { class: "button", disabled: !PROVIDERS[provider] },
+        ),
+      );
     ui.dialog(
       "Sign in to your preparations",
       el(
@@ -131,15 +95,23 @@ export function cloudWorkspace(ui) {
         el(
           "p",
           {},
-          "Use your email to access purchased preparations. Your answers and images are uploaded only when you save after payment.",
+          "Create an account or sign in securely. Use the same account each time to find your saved preparations.",
         ),
-        el("label", { for: "account-email" }, "Email address"),
-        email,
+        el("div", { class: "social-sign-in" }, choices),
+        el(
+          "p",
+          {},
+          "Your answers and images are uploaded only when you save after payment. Sign-in opens in a separate tab.",
+        ),
         output,
-        send,
       ),
+      () => {
+        closed = true;
+        attempt?.cancel();
+      },
     );
   }
+
   async function save(d) {
     const g = group(d);
     if (g.documents.some((r) => r.answers["preparation.consent"] !== true))

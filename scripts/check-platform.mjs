@@ -23,7 +23,7 @@ for (const file of pages) {
   assert.doesNotMatch(html, stale, file + " obsolete service claim");
   assert.match(
     html,
-    file === "prepare.html"
+    ["prepare.html", "auth-callback.html"].includes(file)
       ? /20261017-workspace-v23/
       : /20261016-workspace-v1/,
     file + " cache version",
@@ -38,6 +38,12 @@ assert.doesNotMatch(
 assert.match(prepare, /connect-src 'self'/);
 assert.match(prepare, /no-referrer/);
 assert.match(prepare, /noindex/);
+const callback = fs.readFileSync("auth-callback.html", "utf8");
+assert.match(callback, /no-referrer/);
+assert.match(callback, /noindex/);
+assert.match(callback, /connect-src 'none'/);
+assert.doesNotMatch(callback, /googletagmanager|google-analytics|site-metrics|assets\/app\.js/);
+
 for (const name of fs
   .readdirSync("assets/preparation")
   .filter((f) => f.endsWith(".mjs"))) {

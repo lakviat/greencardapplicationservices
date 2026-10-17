@@ -1,7 +1,7 @@
-// Real local OTP delivery through Mailpit; real Auth/DB/API. Payment fixture is local-only.
+// Simulated OAuth provider; real local Auth session/DB/API. Payment fixture is local-only.
 import { createClient } from "@supabase/supabase-js";
 import { chromium } from "playwright";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import assert from "node:assert/strict";
 import {
   initialDraft,
@@ -29,11 +29,60 @@ const context = await browser.newContext({
 const errors = [];
 let customer;
 try {
+  customer = ok(
+    await db.auth.admin.createUser({
+      email,
+      password: randomUUID(),
+      email_confirm: true,
+    }),
+  ).user;
+  const generated = ok(
+    await db.auth.admin.generateLink({ type: "magiclink", email }),
+  );
+  const fixtureAuth = createClient(config.API_URL, config.ANON_KEY, {
+    auth: { persistSession: false },
+  });
+  const session = ok(
+    await fixtureAuth.auth.verifyOtp({
+      token_hash: generated.properties.hashed_token,
+      type: "magiclink",
+    }),
+  ).session;
+  const authCode = randomUUID();
+  let challenge;
   await context.route(
     "https://wofazcvfvazfkvujwwcw.supabase.co/**",
     async (route) => {
       const request = route.request();
       const url = new URL(request.url());
+      if (url.pathname.endsWith("/settings"))
+        return route.fulfill({
+          json: { external: { google: true, apple: true } },
+        });
+      if (url.pathname.endsWith("/authorize")) {
+        assert.equal(url.searchParams.get("provider"), "google");
+        assert.equal(url.searchParams.get("code_challenge_method"), "s256");
+        challenge = url.searchParams.get("code_challenge");
+        const redirect = new URL(url.searchParams.get("redirect_to"));
+        assert.equal(redirect.origin, base);
+        redirect.searchParams.set("code", authCode);
+        return route.fulfill({
+          status: 302,
+          headers: { location: redirect.href },
+        });
+      }
+      if (
+        url.pathname.endsWith("/token") &&
+        url.searchParams.get("grant_type") === "pkce"
+      ) {
+        const body = request.postDataJSON();
+        assert.equal(body.auth_code, authCode);
+        assert.equal(
+          createHash("sha256").update(body.code_verifier).digest("base64url"),
+          challenge,
+        );
+        return route.fulfill({ json: session });
+      }
       const response = await route.fetch({
         url: config.API_URL + url.pathname + url.search,
         headers: { ...request.headers(), apikey: config.ANON_KEY },
@@ -47,28 +96,6 @@ try {
   await page
     .getByRole("button", { name: "Sign in / open saved preparations" })
     .click();
-  await page.getByLabel("Email address", { exact: true }).fill(email);
-  await page.getByRole("button", { name: "Send sign-in code" }).click();
-  await page.getByLabel("Sign-in code", { exact: true }).waitFor();
-  let message;
-  for (let attempt = 0; attempt < 20; attempt++) {
-    const data = await (
-      await fetch(config.MAILPIT_URL + "/api/v1/messages")
-    ).json();
-    message = data.messages?.find((m) => m.To.some((t) => t.Address === email));
-    if (message) break;
-    await new Promise((r) => setTimeout(r, 300));
-  }
-  assert(message, "OTP email reached local Mailpit");
-  const mail = await (
-    await fetch(config.MAILPIT_URL + "/api/v1/message/" + message.ID)
-  ).json();
-  const code = mail.HTML.match(/<strong>(\d+)<\/strong>/)?.[1];
-  assert(code, "OTP template contains the code");
-  customer = ok(await db.auth.admin.listUsers()).users.find(
-    (u) => u.email === email,
-  );
-  assert(customer);
   const d = {
     ...initialDraft(),
     id: randomUUID(),
@@ -89,8 +116,7 @@ try {
       payload: { documents: [d] },
     }),
   );
-  await page.getByLabel("Sign-in code", { exact: true }).fill(code);
-  await page.getByRole("button", { name: "Verify & continue" }).click();
+  await page.getByRole("button", { name: "Continue with Google" }).click();
   await page
     .getByRole("button", { name: "Open preparation", exact: true })
     .click();
@@ -157,7 +183,7 @@ try {
   await page.screenshot({ path: "/tmp/gcas-backend-account-mobile.png" });
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: actual OTP delivery and verification, mobile country taps, paid autosave, reopening persisted countries/contact, purchased menu, private browser storage.",
+    "PASS: simulated OAuth with a real local Auth session, mobile country taps, paid autosave, reopening persisted countries/contact, purchased menu, private browser storage.",
   );
 } finally {
   await browser.close();
