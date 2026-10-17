@@ -10,6 +10,7 @@ import {
   assert,
   uuid,
   plan,
+  checkoutEmail,
   sanitizePayload,
   requireComplete,
   verifyStripeSignature,
@@ -375,6 +376,7 @@ async function handle(req: Request, url: URL) {
     await limited(`${user.id}:checkout`, 5, 3600);
     assert(uuid(body.id), 400, "Invalid preparation ID.");
     const selected = plan(body.package);
+    const contactEmail = checkoutEmail(body.contactEmail, user.email!);
     let p = check(
       await admin
         .from("gcas_preparations")
@@ -457,7 +459,7 @@ async function handle(req: Request, url: URL) {
         Math.floor(Date.parse(order.created_at) / 1000) + 82800,
       ),
       client_reference_id: p.id,
-      customer_email: user.email!,
+      customer_email: contactEmail,
       "line_items[0][price_data][currency]": "usd",
       "line_items[0][price_data][unit_amount]": String(selected.cents),
       "line_items[0][price_data][product_data][name]": `${selected.label} DV-${FORM_VERSION.year} preparation — unofficial`,

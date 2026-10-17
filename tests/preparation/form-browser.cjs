@@ -222,6 +222,76 @@ fs.mkdirSync(output, { recursive: true });
         await page.locator(".compact-remaining").innerText(),
         "0 left",
       );
+      // A pending separate principal must not strand non-applicable marital states at 96%.
+      await page
+        .getByRole("checkbox", {
+          name: "I also want to prepare a separate entry for an independently eligible spouse.",
+        })
+        .check();
+      assert.equal(
+        await page.locator(".compact-remaining").innerText(),
+        "1 left",
+      );
+      await more();
+      await page
+        .getByRole("button", { name: "Missing Fields", exact: true })
+        .tap();
+      assert.match(
+        await page.locator(".missing-list").innerText(),
+        /Prepare the separate principal worksheet/,
+      );
+      assert.doesNotMatch(
+        await page.locator(".missing-list").innerText(),
+        /Current marital status/,
+      );
+      await close();
+      for (const marital of [
+        "married-us",
+        "unmarried",
+        "divorced",
+        "widowed",
+        "separated",
+      ]) {
+        await input(`entrant.marital-${marital}`).check();
+        assert.equal(
+          await page.locator("[data-progress-label]").innerText(),
+          "100%",
+          marital,
+        );
+        assert.equal(
+          await page.locator(".compact-remaining").innerText(),
+          "0 left",
+          marital,
+        );
+      }
+      await input("entrant.marital-married").check();
+      assert.equal(await input("spouse.firstName").inputValue(), "ALEX");
+      await page
+        .getByRole("checkbox", {
+          name: "I also want to prepare a separate entry for an independently eligible spouse.",
+        })
+        .uncheck();
+      assert.equal(
+        await page.locator("[data-progress-label]").innerText(),
+        "100%",
+      );
+      // Missing spouse data is a real task and links to the exact field.
+      await input("spouse.firstName").fill("");
+      await more();
+      await page
+        .getByRole("button", { name: "Missing Fields", exact: true })
+        .tap();
+      await page
+        .locator(".missing-item")
+        .filter({ hasText: "First / given name" })
+        .tap();
+      assert.equal(
+        await input("spouse.firstName").evaluate(
+          (e) => e === document.activeElement,
+        ),
+        true,
+      );
+      await input("spouse.firstName").fill("ALEX");
       await more();
       assert.equal(
         await page
@@ -290,6 +360,25 @@ fs.mkdirSync(output, { recursive: true });
         .getByRole("button", { name: "Preview prepared worksheet" })
         .tap();
       assert.equal(await page.locator("[data-control]").count(), 0);
+      const preview = await page.locator(".worksheet-output").innerText();
+      assert(preview.includes("JANE"));
+      for (const value of [
+        "jane@example.test",
+        "123 Example Street",
+        "TEST12345",
+        "Bishkek",
+        "ALEX",
+        "SAM",
+      ])
+        assert(
+          !new RegExp(`\\b${value}\\b`).test(preview),
+          `Unpaid preview must omit ${value}`,
+        );
+      assert.equal(await page.locator("iframe").count(), 0);
+      await page.screenshot({
+        path: path.join(output, `limited-preview-${name}.png`),
+        fullPage: true,
+      });
       assert.equal(outbound, 0);
       assert.deepEqual(errors, []);
       console.log(

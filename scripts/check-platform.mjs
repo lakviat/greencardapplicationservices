@@ -24,7 +24,7 @@ for (const file of pages) {
   assert.match(
     html,
     ["prepare.html", "auth-callback.html"].includes(file)
-      ? /20261017-workspace-v23/
+      ? /20261017-workspace-v24/
       : /20261016-workspace-v1/,
     file + " cache version",
   );
@@ -42,7 +42,10 @@ const callback = fs.readFileSync("auth-callback.html", "utf8");
 assert.match(callback, /no-referrer/);
 assert.match(callback, /noindex/);
 assert.match(callback, /connect-src 'none'/);
-assert.doesNotMatch(callback, /googletagmanager|google-analytics|site-metrics|assets\/app\.js/);
+assert.doesNotMatch(
+  callback,
+  /googletagmanager|google-analytics|site-metrics|assets\/app\.js/,
+);
 
 for (const name of fs
   .readdirSync("assets/preparation")

@@ -128,6 +128,10 @@ test("progress counts applicable family, images and passport fields only; relate
   assert(!fields(d).some((f) => f.id === "passport.bio"));
   d.secondEntry = true;
   assert(
+    !preparationProgress(d).remaining.some((x) => x.field.id === "secondEntry"),
+  );
+  d.answers["entrant.marital"] = "married";
+  assert(
     preparationProgress(d).remaining.some((x) => x.field.id === "secondEntry"),
   );
   const other = initialDraft();

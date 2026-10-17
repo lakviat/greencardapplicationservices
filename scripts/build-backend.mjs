@@ -34,3 +34,18 @@ await build({
   supported: { "template-literal": false },
   outfile: "assets/vendor/supabase.mjs",
 });
+
+// Self-hosted PDF renderer is loaded only for a paid document preview.
+const { copyFile, cp } = await import("node:fs/promises");
+for (const file of ["pdf.min.mjs", "pdf.worker.min.mjs"])
+  await copyFile(
+    `node_modules/pdfjs-dist/build/${file}`,
+    `assets/vendor/${file}`,
+  );
+await copyFile(
+  "node_modules/pdfjs-dist/LICENSE",
+  "assets/vendor/pdfjs-LICENSE",
+);
+await cp("node_modules/pdfjs-dist/standard_fonts", "assets/vendor/pdf-fonts", {
+  recursive: true,
+});

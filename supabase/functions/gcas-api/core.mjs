@@ -29,6 +29,20 @@ export function plan(key) {
   );
   return PACKAGES[key];
 }
+// Checkout contact information never grants access to a preparation. Ownership
+// and all delivery links remain tied to the authenticated, verified account.
+export function checkoutEmail(value, verifiedEmail) {
+  if (value === undefined || value === "") return verifiedEmail;
+  assert(
+    typeof value === "string" &&
+      value.length <= 254 &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()) &&
+      !/[\r\n\x00-\x1f\x7f]/.test(value),
+    400,
+    "Enter a valid worksheet email before checkout.",
+  );
+  return value.trim();
+}
 export function sanitizePayload(input, pack, storedAssets = []) {
   plan(pack);
   assert(

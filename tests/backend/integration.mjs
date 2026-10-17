@@ -71,6 +71,8 @@ check(
   }),
 );
 assert.equal((await call(b, "get", { id })).status, 404);
+assert.equal((await call(a, "pdf", { id })).status, 402);
+assert.equal((await call(b, "pdf", { id })).status, 404);
 assert.equal(
   (await call(a, "save", { id, revision: 0, payload: { documents: [] } }))
     .status,
@@ -316,19 +318,17 @@ const expiring = randomUUID(),
       .upload(orphanPath, photo, { contentType: "image/jpeg" }),
   );
   check(
-    await admin
-      .from("gcas_assets")
-      .insert({
-        id: orphan,
-        preparation_id: expiring,
-        document_id: d.id,
-        field_id: "entrant.photo",
-        object_path: orphanPath,
-        bytes: photo.length,
-        width: 600,
-        height: 600,
-        created_at: old,
-      }),
+    await admin.from("gcas_assets").insert({
+      id: orphan,
+      preparation_id: expiring,
+      document_id: d.id,
+      field_id: "entrant.photo",
+      object_path: orphanPath,
+      bytes: photo.length,
+      width: 600,
+      height: 600,
+      created_at: old,
+    }),
   );
   execFileSync(process.execPath, ["scripts/backend-cleanup.mjs"], {
     env: {

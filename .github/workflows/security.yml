@@ -54,7 +54,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - run: npm ci
       - name: Verify generated server bundle and browser SDK
-        run: npm run build:backend && git diff --exit-code -- supabase/functions/gcas-api/serve.ts assets/vendor/supabase.mjs
+        run: npm run build:backend && git diff --exit-code -- supabase/functions/gcas-api/serve.ts assets/vendor
       - name: Start isolated Supabase services
         run: npx supabase start > /tmp/gcas-local-start.log 2>&1
       - run: npm run test:backend

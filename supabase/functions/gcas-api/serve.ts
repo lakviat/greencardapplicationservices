@@ -1595,6 +1595,15 @@ function plan(key) {
   );
   return PACKAGES[key];
 }
+function checkoutEmail(value, verifiedEmail) {
+  if (value === void 0 || value === "") return verifiedEmail;
+  assert(
+    typeof value === "string" && value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()) && !/[\r\n\x00-\x1f\x7f]/.test(value),
+    400,
+    "Enter a valid worksheet email before checkout."
+  );
+  return value.trim();
+}
 function sanitizePayload(input, pack, storedAssets = []) {
   plan(pack);
   assert(
@@ -2366,6 +2375,7 @@ async function handle(req, url) {
     await limited(`${user.id}:checkout`, 5, 3600);
     assert(uuid(body.id), 400, "Invalid preparation ID.");
     const selected = plan(body.package);
+    const contactEmail = checkoutEmail(body.contactEmail, user.email);
     let p2 = check(
       await admin.from("gcas_preparations").select("*").eq("id", body.id).maybeSingle()
     );
@@ -2425,7 +2435,7 @@ async function handle(req, url) {
         Math.floor(Date.parse(order.created_at) / 1e3) + 82800
       ),
       client_reference_id: p2.id,
-      customer_email: user.email,
+      customer_email: contactEmail,
       "line_items[0][price_data][currency]": "usd",
       "line_items[0][price_data][unit_amount]": String(selected.cents),
       "line_items[0][price_data][product_data][name]": `${selected.label} DV-${FORM_VERSION.year} preparation \u2014 unofficial`,

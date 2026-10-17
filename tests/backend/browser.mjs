@@ -3,8 +3,11 @@ import { createClient } from "@supabase/supabase-js";
 import { chromium } from "playwright";
 import { randomUUID, createHash } from "node:crypto";
 import assert from "node:assert/strict";
+import jpeg from "jpeg-js";
+import { readFileSync } from "node:fs";
 import {
   initialDraft,
+  fields,
   FORM_VERSION,
 } from "../../assets/preparation/schema.mjs";
 import { localConfig } from "./local-config.mjs";
@@ -178,14 +181,135 @@ try {
     await page.locator('[id="contact.email"]').inputValue(),
     "julia@example.test",
   );
+  // Complete a synthetic paid fixture through real local storage/API, then
+  // verify that the preview receives a real PDF rather than the unpaid sample.
+  const complete = structuredClone(saved.payload.documents[0]);
+  complete.answers["passport.path"] = "stateless";
+  complete.answers["entrant.marital"] = "married-us";
+  complete.answers["eligibility.basis"] = "birth";
+  complete.secondEntry = true; // Old stale optional request must not block 100%.
+  for (let i = 0; i < 3; i++)
+    for (const f of fields(complete)) {
+      if (["photo", "passportPhoto"].includes(f.type)) continue;
+      if (f.type === "checkbox") complete.answers[f.id] = true;
+      else if (!complete.answers[f.id])
+        complete.answers[f.id] =
+          f.type === "country"
+            ? "Kyrgyzstan"
+            : f.type === "select"
+              ? f.options[0].value
+              : f.type === "date"
+                ? "1990-01-01"
+                : f.type === "futureDate"
+                  ? "2090-01-01"
+                  : f.type === "email"
+                    ? "julia@example.test"
+                    : "EXAMPLE";
+    }
+  const photo = jpeg.encode(
+    { data: Buffer.alloc(600 * 600 * 4, 255), width: 600, height: 600 },
+    80,
+  ).data;
+  const uploadedResponse = await fetch(
+    `${config.API_URL}/functions/v1/gcas-api/upload?id=${id}&document=${d.id}&field=entrant.photo`,
+    {
+      method: "POST",
+      headers: {
+        apikey: config.ANON_KEY,
+        Authorization: `Bearer ${session.access_token}`,
+        "Content-Type": "image/jpeg",
+      },
+      body: photo,
+    },
+  );
+  assert.equal(uploadedResponse.status, 200);
+  const uploaded = await uploadedResponse.json();
+  complete.assets["entrant.photo"] = {
+    id: uploaded.id,
+    status: "valid",
+    confirmed: true,
+  };
+  ok(
+    await db
+      .from("gcas_preparations")
+      .update({ payload: { documents: [complete] } })
+      .eq("id", id),
+  );
+  await page
+    .getByRole("button", { name: "My preparations", exact: true })
+    .tap();
+  await page
+    .getByRole("button", { name: "Sign in / open saved preparations" })
+    .tap();
+  await page
+    .getByRole("button", { name: "Open preparation", exact: true })
+    .tap();
+  await page.waitForFunction(
+    () =>
+      document.querySelector("[data-progress-label]")?.textContent === "100%",
+  );
+  assert.equal(await page.locator("[data-progress-label]").innerText(), "100%");
+  await page.getByRole("button", { name: "More preparation actions" }).tap();
+  await page
+    .getByRole("button", { name: "Review Document", exact: true })
+    .tap();
+  await page.getByRole("button", { name: "Preview prepared worksheet" }).tap();
+  const viewer = page.locator('.pdf-page-surface canvas[data-rendered="1"]');
+  await viewer.waitFor();
+  const pdfUrl = await page
+    .getByRole("link", { name: "Open PDF in a new tab" })
+    .getAttribute("href");
+  assert(pdfUrl.startsWith("blob:"));
+  assert.equal(await page.locator(".limited-preview").count(), 0);
+  assert(
+    await viewer.evaluate((canvas) => {
+      const bytes = canvas
+        .getContext("2d")
+        .getImageData(0, 0, canvas.width, canvas.height).data;
+      return bytes.some((value, i) => i % 4 !== 3 && value < 100);
+    }),
+    "Paid PDF page contains rendered text pixels",
+  );
+  await page.getByRole("button", { name: "Next page →", exact: true }).tap();
+  await page.locator('.pdf-page-surface canvas[data-rendered="2"]').waitFor();
+  await page
+    .getByRole("button", { name: "← Previous page", exact: true })
+    .tap();
+  await viewer.waitFor();
+  const downloaded = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download PDF", exact: true }).tap();
+  const download = await downloaded;
+  assert.equal(
+    readFileSync(await download.path())
+      .subarray(0, 4)
+      .toString(),
+    "%PDF",
+  );
+  await page.screenshot({ path: "/tmp/gcas-paid-pdf-mobile.png" });
+  await page
+    .getByRole("button", { name: "← Back to review", exact: true })
+    .tap();
+  assert.equal(
+    await page.evaluate(async (url) => {
+      try {
+        await fetch(url);
+        return false;
+      } catch {
+        return true;
+      }
+    }, pdfUrl),
+    true,
+    "Leaving preview revokes the private PDF URL",
+  );
   assert.equal(await page.evaluate(() => localStorage.length), 0);
   assert.equal(await page.evaluate(() => sessionStorage.length), 0);
   await page.screenshot({ path: "/tmp/gcas-backend-account-mobile.png" });
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: simulated OAuth with a real local Auth session, mobile country taps, paid autosave, reopening persisted countries/contact, purchased menu, private browser storage.",
+    "PASS: simulated OAuth with a real local Auth session, mobile country taps, paid autosave, reopening persisted countries/contact, purchased menu, private browser storage, completed paid PDF viewing/downloading and blob cleanup.",
   );
 } finally {
+  await context.unrouteAll({ behavior: "ignoreErrors" });
   await browser.close();
   if (customer) {
     ok(await db.from("gcas_preparations").delete().eq("id", id));

@@ -1,4 +1,4 @@
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v23";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v24";
 import {
   FORM_VERSION,
   PACKAGES,
@@ -13,27 +13,28 @@ import {
   warnings,
   recommendPackage,
   hasSpouse,
-} from "./schema.mjs?v=20261017-workspace-v23";
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v23";
+} from "./schema.mjs?v=20261017-workspace-v24";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v24";
 import {
   readImage,
   drawCrop,
   photoCopy,
   passportCopy,
   scanPassport,
-} from "./media.mjs?v=20261017-workspace-v23";
+} from "./media.mjs?v=20261017-workspace-v24";
 import {
   CAPABILITIES,
   unavailable,
   capabilities,
-} from "./backend.mjs?v=20261017-social-auth-v1";
-import { cloudWorkspace } from "./cloud.mjs?v=20261017-social-auth-v1";
-import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v23";
-import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v23";
-import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v23";
-import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v23";
-import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v23";
-import { dateControl } from "./date-control.mjs?v=20261017-workspace-v23";
+} from "./backend.mjs?v=20261017-workspace-v24";
+import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v24";
+import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v24";
+import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v24";
+import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v24";
+import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v24";
+import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v24";
+import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v24";
+import { dateControl } from "./date-control.mjs?v=20261017-workspace-v24";
 const app = document.querySelector("#workspace");
 let draft = initialDraft();
 const sessionDrafts = [draft];
@@ -100,6 +101,10 @@ const cloud = cloudWorkspace({
     dirty = false;
     cloudStatus = "Signed out";
     navigate("dashboard");
+  },
+  pdfReady: (record) => {
+    draft = record;
+    navigate("preview");
   },
 });
 const countryNames = COUNTRIES.map((c) => c.name);
@@ -1267,20 +1272,22 @@ function familyControls() {
       {},
       "If no children must be listed, leave this count at zero and confirm the family checklist.",
     ),
-    el(
-      "label",
-      { class: "second-entry" },
-      el("input", {
-        type: "checkbox",
-        checked: draft.secondEntry,
-        onchange: (e) => {
-          draft.secondEntry = e.target.checked;
-          changed();
-          renderDocument();
-        },
-      }),
-      "I also want to prepare a separate entry for an independently eligible spouse.",
-    ),
+    hasSpouse(draft) || relatedDrafts.has(draft)
+      ? el(
+          "label",
+          { class: "second-entry" },
+          el("input", {
+            type: "checkbox",
+            checked: draft.secondEntry,
+            onchange: (e) => {
+              draft.secondEntry = e.target.checked;
+              changed();
+              renderDocument();
+            },
+          }),
+          "I also want to prepare a separate entry for an independently eligible spouse.",
+        )
+      : null,
     el("p", { "data-recommendation": "", class: "recommendation" }),
     button("Review packages", openPackages, { class: "text-button" }),
     draft.secondEntry && hasSpouse(draft)
@@ -1288,11 +1295,14 @@ function familyControls() {
           class: "button",
         })
       : null,
-    draft.secondEntry && !hasSpouse(draft)
+    hasSpouse(draft)
       ? el(
           "p",
           { class: "notice" },
-          "Complete the applicable marital status and required spouse details first. A separate entry requires independent eligibility.",
+          "This marital status requires spouse details and a photograph. They are included in every package. ",
+          button("Go to spouse details", () => activate("spouse.lastName"), {
+            class: "text-button",
+          }),
         )
       : null,
   );
@@ -1670,11 +1680,7 @@ function openMissing() {
             () => {
               closeDialog();
               if (field.id === "secondEntry") {
-                if (hasSpouse(draft)) openSpouseWorksheet();
-                else {
-                  navigate("document");
-                  activate("entrant.marital");
-                }
+                openSpouseWorksheet();
                 return;
               }
               if (record && record !== draft) {
@@ -1798,6 +1804,16 @@ function openPackages() {
 function openSave() {
   return cloud.save(draft);
 }
+function openReceivePdf() {
+  if (
+    preparationProgress(draft, relatedDrafts.get(draft), countryNames).remaining
+      .length
+  ) {
+    openMissing();
+    return;
+  }
+  return cloud.receivePdf(draft);
+}
 function renderReview() {
   const p = preparationProgress(draft, relatedDrafts.get(draft), countryNames);
   const complete = p.remaining.length === 0;
@@ -1884,7 +1900,18 @@ function renderReview() {
       button("Preview prepared worksheet", () => navigate("preview"), {
         class: "button",
       }),
-      button("Save & receive PDF", openSave, { class: "button primary" }),
+      button(
+        cloud.info(draft)?.state === "paid"
+          ? "Open your PDF"
+          : `Save & receive PDF · ${price(draft.package)}`,
+        openReceivePdf,
+        { class: "button primary" },
+      ),
+      el(
+        "p",
+        { class: "purchase-summary" },
+        "One-time package price. Sign in, pay securely with Stripe, then view and download your completed preparation PDF. Your worksheet email prefills checkout; saved work belongs to your signed-in account.",
+      ),
     ),
   );
 }
@@ -2098,7 +2125,21 @@ function renderDashboard() {
       : []),
   );
 }
+let previewUrl = null;
+let previewCleanup = null;
+let previewGeneration = 0;
+function clearPreview() {
+  previewGeneration++;
+  previewCleanup?.();
+  previewCleanup = null;
+  if (previewUrl) URL.revokeObjectURL(previewUrl);
+  previewUrl = null;
+}
 function renderPreview() {
+  const paid = cloud.info(draft)?.state === "paid";
+  const record = draft;
+  const generation = previewGeneration;
+  const content = el("div", { class: "pdf-content" });
   display.replaceChildren(
     el(
       "div",
@@ -2107,23 +2148,54 @@ function renderPreview() {
       el(
         "p",
         {},
-        CAPABILITIES.pdfDownload
-          ? "Document preview · download your PDF after saving a completed, purchased preparation."
-          : "Document preview · secure PDF download will be enabled with verified payment and backend delivery.",
+        paid
+          ? "Your completed preparation PDF. Submit the official DV entry separately online at dvprogram.state.gov."
+          : "Limited preview · your complete preparation PDF is unlocked after payment. This is an unofficial worksheet, not a government filing.",
       ),
       button(
-        CAPABILITIES.pdfDownload ? "Download PDF" : "Download PDF unavailable",
-        () => cloud.download(draft),
+        paid ? "Download PDF" : `Save & receive PDF · ${price(draft.package)}`,
+        paid ? () => cloud.download(record) : openReceivePdf,
         {
-          class: "button",
-          disabled: !CAPABILITIES.pdfDownload,
+          class: "button primary",
+          disabled: paid && !CAPABILITIES.pdfDownload,
         },
       ),
     ),
-    worksheet(draft),
+    content,
   );
+  if (!paid) {
+    content.append(worksheet(record));
+    return;
+  }
+  content.append(el("p", { role: "status" }, "Preparing your PDF…"));
+  cloud
+    .pdf(record)
+    .then((blob) => {
+      if (generation !== previewGeneration || view !== "preview") return;
+      previewUrl = URL.createObjectURL(blob);
+      content.replaceChildren(
+        el(
+          "p",
+          {},
+          link("Open PDF in a new tab", previewUrl, {
+            target: "_blank",
+            rel: "noopener",
+          }),
+          " if the viewer is unavailable on your device.",
+        ),
+      );
+      previewCleanup = pdfViewer(blob, content);
+    })
+    .catch((error) => {
+      if (generation !== previewGeneration || view !== "preview") return;
+      content.replaceChildren(
+        el("p", { role: "alert", class: "notice" }, error.message),
+        button("Review missing fields", openMissing, { class: "button" }),
+      );
+    });
 }
 function navigate(next) {
+  clearPreview();
   if (dialog) closeDialog();
   if (!["document", "review", "dashboard", "preview"].includes(next))
     next = "document";

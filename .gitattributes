@@ -1,0 +1,2 @@
+# Preserve upstream font-license text byte for byte.
+assets/vendor/pdf-fonts/LICENSE_* -whitespace

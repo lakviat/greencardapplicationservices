@@ -1,4 +1,4 @@
-import { beginSignIn } from "./oauth.mjs?v=20261017-social-auth-v1";
+import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v24";
 import {
   api,
   auth,
@@ -6,9 +6,9 @@ import {
   PROVIDERS,
   CAPABILITIES,
   unavailable,
-} from "./backend.mjs?v=20261017-social-auth-v1";
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v23";
-import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v23";
+} from "./backend.mjs?v=20261017-workspace-v24";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v24";
+import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v24";
 const groups = new WeakMap();
 let account = null;
 const pendingSaves = new Set();
@@ -171,7 +171,7 @@ export function cloudWorkspace(ui) {
       g.busy = false;
     }
   }
-  async function checkout(d) {
+  async function checkout(d, { receivePdf = false, direct = false } = {}) {
     const g = group(d);
     if (g.package !== d.package && g.state === "unpaid") {
       g.package = d.package;
@@ -183,7 +183,15 @@ export function cloudWorkspace(ui) {
         groups.set(r, g);
       });
     }
-    if (g.state === "paid") return save(d);
+    if (g.state === "paid") {
+      await save(d);
+      if (receivePdf) ui.pdfReady(d);
+      return;
+    }
+    if (g.documents.some((r) => r.answers["preparation.consent"] !== true))
+      throw new Error(
+        "Confirm processing permission in each worksheet before checkout.",
+      );
     if (!CAPABILITIES.checkout)
       return message("Checkout setup in progress", unavailable);
     const output = el("p", { role: "status" });
@@ -203,12 +211,14 @@ export function cloudWorkspace(ui) {
           const result = await api("checkout", {
             id: g.id,
             package: g.package,
+            contactEmail: d.answers["contact.email"],
           });
           if (result.paid) {
             popup.close();
             g.state = "paid";
             await save(d);
             ui.close();
+            if (receivePdf) ui.pdfReady(d);
             return;
           }
           const url = new URL(result.url);
@@ -250,6 +260,10 @@ export function cloudWorkspace(ui) {
           clearInterval(paymentWatch);
           await save(d);
           ui.close();
+          if (receivePdf) {
+            ui.pdfReady(d);
+            return;
+          }
           message(
             "Saved to your account",
             "Your preparation and uploaded images are saved. You can sign in from another device to resume.",
@@ -263,7 +277,9 @@ export function cloudWorkspace(ui) {
       { class: "button" },
     );
     ui.dialog(
-      "Save your DV preparation and continue anytime",
+      receivePdf
+        ? "Secure checkout for your PDF"
+        : "Save your DV preparation and continue anytime",
       el(
         "div",
         {},
@@ -291,6 +307,11 @@ export function cloudWorkspace(ui) {
           {},
           "Keep this worksheet tab open while paying. Unpaid work is not saved online.",
         ),
+        el(
+          "p",
+          {},
+          `Receipt email: ${d.answers["contact.email"] || account.email}. Your saved preparation stays in your signed-in account (${account.email}).`,
+        ),
         output,
         confirm,
         check,
@@ -298,6 +319,9 @@ export function cloudWorkspace(ui) {
       ),
       () => clearInterval(paymentWatch),
     );
+    // A signed-in user goes straight to Stripe from the PDF button. After an
+    // OAuth round-trip, browsers may require the visible Continue button again.
+    if (direct) confirm.click();
   }
   async function load(id) {
     const { preparation: p } = await api("get", { id });
@@ -322,16 +346,23 @@ export function cloudWorkspace(ui) {
     ui.status("Saved preparation opened");
   }
   async function download(d) {
-    await save(d);
-    const g = group(d);
-    if (g.state !== "paid") return;
-    ui.status("Preparing PDF…");
-    const blob = await api("pdf", { id: g.id });
+    const blob = await pdf(d);
     const url = URL.createObjectURL(blob);
     const a = el("a", { href: url, download: `DV-${d.year}-preparation.pdf` });
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 30000);
     ui.status("PDF downloaded");
+  }
+  async function pdf(d) {
+    const g = group(d);
+    if (g.state !== "paid")
+      throw new Error("Purchase this preparation to unlock the complete PDF.");
+    if (!CAPABILITIES.pdfDownload) throw new Error(unavailable);
+    clearTimeout(g.timer);
+    pendingSaves.delete(g.timer);
+    await save(d);
+    ui.status("Preparing PDF…");
+    return api("pdf", { id: g.id });
   }
   return {
     info: (d) => groups.get(d),
@@ -352,6 +383,11 @@ export function cloudWorkspace(ui) {
       }
     },
     save: (d) => signIn(() => save(d)).catch(error),
+    receivePdf: (d) =>
+      signIn(() => checkout(d, { receivePdf: true, direct: true })).catch(
+        error,
+      ),
+    pdf,
     download: (d) => signIn(() => download(d)).catch(error),
     email: (d) =>
       signIn(async () => {

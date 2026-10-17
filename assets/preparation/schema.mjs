@@ -65,7 +65,11 @@ export const initialDraft = () => ({
 export const hasSpouse = (d) => d.answers["entrant.marital"] === "married";
 export const hasPassport = (d) => d.answers["passport.path"] === "passport";
 export function recommendPackage(d) {
-  return d.childIds.length ? "family" : d.secondEntry ? "couple" : "single";
+  return d.childIds.length
+    ? "family"
+    : d.secondEntry && hasSpouse(d)
+      ? "couple"
+      : "single";
 }
 const f = (id, label, type = "text", extra = {}) => ({
   id,
@@ -646,7 +650,9 @@ export function preparationProgress(d, related, countries = []) {
     record,
     ...progress(record, countries),
   }));
-  const pending = d.secondEntry && !related;
+  // A stale request must not create an impossible task after marital status
+  // changes. Existing related worksheets remain counted and are never erased.
+  const pending = d.secondEntry && hasSpouse(d) && !related;
   const total = counts.reduce((n, p) => n + p.total, 0) + (pending ? 1 : 0);
   const complete = counts.reduce((n, p) => n + p.complete, 0);
   const remaining = counts.flatMap((p) =>

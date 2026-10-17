@@ -1911,3 +1911,96 @@ body:not([data-view="document"]) .workspace-layout {
     max-width: 45%;
   }
 }
+
+/* The paid viewer uses a server-authorized PDF; unpaid placeholders contain no answers. */
+.pdf-page-surface {
+  background: white;
+  border: 1px solid #d6dfe8;
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 240px;
+}
+.pdf-page-surface canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.pdf-paging {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 16px 0;
+}
+.pdf-paging .button {
+  padding: 10px;
+  font-size: 0.75rem;
+}
+.pdf-paging [role="status"] {
+  font-size: 0.75rem;
+  text-align: center;
+}
+.pdf-content > p,
+.purchase-summary {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.review-actions .purchase-summary {
+  flex-basis: 100%;
+}
+.preview-redacted {
+  opacity: 0.5;
+  filter: blur(3px);
+  user-select: none;
+}
+.preview-redacted h2 {
+  font-size: 0.9rem;
+  padding: 12px;
+  background: #f4df8b;
+}
+.redacted-line {
+  height: 12px;
+  margin: 14px 0;
+  background: #d7dfe7;
+  border-radius: 4px;
+}
+.redacted-line:last-child {
+  width: 65%;
+}
+.preview-lock {
+  position: relative;
+  margin-top: -230px;
+  padding: 26px 20px;
+  text-align: center;
+  border: 1px solid #cfdbe9;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 12px 40px #16324e18;
+}
+.preview-lock h2 {
+  font-size: 1.15rem;
+}
+.preview-lock p {
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.preview-lock-symbol {
+  color: #245b9e;
+  font-size: 2rem;
+}
+.preview-watermark {
+  text-align: center;
+  font: 700 0.7rem/1.6 sans-serif;
+  letter-spacing: 0.08em;
+  color: #52677c;
+  margin-top: 32px;
+}
+@media print {
+  .limited-preview .preview-lock,
+  .limited-preview .preview-watermark {
+    display: block;
+  }
+}

@@ -4,6 +4,7 @@ import { randomUUID, webcrypto } from "node:crypto";
 import {
   sanitizePayload,
   plan,
+  checkoutEmail,
   verifyStripeSignature,
 } from "../../supabase/functions/gcas-api/core.mjs";
 import {
@@ -145,4 +146,27 @@ test("raw webhook signature rejects alteration, wrong secret, expiry; accepts ke
   await assert.rejects(
     verifyStripeSignature(raw, header, secret, now + 301000),
   );
+});
+
+test("checkout prefills worksheet email without changing verified account identity", () => {
+  assert.equal(
+    checkoutEmail(" applicant@example.test ", "owner@example.test"),
+    "applicant@example.test",
+  );
+  assert.equal(
+    checkoutEmail(undefined, "owner@example.test"),
+    "owner@example.test",
+  );
+  for (const value of [
+    null,
+    {},
+    "invalid",
+    "123 Example Street",
+    "a@example.test\r\nBcc:x@y.test",
+    "a".repeat(255) + "@example.test",
+  ])
+    assert.throws(
+      () => checkoutEmail(value, "owner@example.test"),
+      /valid worksheet email/,
+    );
 });

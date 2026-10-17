@@ -92,6 +92,8 @@ test("marriage and arbitrary household sizes expand required fields on Single", 
 test("recommendations do not mutate package or charge; prices stay fixed", () => {
   const d = initialDraft();
   d.secondEntry = true;
+  assert.equal(recommendPackage(d), "single");
+  d.answers["entrant.marital"] = "married";
   assert.equal(recommendPackage(d), "couple");
   d.childIds = ["one"];
   assert.equal(recommendPackage(d), "family");
