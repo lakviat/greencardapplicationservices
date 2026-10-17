@@ -2,8 +2,8 @@ import {
   parseMRZ,
   mergeMRZ,
   scanSuggestions,
-} from "./mrz.mjs?v=20261017-workspace-v32";
-import { parsePrintedPassport } from "./passport-fields.mjs?v=20261017-workspace-v32";
+} from "./mrz.mjs?v=20261017-workspace-v33";
+import { parsePrintedPassport } from "./passport-fields.mjs?v=20261017-workspace-v33";
 // Sensitive image data and object URLs live only in memory. Nothing is uploaded here.
 export const MAX_SOURCE_BYTES = 20 * 1024 * 1024;
 export async function imageType(file) {
@@ -50,7 +50,11 @@ async function decodeHeic(blob) {
       };
       blob
         .arrayBuffer()
-        .then((buffer) => worker.postMessage({ id: 1, buffer }, [buffer]));
+        .then((buffer) => worker.postMessage({ id: 1, buffer }, [buffer]))
+        .catch(() => {
+          clearTimeout(timer);
+          reject(new Error("This photo could not be opened. Select it again."));
+        });
     });
   } finally {
     worker.terminate();
@@ -65,20 +69,13 @@ export async function readImage(file) {
       "Choose a JPEG, PNG, WebP, or HEIC image. PDF files are not supported.",
     );
   let image;
-  if (type === "heic") image = await decodeHeic(file);
-  else {
-    const url = URL.createObjectURL(file);
-    try {
-      image = await new Promise((resolve, reject) => {
-        const im = new Image();
-        im.onload = () => resolve(im);
-        im.onerror = () =>
-          reject(new Error("This image could not be decoded."));
-        im.src = url;
-      });
-    } finally {
-      URL.revokeObjectURL(url);
-    }
+  try {
+    // Safari can decode HEIC itself. Avoid loading a conversion worker when
+    // native decoding works; other browsers retain the local HEIC fallback.
+    image = await nativeImage(file);
+  } catch (error) {
+    if (type !== "heic") throw error;
+    image = await decodeHeic(file);
   }
   const width = image.naturalWidth || image.width,
     height = image.naturalHeight || image.height;
@@ -87,6 +84,19 @@ export async function readImage(file) {
       "Choose a clear image between 100 pixels and 60 megapixels.",
     );
   return { image, width, height, type };
+}
+async function nativeImage(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    return await new Promise((resolve, reject) => {
+      const im = new Image();
+      im.onload = () => resolve(im);
+      im.onerror = () => reject(new Error("This image could not be decoded."));
+      im.src = url;
+    });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
 const jpeg = (canvas, q) =>
   new Promise((resolve, reject) =>

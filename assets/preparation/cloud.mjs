@@ -1,4 +1,4 @@
-import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v32";
+import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v33";
 import {
   api,
   acceptAuth,
@@ -8,15 +8,15 @@ import {
   CAPABILITIES,
   capabilities,
   unavailable,
-} from "./backend.mjs?v=20261017-workspace-v32";
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v32";
-import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v32";
-import { passportUploadCopy } from "./media.mjs?v=20261017-workspace-v32";
-import { accountPage } from "./account-page.mjs?v=20261017-workspace-v32";
+} from "./backend.mjs?v=20261017-workspace-v33";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v33";
+import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v33";
+import { passportUploadCopy } from "./media.mjs?v=20261017-workspace-v33";
+import { accountPage } from "./account-page.mjs?v=20261017-workspace-v33";
 import {
   savedAt,
   savingBar,
-} from "./save-feedback.mjs?v=20261017-workspace-v32";
+} from "./save-feedback.mjs?v=20261017-workspace-v33";
 const groups = new WeakMap();
 let account = null;
 const pendingSaves = new Set();

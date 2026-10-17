@@ -4,6 +4,7 @@ const { chromium, webkit, firefox } = require("playwright");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
+const AxeBuilder = require("@axe-core/playwright").default;
 const base = process.env.PREP_BASE_URL || "https://127.0.0.1:8444";
 assert.equal(new URL(base).hostname, "127.0.0.1");
 const printed =
@@ -31,6 +32,133 @@ const printed =
       await page
         .getByRole("button", { name: "Save time — Scan your passport" })
         .waitFor();
+      const openEntry = () =>
+        page
+          .getByRole("button", { name: "Save time — Scan your passport" })
+          .click();
+      await openEntry();
+      const dialog = page.getByRole("dialog");
+      assert.equal(
+        await dialog.locator("button").count(),
+        3,
+        "Only close and the two photo choices",
+      );
+      const take = dialog.getByRole("button", {
+        name: "Take photo",
+        exact: true,
+      });
+      const choose = dialog.getByRole("button", {
+        name: "Upload photo",
+        exact: true,
+      });
+      assert(await take.isDisabled());
+      assert(await choose.isDisabled());
+      assert.equal(
+        await page.locator("#scan-upload").getAttribute("accept"),
+        "image/*",
+      );
+      assert.equal(
+        await page.locator("#scan-upload").getAttribute("capture"),
+        null,
+      );
+      assert.equal(
+        await page.locator("#scan-camera").getAttribute("capture"),
+        "environment",
+      );
+      await page.locator("#scan-permission").check();
+      for (const width of [320, 390, 430, 768, 1280]) {
+        await page.setViewportSize({ width, height: 844 });
+        assert(
+          await dialog.evaluate(
+            (node) => node.scrollWidth <= node.clientWidth + 1,
+          ),
+        );
+        for (const choice of [take, choose]) {
+          const bounds = await choice.boundingBox();
+          assert(
+            bounds.height >= 44 &&
+              bounds.x >= 0 &&
+              bounds.x + bounds.width <= width,
+          );
+        }
+      }
+      await page.setViewportSize({ width: 390, height: 844 });
+      assert.deepEqual(
+        (await new AxeBuilder({ page }).include(".workspace-dialog").analyze())
+          .violations,
+        [],
+      );
+      await page.screenshot({ path: `/tmp/gcas-v33-scan-entry-${engine}.png` });
+      // Native picker activation must work directly from both buttons. A
+      // capture-less desktop or older browser still has its file-picker path.
+      for (const [choice, id] of [
+        [take, "scan-camera"],
+        [choose, "scan-upload"],
+      ]) {
+        const [picker] = await Promise.all([
+          page.waitForEvent("filechooser"),
+          choice.click(),
+        ]);
+        assert.equal(await picker.element().getAttribute("id"), id);
+        await picker.setFiles([]);
+        await page.locator(`#${id}`).dispatchEvent("cancel");
+        assert(
+          await choose.isEnabled(),
+          "Cancellation does not lock selection",
+        );
+        assert.equal(
+          await page
+            .getByRole("progressbar", { name: "Preparing passport photo" })
+            .count(),
+          0,
+        );
+      }
+      // Invalid selection and selecting the same file again are recoverable.
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const [picker] = await Promise.all([
+          page.waitForEvent("filechooser"),
+          choose.click(),
+        ]);
+        await picker.setFiles({
+          name: "not-an-image.jpg",
+          mimeType: "image/jpeg",
+          buffer: Buffer.from("%PDF-synthetic"),
+        });
+        await dialog
+          .getByRole("status")
+          .filter({ hasText: "Choose a JPEG" })
+          .waitFor();
+        assert(await choose.isEnabled());
+        assert.equal(await page.locator("#scan-upload").inputValue(), "");
+      }
+      // Hold actual file reading to check immediate preparation feedback and
+      // cancellation before conversion finishes, without running OCR early.
+      await page.evaluate(() => {
+        const read = Blob.prototype.arrayBuffer;
+        Blob.prototype.arrayBuffer = function () {
+          const data = read.call(this);
+          return new Promise((resolve) => {
+            window.releasePhoto = async () => {
+              Blob.prototype.arrayBuffer = read;
+              resolve(await data);
+            };
+          });
+        };
+      });
+      await page.locator("#scan-upload").setInputFiles({
+        name: "synthetic-td3.png",
+        mimeType: "image/png",
+        buffer: fs.readFileSync(
+          path.join(__dirname, "fixtures/synthetic-td3.png"),
+        ),
+      });
+      await page
+        .getByRole("progressbar", { name: "Preparing passport photo" })
+        .waitFor();
+      assert(await choose.isDisabled());
+      await dialog.getByRole("button", { name: "Close dialog" }).click();
+      await page.evaluate(() => window.releasePhoto());
+      assert.equal(await dialog.count(), 0);
       await page.evaluate(() => {
         window.scanCalls = 0;
         window.workerTerminations = 0;
@@ -223,7 +351,7 @@ const printed =
       );
       await page.evaluate(() => window.failScanPass());
       await page
-        .getByRole("button", { name: "Enter Manually", exact: true })
+        .getByRole("button", { name: "Try another photo", exact: true })
         .waitFor();
       assert.equal(
         await progress.count(),
@@ -231,7 +359,18 @@ const printed =
         "Failure stops the progress indicator",
       );
       await page
-        .getByRole("button", { name: "Enter Manually", exact: true })
+        .getByRole("button", { name: "Try another photo", exact: true })
+        .click();
+      await page
+        .getByRole("heading", { name: "Scan your passport", exact: true })
+        .waitFor();
+      assert(
+        await page
+          .getByRole("button", { name: "Upload photo", exact: true })
+          .isDisabled(),
+      );
+      await page
+        .getByRole("button", { name: "Close dialog", exact: true })
         .click();
       assert.equal(
         await page.locator('[id="entrant.firstName"]').inputValue(),
@@ -241,7 +380,7 @@ const printed =
       // the same bounded decoder used by the backend, in every browser engine.
       const uploadCopy = await page.evaluate(async () => {
         const { passportCopy, passportUploadCopy } =
-          await import("/assets/preparation/media.mjs?v=20261017-workspace-v32");
+          await import("/assets/preparation/media.mjs?v=20261017-workspace-v33");
         const canvas = document.createElement("canvas");
         canvas.width = 3024;
         canvas.height = 4032;
@@ -266,10 +405,66 @@ const printed =
       });
       assert(decoded.width * decoded.height <= 4000000);
       assert(Math.max(decoded.width, decoded.height) <= 2400);
+      // This HEIC is a conversion of the same fictional PNG fixture. Exercise
+      // both the native-first path and the local decoder fallback on real bytes.
+      const heic = await page.evaluate(async () => {
+        const { readImage, passportCopy } =
+          await import("/assets/preparation/media.mjs?v=20261017-workspace-v33");
+        const source = await (
+          await fetch("/tests/preparation/fixtures/synthetic-td3.heic")
+        ).blob();
+        const OriginalWorker = window.Worker;
+        let conversions = 0;
+        window.Worker = class extends OriginalWorker {
+          constructor(...args) {
+            super(...args);
+            conversions++;
+          }
+        };
+        let native;
+        try {
+          const decoded = await readImage(source);
+          native = {
+            width: decoded.width,
+            height: decoded.height,
+            type: decoded.type,
+            conversions,
+          };
+          const OriginalImage = window.Image;
+          window.Image = function () {
+            const image = new OriginalImage();
+            Object.defineProperty(image, "src", {
+              set() {
+                queueMicrotask(() => image.onerror());
+              },
+            });
+            return image;
+          };
+          try {
+            const copy = await passportCopy(source);
+            return {
+              native,
+              width: copy.width,
+              height: copy.height,
+              type: copy.blob.type,
+              conversions,
+            };
+          } finally {
+            window.Image = OriginalImage;
+          }
+        } finally {
+          window.Worker = OriginalWorker;
+        }
+      });
+      assert.equal(heic.native.type, "heic");
+      assert.equal(heic.width, heic.native.width);
+      assert.equal(heic.height, heic.native.height);
+      assert.equal(heic.type, "image/jpeg");
+      assert.equal(heic.conversions, heic.native.conversions + 1);
       assert.deepEqual(errors, []);
       await context.close();
       console.log(
-        `PASS ${engine}: continuous thin green scan indicator across retries, later printed name correction, review before apply, stable mobile dialog bounds, 12 MP upload normalization, cancellation, failure and reduced motion.`,
+        `PASS ${engine}: accessible photo choices, native picker activation/cancellation/reselection, preparation feedback, HEIC native-first and fallback decoding, continuous scan indicator, later printed name correction, review before apply, stable mobile dialog bounds, 12 MP normalization, failure and reduced motion.`,
       );
     } finally {
       await browser.close();

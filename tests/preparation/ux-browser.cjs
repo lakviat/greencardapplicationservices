@@ -119,7 +119,7 @@ const engines = { chromium, webkit, firefox };
       .click();
     assert(
       await page
-        .getByRole("button", { name: "Upload Passport", exact: true })
+        .getByRole("button", { name: "Upload photo", exact: true })
         .isDisabled(),
     );
     assert.equal(

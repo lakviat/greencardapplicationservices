@@ -1,4 +1,4 @@
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v32";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v33";
 import {
   FORM_VERSION,
   PACKAGES,
@@ -13,33 +13,33 @@ import {
   warnings,
   recommendPackage,
   hasSpouse,
-} from "./schema.mjs?v=20261017-workspace-v32";
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v32";
+} from "./schema.mjs?v=20261017-workspace-v33";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v33";
 import {
   readImage,
   drawCrop,
   photoCopy,
   passportCopy,
   scanPassport,
-} from "./media.mjs?v=20261017-workspace-v32";
+} from "./media.mjs?v=20261017-workspace-v33";
 import {
   CAPABILITIES,
   unavailable,
   capabilities,
-} from "./backend.mjs?v=20261017-workspace-v32";
-import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v32";
-import { accountControl } from "./account-control.mjs?v=20261017-workspace-v32";
-import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v32";
-import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v32";
-import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v32";
-import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v32";
-import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v32";
-import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v32";
-import { dateControl } from "./date-control.mjs?v=20261017-workspace-v32";
+} from "./backend.mjs?v=20261017-workspace-v33";
+import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v33";
+import { accountControl } from "./account-control.mjs?v=20261017-workspace-v33";
+import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v33";
+import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v33";
+import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v33";
+import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v33";
+import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v33";
+import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v33";
+import { dateControl } from "./date-control.mjs?v=20261017-workspace-v33";
 import {
   saveIndicator,
   savedAt,
-} from "./save-feedback.mjs?v=20261017-workspace-v32";
+} from "./save-feedback.mjs?v=20261017-workspace-v33";
 const app = document.querySelector("#workspace");
 const saveFeedback = saveIndicator();
 const saveStates = new WeakMap();
@@ -680,7 +680,7 @@ function mediaControl(field) {
   const asset = draft.assets[field.id];
   const upload = el("input", {
     type: "file",
-    accept: "image/jpeg,image/png,image/webp,image/heic,image/heif",
+    accept: "image/*",
     class: "sr-only",
     id: `file-${field.id}`,
     "aria-label": `Upload ${field.label}`,
@@ -902,6 +902,9 @@ function openDialog(title, content, cleanup) {
     content,
   );
   dialog.addEventListener("cancel", (e) => {
+    // File-picker cancellation bubbles too; keep the sheet open so the user
+    // can retry or choose the other source. Only Escape on the dialog closes it.
+    if (e.target !== e.currentTarget) return;
     e.preventDefault();
     closeDialog();
   });
@@ -1067,7 +1070,9 @@ function startPassportScan() {
   const consent = el("input", { type: "checkbox", id: "scan-permission" });
   const upload = el("input", {
     type: "file",
-    accept: "image/jpeg,image/png,image/webp,image/heic,image/heif",
+    // The image wildcard lets mobile browsers offer their native photo library.
+    // readImage validates the actual bytes after selection, including HEIC.
+    accept: "image/*",
     id: "scan-upload",
     class: "sr-only",
     tabindex: "-1",
@@ -1082,16 +1087,44 @@ function startPassportScan() {
     tabindex: "-1",
     "aria-label": "Take passport photo for scanning",
   });
-  const take = button("Take Passport Photo", () => camera.click(), {
-    disabled: true,
-  });
-  const choose = button("Upload Passport", () => upload.click(), {
-    disabled: true,
-  });
+  const choiceLabel = (icon, text) => [
+    el("img", {
+      src: `/assets/preparation/scan-${icon}.svg`,
+      width: 22,
+      height: 22,
+      alt: "",
+    }),
+    el("span", {}, text),
+  ];
+  // Keep the native picker call synchronous with the tap: no permissions API,
+  // network request or conversion should delay it or consume user activation.
+  // Browsers without camera capture fall back to their standard file picker.
+  const take = button(
+    choiceLabel("camera", "Take photo"),
+    () => camera.click(),
+    {
+      class: "scan-choice scan-choice-camera",
+      disabled: true,
+    },
+  );
+  const choose = button(
+    choiceLabel("upload", "Upload photo"),
+    () => upload.click(),
+    {
+      class: "scan-choice scan-choice-upload",
+      disabled: true,
+    },
+  );
   consent.addEventListener("change", () => {
     take.disabled = choose.disabled = !consent.checked;
   });
-  const info = el("p", { role: "status" });
+  const info = el("p", { class: "scan-selection-status", role: "status" });
+  const progress = el("div", {
+    class: "scan-progress",
+    role: "progressbar",
+    "aria-label": "Preparing passport photo",
+    hidden: true,
+  });
   const abort = new AbortController();
   for (const input of [upload, camera])
     input.addEventListener("change", async () => {
@@ -1099,7 +1132,9 @@ function startPassportScan() {
       input.value = "";
       if (!file || !consent.checked) return;
       take.disabled = choose.disabled = true;
-      info.textContent = "Preparing a private image copy on this device…";
+      consent.disabled = true;
+      progress.hidden = false;
+      info.textContent = "Preparing your photo…";
       try {
         const copy = await passportCopy(file);
         if (abort.signal.aborted || draft !== target) return;
@@ -1108,6 +1143,8 @@ function startPassportScan() {
       } catch (e) {
         if (!abort.signal.aborted) {
           info.textContent = e.message;
+          progress.hidden = true;
+          consent.disabled = false;
           take.disabled = choose.disabled = false;
         }
       }
@@ -1116,34 +1153,30 @@ function startPassportScan() {
     "Scan your passport",
     el(
       "div",
-      {},
+      { class: "scan-intro" },
       el(
         "p",
         {},
-        "Automatically fill supported details. You'll review everything before continuing. Include the whole photo page and both lines at the bottom.",
+        "Use the full passport photo page to auto-fill your details.",
       ),
       el(
         "p",
-        { class: "notice" },
-        "Reading happens on this device. Only after you confirm will the image join this worksheet. Saving uploads the copy to your private account for free. You can replace or remove it. No advertising or external AI receives this scan.",
+        { class: "scan-privacy" },
+        "Scanned on your device. Review before applying. Your confirmed photo saves privately with your progress.",
       ),
       el(
         "label",
         { class: "photo-confirm", for: "scan-permission" },
         consent,
-        "I have permission to process this passport and understand how the confirmed copy is saved.",
+        "I have permission to use this passport.",
       ),
-      el(
-        "div",
-        { class: "scan-choices" },
-        take,
-        choose,
-        button("Enter Manually", closeDialog),
-      ),
+      el("div", { class: "scan-choices" }, take, choose),
       upload,
       camera,
       info,
-      link("Privacy and retention", "/policies/#privacy", {
+      progress,
+      link("Privacy & storage", "/policies/#privacy", {
+        class: "scan-privacy-link",
         target: "_blank",
         rel: "noopener noreferrer",
       }),
@@ -1362,7 +1395,7 @@ async function openScan(asset, { attach = false } = {}) {
     if (!abort.signal.aborted) {
       info.textContent =
         "We could not reliably read this passport. No answers or files were changed.";
-      body.append(button("Enter Manually", closeDialog));
+      body.append(button("Try another photo", startPassportScan));
     }
   } finally {
     progress.remove();

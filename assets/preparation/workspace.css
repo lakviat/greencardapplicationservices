@@ -1259,10 +1259,71 @@ body:not([data-view="document"]) .workspace-layout {
   color: var(--muted);
 }
 .scan-choices {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  margin: 18px 0;
+}
+.scan-choices .scan-choice {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-width: 0;
+  min-height: 60px;
+  padding: 14px 10px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  box-shadow: 0 2px 5px #142b4308;
+}
+.scan-choice img {
+  flex: 0 0 22px;
+}
+.scan-choices .scan-choice-camera {
+  color: #fff;
+  background: linear-gradient(160deg, #2b64b0, #1b4b8c);
+  border-color: #2156a0;
+  box-shadow:
+    0 4px 10px #2156a01a,
+    inset 0 1px 0 #ffffff26;
+}
+.scan-choices .scan-choice-camera:hover:not(:disabled) {
+  background: #19477f;
+}
+.scan-choices .scan-choice-upload {
+  color: var(--blue);
+  background: #f8faff;
+  border-color: #cbd9eb;
+}
+.scan-choices .scan-choice-upload:hover:not(:disabled) {
+  background: #edf3fc;
+  border-color: var(--blue);
+}
+.scan-intro .scan-privacy {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  margin: 12px 0 18px;
+}
+.scan-intro .photo-confirm {
+  align-items: center;
+  min-height: 44px;
+}
+.scan-intro .photo-confirm input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex: 0 0 18px;
+  accent-color: var(--blue);
+}
+.scan-selection-status:empty {
+  display: none;
+}
+.scan-privacy-link {
+  font-size: 0.74rem;
+  color: var(--muted);
+  text-underline-offset: 3px;
 }
 .scan-review {
   display: grid;

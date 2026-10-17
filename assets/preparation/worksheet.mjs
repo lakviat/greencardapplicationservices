@@ -1,5 +1,5 @@
-import { el } from "./dom.mjs?v=20261017-workspace-v32";
-import { worksheetRows } from "./schema.mjs?v=20261017-workspace-v32";
+import { el } from "./dom.mjs?v=20261017-workspace-v33";
+import { worksheetRows } from "./schema.mjs?v=20261017-workspace-v33";
 // Unpaid previews contain only a small sample. Never put the complete document
 // in the DOM behind a blur: screenshots, printing or CSS removal would reveal it.
 export function worksheet(d) {
