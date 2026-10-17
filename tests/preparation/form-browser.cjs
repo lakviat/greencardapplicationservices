@@ -37,8 +37,12 @@ fs.mkdirSync(output, { recursive: true });
       await page.goto(base + "/prepare.html");
       const input = (id) => page.locator(`[id="${id}"]`);
       const field = (id) => page.locator(`[data-field="${id}"]`);
-      const more = () =>
-        page.getByRole("button", { name: "More preparation actions" }).tap();
+      const more = async () => {
+        await page.evaluate(() => document.activeElement.blur());
+        await page
+          .getByRole("button", { name: "More preparation actions" })
+          .tap();
+      };
       const close = () =>
         page.getByRole("button", { name: "Close dialog" }).tap();
       async function country(id, query, expected) {

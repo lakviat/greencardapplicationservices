@@ -1,4 +1,4 @@
-import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v24";
+import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v25";
 import {
   api,
   auth,
@@ -6,11 +6,12 @@ import {
   PROVIDERS,
   CAPABILITIES,
   unavailable,
-} from "./backend.mjs?v=20261017-workspace-v24";
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v24";
-import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v24";
+} from "./backend.mjs?v=20261017-workspace-v25";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v25";
+import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v25";
 const groups = new WeakMap();
 let account = null;
+let authSubscription;
 const pendingSaves = new Set();
 function scheduleSave(g, action, delay) {
   clearTimeout(g.timer);
@@ -26,7 +27,43 @@ export function cloudWorkspace(ui) {
     ui.dialog(title, el("p", { role: "status" }, text));
   const error = (e) => {
     ui.status(`Not saved: ${e.message}`);
+    if (e.code === "processing-consent") {
+      ui.dialog(
+        "Permission needed to save",
+        el(
+          "div",
+          {},
+          el(
+            "p",
+            {},
+            `Signed in as ${account.email}. Your progress has not been saved yet.`,
+          ),
+          el("p", {}, e.message),
+          button(
+            "Review processing permission",
+            () => {
+              ui.close();
+              ui.reviewConsent(e.record);
+            },
+            { class: "button primary" },
+          ),
+        ),
+      );
+      return;
+    }
     message("Please check this step", e.message);
+  };
+  const requireConsent = (g) => {
+    const record = g.documents.find(
+      (r) => r.answers["preparation.consent"] !== true,
+    );
+    if (record) {
+      const e = new Error(
+        "Confirm processing permission in the final section of each worksheet before saving or checkout.",
+      );
+      Object.assign(e, { code: "processing-consent", record });
+      throw e;
+    }
   };
   const group = (d) => {
     let g = groups.get(d);
@@ -74,6 +111,14 @@ export function cloudWorkspace(ui) {
               acceptAuth(candidate);
               account = verified;
               ui.close();
+              ui.accountChanged?.(account);
+              authSubscription?.unsubscribe();
+              authSubscription = candidate.onAuthStateChange((event) => {
+                if (event === "SIGNED_OUT") {
+                  account = null;
+                  ui.accountChanged?.(null);
+                }
+              }).data.subscription;
               await next();
             } catch (e) {
               if (account) error(e);
@@ -114,19 +159,17 @@ export function cloudWorkspace(ui) {
 
   async function save(d) {
     const g = group(d);
-    if (g.documents.some((r) => r.answers["preparation.consent"] !== true))
-      throw new Error(
-        "Confirm processing permission in the final section of each worksheet before saving or checkout.",
-      );
+    requireConsent(g);
     if (g.state !== "paid") return checkout(d);
-    if (g.busy)
-      throw new Error(
-        "A save is already in progress. Please wait for it to finish, then try again.",
-      );
-    g.busy = true;
+    if (g.saving) {
+      await g.saving;
+      return save(d);
+    }
+    clearTimeout(g.timer);
+    pendingSaves.delete(g.timer);
     const started = g.changeNumber || 0;
     ui.status("Saving…");
-    try {
+    g.saving = (async () => {
       // Snapshot answers before asynchronous uploads. Further edits trigger another save.
       const documents = g.documents.map((r) => ({
         ...r,
@@ -163,12 +206,27 @@ export function cloudWorkspace(ui) {
       if (started === (g.changeNumber || 0)) {
         ui.saved(g.documents);
         ui.status("Saved to your account");
+        return true;
       } else {
         ui.status("Saving latest changes…");
         scheduleSave(g, () => save(d).catch(error), 800);
+        return false;
       }
-    } finally {
-      g.busy = false;
+    })().finally(() => {
+      g.saving = null;
+    });
+    return g.saving;
+  }
+  async function saveProgress(d) {
+    let saved;
+    do {
+      saved = await save(d);
+    } while (saved === false);
+    if (saved) {
+      message(
+        "Progress saved",
+        `Your latest changes are saved to ${account.email}. Last saved ${new Date(group(d).updated_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`,
+      );
     }
   }
   async function checkout(d, { receivePdf = false, direct = false } = {}) {
@@ -188,12 +246,14 @@ export function cloudWorkspace(ui) {
       if (receivePdf) ui.pdfReady(d);
       return;
     }
-    if (g.documents.some((r) => r.answers["preparation.consent"] !== true))
-      throw new Error(
-        "Confirm processing permission in each worksheet before checkout.",
+    requireConsent(g);
+    if (!CAPABILITIES.checkout) {
+      ui.status("Not saved — checkout is not available yet");
+      return message(
+        "Signed in — saving is not available yet",
+        `You are signed in as ${account.email}. Online saving requires a purchased preparation, and checkout is not available yet. Your changes have not been saved online. Keep this worksheet tab open to retain them.`,
       );
-    if (!CAPABILITIES.checkout)
-      return message("Checkout setup in progress", unavailable);
+    }
     const output = el("p", { role: "status" });
     let paymentWatch;
     const confirm = button(
@@ -365,6 +425,7 @@ export function cloudWorkspace(ui) {
     return api("pdf", { id: g.id });
   }
   return {
+    account: () => account,
     info: (d) => groups.get(d),
     link(source, next) {
       const g = groups.get(source);
@@ -382,7 +443,7 @@ export function cloudWorkspace(ui) {
         scheduleSave(g, () => save(d).catch(error), 1800);
       }
     },
-    save: (d) => signIn(() => save(d)).catch(error),
+    save: (d) => signIn(() => saveProgress(d)).catch(error),
     receivePdf: (d) =>
       signIn(() => checkout(d, { receivePdf: true, direct: true })).catch(
         error,

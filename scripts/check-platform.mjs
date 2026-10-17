@@ -24,7 +24,7 @@ for (const file of pages) {
   assert.match(
     html,
     ["prepare.html", "auth-callback.html"].includes(file)
-      ? /20261017-workspace-v24/
+      ? /20261017-workspace-v25/
       : /20261016-workspace-v1/,
     file + " cache version",
   );

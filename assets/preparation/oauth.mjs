@@ -1,7 +1,7 @@
 import {
   createAuth,
   SUPABASE_URL,
-} from "./backend.mjs?v=20261017-workspace-v24";
+} from "./backend.mjs?v=20261017-workspace-v25";
 
 // The worksheet never navigates away. Only a single-use authorization code
 // crosses tabs; the PKCE verifier and session stay in memory in this tab.
@@ -30,6 +30,8 @@ export function beginSignIn(provider) {
     candidate?.stopAutoRefresh();
     clearTimeout(timer);
     window.removeEventListener("message", onMessage);
+    document.removeEventListener("visibilitychange", resume);
+    window.removeEventListener("pageshow", resume);
     channel?.close();
     // COOP may sever the WindowProxy; BroadcastChannel still works on return.
     try {
@@ -81,6 +83,12 @@ export function beginSignIn(provider) {
       );
   };
   window.addEventListener("message", onMessage);
+  const resume = () => {
+    if (!settled && document.visibilityState === "visible")
+      channel?.postMessage({ type: "gcas-oauth-ready", attempt });
+  };
+  document.addEventListener("visibilitychange", resume);
+  window.addEventListener("pageshow", resume);
   timer = setTimeout(
     () =>
       finish(

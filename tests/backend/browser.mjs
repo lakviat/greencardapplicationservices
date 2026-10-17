@@ -97,7 +97,9 @@ try {
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto(`${base}/prepare.html#dashboard`);
   await page
-    .getByRole("button", { name: "Sign in / open saved preparations" })
+    .getByRole("button", {
+      name: /^(Sign in \/ open|Open) saved preparations$/,
+    })
     .click();
   const d = {
     ...initialDraft(),
@@ -137,6 +139,7 @@ try {
   }
   await page.locator('[id="contact.email"]').fill("julia@example.test");
   await page
+    .locator(".draft-status")
     .getByText("Saved to your account", { exact: true })
     .waitFor({ timeout: 15000 });
   const saved = ok(
@@ -154,17 +157,28 @@ try {
     "contact.email": "julia@example.test",
   }))
     assert.equal(saved.payload.documents[0].answers[field], expected);
+  await page.evaluate(() => document.activeElement.blur());
   await page.getByRole("button", { name: "More preparation actions" }).tap();
   assert.equal(await page.getByRole("button", { name: /^Buy / }).count(), 0);
   assert(
     await page.getByText("Purchased package", { exact: true }).isVisible(),
+  );
+  await page.getByRole("button", { name: "Save Progress", exact: true }).tap();
+  await page
+    .getByRole("heading", { name: "Progress saved", exact: true })
+    .waitFor();
+  assert.match(
+    await page.getByRole("dialog").innerText(),
+    /Your latest changes are saved to/,
   );
   await page.getByRole("button", { name: "Close dialog" }).tap();
   await page
     .getByRole("button", { name: "My preparations", exact: true })
     .tap();
   await page
-    .getByRole("button", { name: "Sign in / open saved preparations" })
+    .getByRole("button", {
+      name: /^(Sign in \/ open|Open) saved preparations$/,
+    })
     .tap();
   await page
     .getByRole("button", { name: "Open preparation", exact: true })
@@ -239,7 +253,9 @@ try {
     .getByRole("button", { name: "My preparations", exact: true })
     .tap();
   await page
-    .getByRole("button", { name: "Sign in / open saved preparations" })
+    .getByRole("button", {
+      name: /^(Sign in \/ open|Open) saved preparations$/,
+    })
     .tap();
   await page
     .getByRole("button", { name: "Open preparation", exact: true })
@@ -249,6 +265,7 @@ try {
       document.querySelector("[data-progress-label]")?.textContent === "100%",
   );
   assert.equal(await page.locator("[data-progress-label]").innerText(), "100%");
+  await page.evaluate(() => document.activeElement.blur());
   await page.getByRole("button", { name: "More preparation actions" }).tap();
   await page
     .getByRole("button", { name: "Review Document", exact: true })

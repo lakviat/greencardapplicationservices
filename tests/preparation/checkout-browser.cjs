@@ -37,6 +37,10 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         saved = false,
         pdfCalls = 0,
         checkoutBodies = [];
+      let saveMode = "success",
+        releaseSave,
+        saveCalls = 0,
+        lastSavedName;
       await context.route(`${project}/**`, async (route) => {
         const request = route.request(),
           url = new URL(request.url());
@@ -88,6 +92,20 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
             preparation: { state: paid ? "paid" : "unpaid", revision: 0 },
           });
         if (url.pathname.endsWith("/save")) {
+          saveCalls++;
+          lastSavedName =
+            request.postDataJSON().payload.documents[0].answers[
+              "entrant.firstName"
+            ];
+          if (saveMode === "hold")
+            await new Promise((resolve) => {
+              releaseSave = resolve;
+            });
+          if (saveMode === "fail")
+            return route.fulfill({
+              status: 500,
+              json: { error: "Synthetic save failure. Please retry." },
+            });
           assert(paid, "No answers uploaded before verified payment");
           assert.equal(
             request.postDataJSON().payload.documents[0].answers[
@@ -120,18 +138,20 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         route.fulfill({
           contentType: "text/html",
           body: `<!doctype html><html><body><main></main><section id="dialog"></section><p id="status"></p><script type="module">
-        import {cloudWorkspace} from '/assets/preparation/cloud.mjs?v=20261017-workspace-v24';
-        import {CAPABILITIES, PROVIDERS} from '/assets/preparation/backend.mjs?v=20261017-workspace-v24';
-        import {initialDraft} from '/assets/preparation/schema.mjs?v=20261017-workspace-v24';
+        import {cloudWorkspace} from '/assets/preparation/cloud.mjs?v=20261017-workspace-v25';
+        import {CAPABILITIES, PROVIDERS} from '/assets/preparation/backend.mjs?v=20261017-workspace-v25';
+        import {initialDraft} from '/assets/preparation/schema.mjs?v=20261017-workspace-v25';
         Object.assign(CAPABILITIES,{accounts:true,checkout:true,cloudSave:true,pdfDownload:true}); PROVIDERS.google=true;
         const d=initialDraft(); d.answers={'preparation.consent':true,'contact.email':'applicant@example.test','entrant.firstName':'SYNTHETIC'};
         let cleanup;
         const close=()=>{const fn=cleanup;cleanup=null;fn?.();document.querySelector('#dialog').replaceChildren();};
-        const cloud=cloudWorkspace({related:()=>null,dialog:(title,node,onClose)=>{close();cleanup=onClose;document.querySelector('#dialog').replaceChildren(node);},close,status:text=>document.querySelector('#status').textContent=text,saved:()=>{},pdfReady:()=>{document.querySelector('#status').textContent='PDF unlocked';}});
+        const cloud=cloudWorkspace({related:()=>null,dialog:(title,node,onClose)=>{close();cleanup=onClose;const heading=document.createElement('h2');heading.textContent=title;document.querySelector('#dialog').replaceChildren(heading,node);},close,status:text=>document.querySelector('#status').textContent=text,saved:()=>{},pdfReady:()=>{document.querySelector('#status').textContent='PDF unlocked';}});
         const add=(label,action)=>{const b=document.createElement('button');b.textContent=label;b.onclick=action;document.querySelector('main').append(b);};
         add('Save & receive PDF',()=>cloud.receivePdf(d));
         add('Try PDF',async()=>{try{const blob=await cloud.pdf(d);document.querySelector('#status').textContent=await blob.text();}catch(e){document.querySelector('#status').textContent=e.message;}});
         add('Close checkout',close);
+        add('Save progress',()=>cloud.save(d));
+        add('Edit answers',()=>{ d.answers['entrant.firstName']='UPDATED'; cloud.changed(d); });
       </script></body></html>`,
         }),
       );
@@ -193,6 +213,55 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         .getByText("%PDF-synthetic-local-test", { exact: true })
         .waitFor();
       assert.equal(pdfCalls, 1);
+      // A manual save acknowledges the server response, including edits made
+      // while the preceding request was still in flight. It never reauthenticates.
+      await page
+        .getByRole("button", { name: "Close checkout", exact: true })
+        .click();
+      saveMode = "hold";
+      await page
+        .getByRole("button", { name: "Save progress", exact: true })
+        .click();
+      await page.getByText("Saving…", { exact: true }).waitFor();
+      assert.equal(
+        await page
+          .getByRole("heading", { name: "Progress saved", exact: true })
+          .count(),
+        0,
+      );
+      await page
+        .getByRole("button", { name: "Edit answers", exact: true })
+        .click();
+      for (let n = 0; !releaseSave && n < 200; n++)
+        await new Promise((r) => setTimeout(r, 20));
+      assert(releaseSave);
+      saveMode = "success";
+      releaseSave();
+      await page
+        .getByRole("heading", { name: "Progress saved", exact: true })
+        .waitFor();
+      assert.equal(lastSavedName, "UPDATED");
+      assert.match(
+        await page.locator("#dialog").innerText(),
+        /saved to account@example.test/,
+      );
+      await page
+        .getByRole("button", { name: "Close checkout", exact: true })
+        .click();
+      saveMode = "fail";
+      await page
+        .getByRole("button", { name: "Save progress", exact: true })
+        .click();
+      await page
+        .getByText("Synthetic save failure. Please retry.", { exact: true })
+        .waitFor();
+      assert.equal(
+        await page
+          .getByRole("heading", { name: "Progress saved", exact: true })
+          .count(),
+        0,
+      );
+      assert.match(await page.locator("#status").innerText(), /^Not saved:/);
       assert.deepEqual(errors, []);
       console.log(
         engine +

@@ -1388,8 +1388,10 @@ body:not([data-view="document"]) .workspace-layout {
   background: #f1f4f7;
   color: var(--muted);
 }
-.dialog-open .workspace-bottom {
+.dialog-open .workspace-bottom,
+.field-editing .workspace-bottom {
   visibility: hidden;
+  pointer-events: none;
 }
 @media (max-width: 800px) {
   .workspace-header {
@@ -1618,17 +1620,6 @@ body:not([data-view="document"]) .workspace-layout {
   }
   .keyboard-open .workspace-header {
     position: static;
-  }
-  .keyboard-open .workspace-bottom {
-    padding-top: 3px;
-    padding-bottom: 3px;
-    min-height: 50px;
-  }
-  .keyboard-open .compact-remaining {
-    display: none;
-  }
-  .keyboard-open .completion {
-    grid-template-columns: 1fr;
   }
   .workspace-dialog {
     position: fixed;

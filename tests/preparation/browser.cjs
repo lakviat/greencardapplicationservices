@@ -17,6 +17,8 @@ const selected = (process.env.PREP_ENGINES || "chromium,webkit,firefox").split(
 const engines = { chromium, webkit, firefox };
 const input = (page, id) => page.locator(`[data-field="${id}"] [data-control]`);
 async function action(page, name) {
+  await page.evaluate(() => document.activeElement.blur());
+  await page.locator(".workspace-bottom").waitFor({ state: "visible" });
   if (
     await page
       .getByRole("button", { name: "More preparation actions", exact: true })
@@ -126,6 +128,8 @@ async function screenshot(page, name) {
       if (name === "chromium" && [390, 1440].includes(width))
         await screenshot(page, "editor-" + width);
       await input(page, "entrant.lastName").fill("EXAMPLE");
+      await page.locator(".workspace-bottom").waitFor({ state: "hidden" });
+      await page.evaluate(() => document.activeElement.blur());
       await page
         .getByRole("button", { name: "Next required field", exact: true })
         .click();

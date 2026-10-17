@@ -31,7 +31,10 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
               : "synthetic@example.test",
           email_confirmed_at: new Date().toISOString(),
           app_metadata: { provider },
-          user_metadata: {},
+          user_metadata: {
+            full_name: "Synthetic User",
+            avatar_url: "https://lh3.googleusercontent.com/a/synthetic-avatar",
+          },
         };
         const token = [
           "e30",
@@ -43,6 +46,15 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
           ).toString("base64url"),
           "synthetic",
         ].join(".");
+        let avatarRequests = 0;
+        await context.route("https://lh3.googleusercontent.com/**", (route) => {
+          avatarRequests++;
+          assert.equal(route.request().headers().referer, undefined);
+          return route.fulfill({
+            contentType: "image/svg+xml",
+            body: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" fill="#2156a0"/></svg>',
+          });
+        });
         await context.route(`${project}/**`, async (route) => {
           const url = new URL(route.request().url());
           const json = (value) => route.fulfill({ json: value });
@@ -118,13 +130,18 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         const errors = [];
         page.on("pageerror", (e) => errors.push(e.message));
         await page.goto(`${base}/prepare.html`);
+        await page
+          .getByRole("button", { name: "Sign in to your account", exact: true })
+          .waitFor();
         await page.locator('[id="entrant.firstName"]').fill("UNSAVED");
         await page
           .getByRole("button", { name: "My preparations", exact: true })
           .click();
         const open = async () => {
           await page
-            .getByRole("button", { name: "Sign in / open saved preparations" })
+            .getByRole("button", {
+              name: /^(Sign in \/ open|Open) saved preparations$/,
+            })
             .click();
           await page
             .getByRole("button", {
@@ -186,6 +203,7 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         });
         await page.getByRole("button", { name: "Close dialog" }).click();
         const stale = await context.newPage();
+        await stale.clock.install();
         await stale.goto(lastRedirect + "&code=stale");
         assert.equal(
           await stale.evaluate(() => location.search + location.hash),
@@ -193,6 +211,28 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
           "Callback removes sensitive URL",
         );
         assert.equal(tokenCalls, 0);
+        // Mobile browsers may suspend the original worksheet while Google is
+        // foreground. The callback must still answer when that tab resumes.
+        await stale.clock.fastForward(20000);
+        await stale
+          .getByText(
+            /Keep this sign-in tab open until your account appears there/,
+          )
+          .waitFor();
+        await page.evaluate((attempt) => {
+          const channel = new BroadcastChannel(`gcas-auth-${attempt}`);
+          channel.onmessage = (event) => {
+            window.callbackResumed = event.data.code === "stale";
+            channel.close();
+          };
+          channel.postMessage({ type: "gcas-oauth-ready", attempt });
+        }, new URL(lastRedirect).searchParams.get("attempt"));
+        await page.waitForFunction(() => window.callbackResumed === true);
+        assert.equal(
+          tokenCalls,
+          0,
+          "Canceled attempt remains unable to exchange a code",
+        );
         await stale.close();
         // Cancel during exchange must never sign the worksheet in afterwards.
         await open();
@@ -212,9 +252,29 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
           .waitFor();
         assert.equal(tokenCalls, 2);
         await page
+          .getByRole("dialog")
           .getByText(`Signed in as ${verified.email}`, { exact: true })
           .waitFor();
         await page.getByRole("button", { name: "Close dialog" }).click();
+        const profile = page.getByRole("button", {
+          name: `Account: ${verified.email}`,
+          exact: true,
+        });
+        await profile.waitFor();
+        assert.equal(await profile.innerText(), "SU\nSigned in");
+        assert.equal(avatarRequests, provider === "google" ? 1 : 0);
+        assert.equal(
+          await page
+            .getByRole("button", {
+              name: "Open saved preparations",
+              exact: true,
+            })
+            .count(),
+          1,
+        );
+        await page.screenshot({
+          path: `/tmp/gcas-account-${provider}-${engine}.png`,
+        });
         await page
           .getByRole("heading", { name: "UNSAVED", exact: true })
           .waitFor();
@@ -226,12 +286,67 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         );
         assert.deepEqual(errors, []);
         if (provider === "google") {
+          // A successful login must remain visible when saving still needs consent.
           await page
-            .getByRole("button", { name: "Sign in / open saved preparations" })
+            .getByRole("button", { name: "Edit document", exact: true })
             .click();
+          await page
+            .getByRole("button", { name: "More preparation actions" })
+            .click();
+          await page
+            .getByRole("button", { name: "Save Progress", exact: true })
+            .click();
+          await page
+            .getByRole("heading", {
+              name: "Permission needed to save",
+              exact: true,
+            })
+            .waitFor();
+          await page
+            .getByText(
+              `Signed in as ${verified.email}. Your progress has not been saved yet.`,
+              { exact: true },
+            )
+            .waitFor();
+          await page
+            .getByRole("button", {
+              name: "Review processing permission",
+              exact: true,
+            })
+            .click();
+          assert.equal(
+            await page.evaluate(() => document.activeElement.id),
+            "preparation.consent",
+          );
+          await page.locator('[id="preparation.consent"]').check();
+          await page
+            .getByRole("button", { name: "More preparation actions" })
+            .click();
+          await page
+            .getByRole("button", { name: "Save Progress", exact: true })
+            .click();
+          await page
+            .getByRole("heading", {
+              name: "Signed in — saving is not available yet",
+              exact: true,
+            })
+            .waitFor();
+          await page.getByRole("button", { name: "Close dialog" }).click();
+          assert.equal(
+            authorizeCalls,
+            4,
+            "Saving again does not repeat Google sign-in",
+          );
+          await profile.click();
           await page
             .getByRole("button", { name: "Sign out & clear this tab" })
             .click();
+          await page
+            .getByRole("button", {
+              name: "Sign in to your account",
+              exact: true,
+            })
+            .waitFor();
           await page
             .getByRole("button", { name: "My preparations", exact: true })
             .click();

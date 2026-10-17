@@ -1,4 +1,4 @@
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v24";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v25";
 import {
   FORM_VERSION,
   PACKAGES,
@@ -13,28 +13,29 @@ import {
   warnings,
   recommendPackage,
   hasSpouse,
-} from "./schema.mjs?v=20261017-workspace-v24";
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v24";
+} from "./schema.mjs?v=20261017-workspace-v25";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v25";
 import {
   readImage,
   drawCrop,
   photoCopy,
   passportCopy,
   scanPassport,
-} from "./media.mjs?v=20261017-workspace-v24";
+} from "./media.mjs?v=20261017-workspace-v25";
 import {
   CAPABILITIES,
   unavailable,
   capabilities,
-} from "./backend.mjs?v=20261017-workspace-v24";
-import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v24";
-import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v24";
-import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v24";
-import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v24";
-import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v24";
-import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v24";
-import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v24";
-import { dateControl } from "./date-control.mjs?v=20261017-workspace-v24";
+} from "./backend.mjs?v=20261017-workspace-v25";
+import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v25";
+import { accountControl } from "./account-control.mjs?v=20261017-workspace-v25";
+import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v25";
+import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v25";
+import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v25";
+import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v25";
+import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v25";
+import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v25";
+import { dateControl } from "./date-control.mjs?v=20261017-workspace-v25";
 const app = document.querySelector("#workspace");
 let draft = initialDraft();
 const sessionDrafts = [draft];
@@ -45,9 +46,24 @@ const cloud = cloudWorkspace({
   dialog: openDialog,
   close: closeDialog,
   related: (d) => relatedDrafts.get(d),
+  accountChanged: (account) => {
+    profile.update(account);
+    announce(
+      account
+        ? `Signed in as ${account.email}`
+        : "Signed out. Sign in to save your progress.",
+    );
+    if (view === "dashboard") renderDashboard();
+  },
+  reviewConsent: (record) => {
+    draft = record;
+    navigate("document");
+    activate("preparation.consent");
+  },
   status: (text) => {
     cloudStatus = text;
     draftStatus.textContent = text;
+    announce(text);
   },
   saved: (records) => {
     records.forEach((r) => dirtyRecords.delete(r));
@@ -189,6 +205,7 @@ const bottom = el(
   ),
   actionsButton,
 );
+const profile = accountControl(() => cloud.dashboard());
 const header = el(
   "header",
   { class: "workspace-header" },
@@ -219,6 +236,7 @@ const header = el(
   button("My preparations", () => navigate("dashboard"), {
     class: "button dashboard-link",
   }),
+  profile.node,
 );
 const notice = el(
   "div",
@@ -2105,12 +2123,16 @@ function renderDashboard() {
         "p",
         {},
         CAPABILITIES.accounts
-          ? "Sign in with Google or Apple to open purchased preparations."
+          ? cloud.account()
+            ? `Signed in as ${cloud.account().email}`
+            : "Sign in to open purchased preparations."
           : unavailable,
       ),
       button(
         CAPABILITIES.accounts
-          ? "Sign in / open saved preparations"
+          ? cloud.account()
+            ? "Open saved preparations"
+            : "Sign in / open saved preparations"
           : "Account sign-in unavailable",
         cloud.dashboard,
         {

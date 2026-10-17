@@ -33,8 +33,12 @@ const engines = { chromium, webkit, firefox };
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(base + "/prepare.html");
     const input = (id) => page.locator(`[id="${id}"]`);
-    const more = () =>
-      page.getByRole("button", { name: "More preparation actions" }).click();
+    const more = async () => {
+      await page.evaluate(() => document.activeElement.blur());
+      await page
+        .getByRole("button", { name: "More preparation actions" })
+        .click();
+    };
     assert(
       (await page.locator(".workspace-bottom").boundingBox()).height <= 72,
     );
@@ -50,6 +54,9 @@ const engines = { chromium, webkit, firefox };
     );
     assert.equal(await input("eligibility.basis").inputValue(), "");
     await input("entrant.lastName").fill("EXAMPLE");
+    await page.locator(".workspace-bottom").waitFor({ state: "hidden" });
+    await page.evaluate(() => document.activeElement.blur());
+    await page.locator(".workspace-bottom").waitFor({ state: "visible" });
     await page.getByRole("button", { name: "Next required field" }).click();
     assert.equal(
       await page.evaluate(() => document.activeElement.id),
@@ -247,12 +254,22 @@ const engines = { chromium, webkit, firefox };
     }));
     assert.equal(geometry.bottom, "424px");
     assert(
-      geometry.field.bottom <= geometry.bar.top + 1,
-      "Keyboard bar keeps focused input visible",
+      geometry.field.bottom <= 420,
+      "Focused input remains within the visible viewport without the toolbar",
+    );
+    assert.equal(
+      await keyboard.locator(".workspace-bottom").isVisible(),
+      false,
     );
     await keyboard.screenshot({
       path: path.join(output, `keyboard-simulation-${name}.png`),
     });
+    await keyboard.evaluate(() => {
+      document.activeElement.blur();
+      Object.assign(visualViewport, { height: 844, offsetTop: 0 });
+      visualViewport.dispatchEvent(new Event("resize"));
+    });
+    await keyboard.locator(".workspace-bottom").waitFor({ state: "visible" });
     await keyboard.close();
     const small = await context.newPage();
     await small.setViewportSize({ width: 320, height: 568 });
@@ -277,9 +294,11 @@ const engines = { chromium, webkit, firefox };
         .toJSON(),
     }));
     assert(
-      visible.field.bottom <= visible.bar.top + 1,
-      "Enlarged input remains above the toolbar",
+      visible.field.bottom <= 568,
+      "Enlarged input remains inside the viewport",
     );
+    assert.equal(await small.locator(".workspace-bottom").isVisible(), false);
+    await small.evaluate(() => document.activeElement.blur());
     await small
       .getByRole("button", { name: "More preparation actions" })
       .click();

@@ -31,11 +31,11 @@ export function attachViewport(toolbar) {
         ? 8
         : document.querySelector(".workspace-header").getBoundingClientRect()
             .height + 12);
-    const bottom =
-      Math.min(
-        (vv?.offsetTop || 0) + (vv?.height || innerHeight),
-        toolbar.getBoundingClientRect().top,
-      ) - 12;
+    const visibleBottom = (vv?.offsetTop || 0) + (vv?.height || innerHeight);
+    const toolbarTop = document.body.classList.contains("field-editing")
+      ? visibleBottom
+      : toolbar.getBoundingClientRect().top;
+    const bottom = Math.min(visibleBottom, toolbarTop) - 12;
     const rect = field.getBoundingClientRect();
     if (rect.bottom > bottom)
       window.scrollBy({ top: rect.bottom - bottom, behavior: "instant" });
@@ -57,6 +57,9 @@ export function attachViewport(toolbar) {
       root.style.setProperty("--viewport-height", `${g.height}px`);
       root.style.setProperty("--viewport-top", `${g.top}px`);
       document.body.classList.toggle("keyboard-open", g.typing);
+      // Focus is the signal, including hardware keyboards and native selects.
+      // Waiting for keyboard geometry makes the toolbar jump on iOS.
+      document.body.classList.toggle("field-editing", !!editable());
       clearTimeout(ensureTimer);
       if (event?.type !== "scroll")
         ensureTimer = setTimeout(ensureVisible, 120);
