@@ -1,5 +1,4 @@
 // Real local OTP delivery through Mailpit; real Auth/DB/API. Payment fixture is local-only.
-import { execFileSync } from "node:child_process";
 import { createClient } from "@supabase/supabase-js";
 import { chromium } from "playwright";
 import { randomUUID } from "node:crypto";
@@ -8,11 +7,10 @@ import {
   initialDraft,
   FORM_VERSION,
 } from "../../assets/preparation/schema.mjs";
-const raw = execFileSync("npx", ["supabase", "status", "-o", "json"], {
-  encoding: "utf8",
-});
-const config = JSON.parse(raw.slice(raw.indexOf("{")));
-assert.equal(new URL(config.API_URL).hostname, "127.0.0.1");
+import { localConfig } from "./local-config.mjs";
+const config = localConfig();
+const base = process.env.PREP_BASE_URL || "https://127.0.0.1:8444";
+assert.equal(new URL(base).hostname, "127.0.0.1");
 const db = createClient(config.API_URL, config.SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
   }),
@@ -44,7 +42,7 @@ try {
   );
   const page = await context.newPage();
   page.on("pageerror", (e) => errors.push(e.message));
-  await page.goto("https://127.0.0.1:8444/prepare.html#dashboard");
+  await page.goto(`${base}/prepare.html#dashboard`);
   await page
     .getByRole("button", { name: "Sign in / open saved preparations" })
     .click();

@@ -12,11 +12,8 @@ import {
 } from "../../assets/preparation/schema.mjs";
 import { COUNTRIES } from "../../assets/preparation/countries.mjs";
 import { writeFileSync } from "node:fs";
-const output = execFileSync("npx", ["supabase", "status", "-o", "json"], {
-  encoding: "utf8",
-});
-const config = JSON.parse(output.slice(output.indexOf("{")));
-assert.equal(new URL(config.API_URL).hostname, "127.0.0.1");
+import { localConfig } from "./local-config.mjs";
+const config = localConfig();
 const admin = createClient(config.API_URL, config.SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
 });
