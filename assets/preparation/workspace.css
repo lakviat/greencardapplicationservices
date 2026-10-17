@@ -1215,6 +1215,35 @@ body:not([data-view="document"]) .workspace-layout {
   gap: 18px;
   align-items: start;
 }
+.scan-progress {
+  height: 3px;
+  margin: -4px 0 18px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: #eef6f0;
+}
+.scan-progress::before {
+  content: "";
+  display: block;
+  height: 100%;
+  width: 45%;
+  background: linear-gradient(90deg, #198552, #8ad3aa 65%, #fff);
+  animation: scan-reading 1.8s linear infinite;
+}
+@keyframes scan-reading {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(225%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scan-progress::before {
+    animation: none;
+    width: 100%;
+  }
+}
 .scan-image {
   position: sticky;
   top: 0;

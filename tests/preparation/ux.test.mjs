@@ -87,7 +87,7 @@ test("name padding OCR noise does not discard a checked data row or repair its l
   assert.equal(parsed.values.number, "L898902C3");
   assert.equal(parsed.values.birthDate, "1974-08-12");
   assert.equal(parsed.values.nationalityCode, undefined);
-  assert(parsed.issues.some((i) => i.includes("name-row padding")));
+  assert(parsed.issues.some((i) => i.includes("name line was unclear")));
   assert.equal(
     parseMRZ(noisy + "\n" + data.slice(1), now).status,
     "unreadable",

@@ -2,8 +2,8 @@ import {
   parseMRZ,
   mergeMRZ,
   scanSuggestions,
-} from "./mrz.mjs?v=20261017-workspace-v27";
-import { parsePrintedPassport } from "./passport-fields.mjs?v=20261017-workspace-v27";
+} from "./mrz.mjs?v=20261017-workspace-v28";
+import { parsePrintedPassport } from "./passport-fields.mjs?v=20261017-workspace-v28";
 // Sensitive image data and object URLs live only in memory. Nothing is uploaded here.
 export const MAX_SOURCE_BYTES = 20 * 1024 * 1024;
 export async function imageType(file) {
@@ -192,7 +192,9 @@ export async function scanPassport(blob, countries, onProgress, signal) {
         // not try to fetch that already-revoked URL again.
         let detected = {},
           checked = parseMRZ("");
-        const collect = (data) => {
+        const names = window.gcasPassport.createNameReader();
+        const collect = (data, { printedOnly = false } = {}) => {
+          names.add(data.text, data.blocks || [], { printedOnly });
           const legacy = window.gcasPassport.parsePassport(
             data.text,
             countries,
@@ -203,16 +205,28 @@ export async function scanPassport(blob, countries, onProgress, signal) {
             ...legacy,
             ...printed,
           })) {
+            if (["firstName", "lastName", "middleName"].includes(key)) continue;
             if (key === "issues")
               detected.issues = [
                 ...new Set([...(detected.issues || []), ...value]),
               ];
             else if (value && !detected[key]) detected[key] = value;
           }
-          checked = mergeMRZ(checked, parseMRZ(data.text));
+          if (!printedOnly) checked = mergeMRZ(checked, parseMRZ(data.text));
+        };
+        const suggestions = () => {
+          const nameResult = names.result();
+          return scanSuggestions(
+            {
+              ...detected,
+              ...nameResult,
+              issues: [...(detected.issues || []), ...nameResult.issues],
+            },
+            checked,
+          );
         };
         const enough = () => {
-          const v = scanSuggestions(detected, checked);
+          const v = suggestions();
           return (
             v.firstName &&
             v.lastName &&
@@ -238,6 +252,19 @@ export async function scanPassport(blob, countries, onProgress, signal) {
           (await worker.recognize(native, {}, { text: true, blocks: true }))
             .data,
         );
+        // A name's MRZ row has no checksum. Read the printed labels separately
+        // before accepting it, even when the document number/dates passed.
+        if (names.needsPrintedNames()) {
+          await worker.setParameters({
+            tessedit_pageseg_mode: "11",
+            tessedit_char_whitelist: "",
+          });
+          collect(
+            (await worker.recognize(native, {}, { text: true, blocks: true }))
+              .data,
+            { printedOnly: true },
+          );
+        }
         if (!enough()) {
           await worker.setParameters({
             tessedit_pageseg_mode: "6",
@@ -263,7 +290,7 @@ export async function scanPassport(blob, countries, onProgress, signal) {
           strip.width = strip.height = 0;
         }
         native.width = native.height = 0;
-        if (enough()) return scanSuggestions(detected, checked);
+        if (enough()) return suggestions();
         // Work at useful OCR resolution without retaining multiple large images.
         const scale = Math.min(2, 2600 / Math.max(source.width, source.height));
         for (const degrees of [0, 180, 90, 270]) {
@@ -354,7 +381,7 @@ export async function scanPassport(blob, countries, onProgress, signal) {
           }
           // If the page is upright but labels were missed, a sparse-text pass
           // recovers small separate fields without guessing from nationality.
-          if (!enough() && detected.firstName && detected.lastName) {
+          if (!enough() && suggestions().firstName && suggestions().lastName) {
             await worker.setParameters({
               tessedit_pageseg_mode: "11",
               tessedit_char_whitelist: "",
@@ -367,12 +394,18 @@ export async function scanPassport(blob, countries, onProgress, signal) {
                   { text: true, blocks: true },
                 )
               ).data,
+              { printedOnly: true },
             );
           }
           full.width = full.height = 0;
-          if (enough() || (detected.firstName && detected.lastName)) break;
+          if (
+            enough() ||
+            checked.status === "checked" ||
+            (suggestions().firstName && suggestions().lastName)
+          )
+            break;
         }
-        return scanSuggestions(detected, checked);
+        return suggestions();
       })(),
     ]);
   } finally {

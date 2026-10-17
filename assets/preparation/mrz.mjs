@@ -1,5 +1,5 @@
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v27";
-import { PASSPORT_COUNTRIES } from "./passport-countries.mjs?v=20261017-workspace-v27";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v28";
+import { PASSPORT_COUNTRIES } from "./passport-countries.mjs?v=20261017-workspace-v28";
 // ICAO TD3 only. Checksums validate transcription, never identity or eligibility.
 // Keep raw OCR/MRZ text out of drafts, analytics and storage.
 const digit = (s) =>
@@ -109,7 +109,7 @@ export function parseMRZ(text, now = new Date()) {
   const issues = [];
   if (a.length !== 44)
     issues.push(
-      "OCR changed the name-row padding. Names require manual comparison; the separate data-row checks are unchanged.",
+      "The name line was unclear. Compare the first and last name with the printed passport details.",
     );
   if (!valid)
     issues.push(

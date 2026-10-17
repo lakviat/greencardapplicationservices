@@ -1,4 +1,4 @@
-import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v27";
+import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v28";
 import {
   api,
   acceptAuth,
@@ -7,9 +7,9 @@ import {
   PROVIDERS,
   CAPABILITIES,
   unavailable,
-} from "./backend.mjs?v=20261017-workspace-v27";
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v27";
-import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v27";
+} from "./backend.mjs?v=20261017-workspace-v28";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v28";
+import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v28";
 const groups = new WeakMap();
 let account = null;
 const pendingSaves = new Set();

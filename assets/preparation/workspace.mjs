@@ -1,4 +1,4 @@
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v27";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v28";
 import {
   FORM_VERSION,
   PACKAGES,
@@ -13,29 +13,29 @@ import {
   warnings,
   recommendPackage,
   hasSpouse,
-} from "./schema.mjs?v=20261017-workspace-v27";
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v27";
+} from "./schema.mjs?v=20261017-workspace-v28";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v28";
 import {
   readImage,
   drawCrop,
   photoCopy,
   passportCopy,
   scanPassport,
-} from "./media.mjs?v=20261017-workspace-v27";
+} from "./media.mjs?v=20261017-workspace-v28";
 import {
   CAPABILITIES,
   unavailable,
   capabilities,
-} from "./backend.mjs?v=20261017-workspace-v27";
-import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v27";
-import { accountControl } from "./account-control.mjs?v=20261017-workspace-v27";
-import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v27";
-import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v27";
-import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v27";
-import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v27";
-import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v27";
-import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v27";
-import { dateControl } from "./date-control.mjs?v=20261017-workspace-v27";
+} from "./backend.mjs?v=20261017-workspace-v28";
+import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v28";
+import { accountControl } from "./account-control.mjs?v=20261017-workspace-v28";
+import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v28";
+import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v28";
+import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v28";
+import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v28";
+import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v28";
+import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v28";
+import { dateControl } from "./date-control.mjs?v=20261017-workspace-v28";
 const app = document.querySelector("#workspace");
 let draft = initialDraft();
 const sessionDrafts = [draft];
@@ -1104,11 +1104,19 @@ async function openScan(asset, { attach = false } = {}) {
     abort = new AbortController(),
     preview = URL.createObjectURL(asset.blob);
   const info = el("p", { role: "status" }, "Reading on your device…");
+  // OCR may retry different crops/orientations, so per-pass percentages are
+  // not overall progress. One continuous indicator spans the entire scan.
+  const progress = el("div", {
+    class: "scan-progress",
+    role: "progressbar",
+    "aria-label": "Reading passport",
+  });
   const details = el("div", { class: "scan-values" });
   const body = el(
     "div",
     {},
     info,
+    progress,
     el(
       "div",
       { class: "scan-review" },
@@ -1131,12 +1139,11 @@ async function openScan(asset, { attach = false } = {}) {
     const values = await scanPassport(
       asset.blob,
       countryNames,
-      (p) => {
-        info.textContent = `Reading on your device… ${p}%`;
-      },
+      () => {},
       abort.signal,
     );
     if (abort.signal.aborted || draft !== target) return;
+    progress.remove();
     info.textContent =
       values.mrzStatus === "checked"
         ? "MRZ checksums passed. This checks transcription only; verify every value against the image."
@@ -1305,6 +1312,8 @@ async function openScan(asset, { attach = false } = {}) {
         "We could not reliably read this passport. No answers or files were changed.";
       body.append(button("Enter Manually", closeDialog));
     }
+  } finally {
+    progress.remove();
   }
 }
 function familyControls() {
