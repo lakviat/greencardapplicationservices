@@ -1,4 +1,4 @@
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v31";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v32";
 import {
   FORM_VERSION,
   PACKAGES,
@@ -13,35 +13,41 @@ import {
   warnings,
   recommendPackage,
   hasSpouse,
-} from "./schema.mjs?v=20261017-workspace-v31";
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v31";
+} from "./schema.mjs?v=20261017-workspace-v32";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v32";
 import {
   readImage,
   drawCrop,
   photoCopy,
   passportCopy,
   scanPassport,
-} from "./media.mjs?v=20261017-workspace-v31";
+} from "./media.mjs?v=20261017-workspace-v32";
 import {
   CAPABILITIES,
   unavailable,
   capabilities,
-} from "./backend.mjs?v=20261017-workspace-v31";
-import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v31";
-import { accountControl } from "./account-control.mjs?v=20261017-workspace-v31";
-import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v31";
-import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v31";
-import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v31";
-import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v31";
-import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v31";
-import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v31";
-import { dateControl } from "./date-control.mjs?v=20261017-workspace-v31";
+} from "./backend.mjs?v=20261017-workspace-v32";
+import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v32";
+import { accountControl } from "./account-control.mjs?v=20261017-workspace-v32";
+import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v32";
+import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v32";
+import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v32";
+import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v32";
+import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v32";
+import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v32";
+import { dateControl } from "./date-control.mjs?v=20261017-workspace-v32";
+import {
+  saveIndicator,
+  savedAt,
+} from "./save-feedback.mjs?v=20261017-workspace-v32";
 const app = document.querySelector("#workspace");
+const saveFeedback = saveIndicator();
+const saveStates = new WeakMap();
 let draft = initialDraft();
 const sessionDrafts = [draft];
 const relatedDrafts = new WeakMap();
 const dirtyRecords = new WeakSet();
-let cloudStatus = "";
+const draftStatuses = new WeakMap();
 const cloud = cloudWorkspace({
   dialog: openDialog,
   close: closeDialog,
@@ -49,6 +55,10 @@ const cloud = cloudWorkspace({
   records: () => sessionDrafts,
   preparations: () => navigate("dashboard"),
   accountPage: (content) => navigate("account", content),
+  saveState: (records, state) => {
+    records.forEach((record) => saveStates.set(record, state));
+    updateSaveFeedback();
+  },
   accountReady: (account) => profile.update(account),
   accountChanged: (account) => {
     profile.update(account);
@@ -60,10 +70,12 @@ const cloud = cloudWorkspace({
     if (view === "dashboard") renderDashboard();
     if (!account && view === "account") navigate("dashboard");
   },
-  status: (text) => {
-    cloudStatus = text;
-    draftStatus.textContent = text;
-    announce(text);
+  status: (text, records = [draft]) => {
+    records.forEach((record) => draftStatuses.set(record, text));
+    if (records.includes(draft)) {
+      draftStatus.textContent = text;
+      announce(text);
+    }
   },
   saved: (records) => {
     records.forEach((r) => dirtyRecords.delete(r));
@@ -115,7 +127,7 @@ const cloud = cloudWorkspace({
     sessionDrafts.splice(0, sessionDrafts.length, initialDraft());
     draft = sessionDrafts[0];
     dirty = false;
-    cloudStatus = "Signed out";
+    draftStatuses.set(draft, "Signed out");
     navigate("dashboard");
   },
   pdfReady: (record) => {
@@ -238,6 +250,10 @@ const header = el(
   }),
   profile.node,
 );
+const headerMain = el("div", { class: "workspace-header-main" }, [
+  ...header.childNodes,
+]);
+header.replaceChildren(headerMain, saveFeedback.node);
 const notice = el(
   "div",
   { class: "workspace-notice" },
@@ -303,7 +319,7 @@ function announce(text) {
 function changed() {
   dirty = true;
   dirtyRecords.add(draft);
-  cloudStatus = "";
+  draftStatuses.delete(draft);
   cloud.changed(draft);
   draft.reviewed = false;
   updateProgress();
@@ -320,7 +336,15 @@ function fieldError(field) {
     return "Select an exact country name from the suggestions.";
   return validate(field, draft);
 }
+function updateSaveFeedback() {
+  const info = cloud.info(draft);
+  saveFeedback.update(
+    saveStates.get(draft) || { timestamp: info?.updated_at },
+    dirtyRecords.has(draft),
+  );
+}
 function updateProgress() {
+  updateSaveFeedback();
   const p = preparationProgress(draft, relatedDrafts.get(draft), countryNames);
   percentLabel.textContent = `${p.percent}%`;
   progressBar.value = p.percent;
@@ -338,8 +362,10 @@ function updateProgress() {
   if (packageIndicator.textContent !== packageText)
     packageIndicator.textContent = packageText;
   draftStatus.textContent =
-    cloudStatus ||
-    (dirty ? "Unsaved · keep this tab open" : "In this tab · not saved");
+    draftStatuses.get(draft) ||
+    (dirtyRecords.has(draft)
+      ? "Unsaved · keep this tab open"
+      : "In this tab · not saved");
   for (const field of fields(draft)) {
     const node = document.getElementById(`field-${field.id}`);
     if (!node) continue;
@@ -2096,7 +2122,7 @@ function renderDashboard() {
         "p",
         {},
         cloud.info(record)?.updated_at
-          ? `Last cloud save: ${new Date(cloud.info(record).updated_at).toLocaleString()}`
+          ? `Last saved ${savedAt(cloud.info(record).updated_at)} (your local time)`
           : "Not saved yet · Save Progress is free",
       ),
       el(

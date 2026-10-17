@@ -181,11 +181,9 @@ async function screenshot(page, name) {
       assert.equal(await child.inputValue(), "SAM");
       assert.equal(await input(page, "spouse.firstName").inputValue(), "ALEX");
       await action(page, "save");
-      assert(
-        await page
-          .getByRole("heading", { name: "Account setup in progress" })
-          .isVisible(),
-      );
+      await page
+        .getByRole("heading", { name: "Account setup in progress" })
+        .waitFor();
       await page.getByRole("button", { name: "Close dialog" }).click();
       await action(page, "review");
       assert.match(

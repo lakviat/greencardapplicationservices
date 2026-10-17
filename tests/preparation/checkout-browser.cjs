@@ -15,6 +15,8 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
       const context = await browser.newContext({
         ignoreHTTPSErrors: true,
         viewport: { width: 390, height: 844 },
+        locale: "en-US",
+        timezoneId: "America/New_York",
       });
       const user = {
         id: randomUUID(),
@@ -42,6 +44,8 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         releaseSave,
         saveCalls = 0,
         lastSavedName;
+      let lastSavedAt;
+      const saveIds = new Set();
       await context.route(`${project}/**`, async (route) => {
         const request = route.request(),
           url = new URL(request.url());
@@ -99,6 +103,7 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
           });
         if (url.pathname.endsWith("/save")) {
           saveCalls++;
+          saveIds.add(request.postDataJSON().id);
           lastSavedName =
             request.postDataJSON().payload.documents[0].answers[
               "entrant.firstName"
@@ -120,12 +125,15 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
             "applicant@example.test",
           );
           saved = true;
+          lastSavedAt = new Date(
+            Date.UTC(2026, 9, 17, 18, 0, saveCalls),
+          ).toISOString();
           return json({
             preparation: {
               revision: ++revision,
               state: paid ? "paid" : "unpaid",
               package: "single",
-              updated_at: new Date().toISOString(),
+              updated_at: lastSavedAt,
             },
           });
         }
@@ -148,15 +156,17 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
       await context.route(base + "/checkout-test", (route) =>
         route.fulfill({
           contentType: "text/html",
-          body: `<!doctype html><html><body><main></main><section id="dialog"></section><p id="status"></p><script type="module">
-        import {cloudWorkspace} from '/assets/preparation/cloud.mjs?v=20261017-workspace-v31';
-        import {CAPABILITIES, PROVIDERS} from '/assets/preparation/backend.mjs?v=20261017-workspace-v31';
-        import {initialDraft} from '/assets/preparation/schema.mjs?v=20261017-workspace-v31';
+          body: `<!doctype html><html><head><link rel="stylesheet" href="/assets/preparation/workspace.css?v=20261017-workspace-v32"></head><body><main></main><section id="dialog"></section><p id="status"></p><script type="module">
+        import {cloudWorkspace} from '/assets/preparation/cloud.mjs?v=20261017-workspace-v32';
+        import {CAPABILITIES, PROVIDERS} from '/assets/preparation/backend.mjs?v=20261017-workspace-v32';
+        import {initialDraft} from '/assets/preparation/schema.mjs?v=20261017-workspace-v32';
+        import {saveIndicator} from '/assets/preparation/save-feedback.mjs?v=20261017-workspace-v32';
+        const indicator=saveIndicator(); document.body.append(indicator.node);
         Object.assign(CAPABILITIES,{accounts:true,checkout:true,cloudSave:true,pdfDownload:true}); PROVIDERS.google=true;
         const d=initialDraft(); d.answers={'contact.email':'applicant@example.test','entrant.firstName':'SYNTHETIC'};
         let cleanup;
         const close=()=>{const fn=cleanup;cleanup=null;fn?.();document.querySelector('#dialog').replaceChildren();};
-        const cloud=cloudWorkspace({related:()=>null,dialog:(title,node,onClose)=>{close();cleanup=onClose;const heading=document.createElement('h2');heading.textContent=title;document.querySelector('#dialog').replaceChildren(heading,node);},close,status:text=>document.querySelector('#status').textContent=text,saved:()=>{},pdfReady:()=>{document.querySelector('#status').textContent='PDF unlocked';}});
+        const cloud=cloudWorkspace({related:()=>null,saveState:(_records,state)=>indicator.update(state),dialog:(title,node,onClose)=>{close();cleanup=onClose;const heading=document.createElement('h2');heading.textContent=title;document.querySelector('#dialog').replaceChildren(heading,node);},close,status:text=>document.querySelector('#status').textContent=text,saved:()=>{},pdfReady:()=>{document.querySelector('#status').textContent='PDF unlocked';}});
         const add=(label,action)=>{const b=document.createElement('button');b.textContent=label;b.onclick=action;document.querySelector('main').append(b);};
         add('Save & receive PDF',()=>cloud.receivePdf(d));
         add('Try PDF',async()=>{try{const blob=await cloud.pdf(d);document.querySelector('#status').textContent=await blob.text();}catch(e){document.querySelector('#status').textContent=e.message;}});
@@ -272,6 +282,63 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
       await page
         .getByRole("button", { name: "Close checkout", exact: true })
         .click();
+      // Autosave and a repeated manual click share one in-flight request.
+      saveMode = "hold";
+      const callsBeforeAuto = saveCalls;
+      await page
+        .getByRole("button", { name: "Edit answers", exact: true })
+        .click();
+      await page.getByText("Saving…", { exact: true }).waitFor();
+      await page.locator('.save-feedback [role="progressbar"]').waitFor();
+      for (let n = 0; !releaseSave && n < 200; n++)
+        await new Promise((r) => setTimeout(r, 20));
+      assert(releaseSave);
+      await page
+        .getByRole("button", { name: "Save progress", exact: true })
+        .evaluate((button) => {
+          button.click();
+          const bar = document.querySelector('#dialog [role="progressbar"]');
+          button.click();
+          window.sameSavingBar =
+            bar === document.querySelector('#dialog [role="progressbar"]');
+        });
+      await page
+        .getByRole("heading", { name: "Saving progress", exact: true })
+        .waitFor();
+      assert.equal(saveCalls, callsBeforeAuto + 1);
+      assert.equal(
+        await page.evaluate(() => window.sameSavingBar),
+        true,
+        "Repeated clicks keep one continuous indicator",
+      );
+      assert.equal(
+        await page
+          .locator('#dialog [role="progressbar"]')
+          .getAttribute("aria-valuenow"),
+        null,
+      );
+      const previousTime = await page
+        .locator(".save-feedback time")
+        .getAttribute("datetime");
+      assert.equal(
+        previousTime,
+        lastSavedAt,
+        "Pending requests retain the last confirmed timestamp",
+      );
+      saveMode = "success";
+      releaseSave();
+      releaseSave = null;
+      await page
+        .getByRole("heading", { name: "Progress saved", exact: true })
+        .waitFor();
+      assert.equal(
+        saveCalls,
+        callsBeforeAuto + 1,
+        "Manual save joins autosave without a second write",
+      );
+      await page
+        .getByRole("button", { name: "Close checkout", exact: true })
+        .click();
       saveMode = "hold";
       await page
         .getByRole("button", { name: "Save progress", exact: true })
@@ -295,6 +362,23 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         .getByRole("heading", { name: "Progress saved", exact: true })
         .waitFor();
       assert.equal(lastSavedName, "UPDATED");
+      assert.equal(
+        await page.locator(".save-feedback time").getAttribute("datetime"),
+        lastSavedAt,
+      );
+      assert.match(
+        await page.locator(".save-feedback time").innerText(),
+        /Oct 17, 2026(?:,| at) 2:00:\d{2} PM/,
+      );
+      assert.equal(
+        await page.locator('.save-feedback [role="progressbar"]').isVisible(),
+        false,
+      );
+      assert.equal(
+        saveIds.size,
+        1,
+        "Saves update the same preparation rather than creating dated copies",
+      );
       assert.match(
         await page.locator("#dialog").innerText(),
         /saved to account@example.test/,
@@ -302,6 +386,7 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
       await page
         .getByRole("button", { name: "Close checkout", exact: true })
         .click();
+      const lastSuccess = lastSavedAt;
       saveMode = "fail";
       await page
         .getByRole("button", { name: "Save progress", exact: true })
@@ -316,6 +401,14 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         0,
       );
       assert.match(await page.locator("#status").innerText(), /^Not saved:/);
+      assert.equal(
+        await page.locator(".save-feedback time").getAttribute("datetime"),
+        lastSuccess,
+      );
+      assert.equal(
+        await page.locator('.save-feedback [role="progressbar"]').isVisible(),
+        false,
+      );
       assert.deepEqual(errors, []);
       console.log(
         engine +

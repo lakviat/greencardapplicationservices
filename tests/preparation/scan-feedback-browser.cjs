@@ -241,7 +241,7 @@ const printed =
       // the same bounded decoder used by the backend, in every browser engine.
       const uploadCopy = await page.evaluate(async () => {
         const { passportCopy, passportUploadCopy } =
-          await import("/assets/preparation/media.mjs?v=20261017-workspace-v31");
+          await import("/assets/preparation/media.mjs?v=20261017-workspace-v32");
         const canvas = document.createElement("canvas");
         canvas.width = 3024;
         canvas.height = 4032;

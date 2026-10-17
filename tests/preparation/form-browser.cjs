@@ -316,14 +316,12 @@ fs.mkdirSync(output, { recursive: true });
       await page
         .getByRole("button", { name: "Pay now · $9.99", exact: true })
         .tap();
-      assert(
-        await page
-          .getByRole("heading", {
-            name: "Account setup in progress",
-            exact: true,
-          })
-          .isVisible(),
-      );
+      await page
+        .getByRole("heading", {
+          name: "Account setup in progress",
+          exact: true,
+        })
+        .waitFor();
       await close();
       await more();
       await page

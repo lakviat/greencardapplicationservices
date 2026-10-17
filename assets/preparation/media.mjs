@@ -2,8 +2,8 @@ import {
   parseMRZ,
   mergeMRZ,
   scanSuggestions,
-} from "./mrz.mjs?v=20261017-workspace-v31";
-import { parsePrintedPassport } from "./passport-fields.mjs?v=20261017-workspace-v31";
+} from "./mrz.mjs?v=20261017-workspace-v32";
+import { parsePrintedPassport } from "./passport-fields.mjs?v=20261017-workspace-v32";
 // Sensitive image data and object URLs live only in memory. Nothing is uploaded here.
 export const MAX_SOURCE_BYTES = 20 * 1024 * 1024;
 export async function imageType(file) {
@@ -122,7 +122,18 @@ export async function passportCopy(file) {
 }
 // Keep the detailed local scan, but bound the cloud copy's decoded memory.
 // A small JPEG file can still expand to hundreds of MB on the server.
-export async function passportUploadCopy(blob) {
+const uploadCopies = new WeakMap();
+export function passportUploadCopy(blob) {
+  if (!uploadCopies.has(blob)) {
+    const copy = makePassportUploadCopy(blob).catch((error) => {
+      uploadCopies.delete(blob);
+      throw error;
+    });
+    uploadCopies.set(blob, copy);
+  }
+  return uploadCopies.get(blob);
+}
+async function makePassportUploadCopy(blob) {
   const source = await readImage(blob);
   const scale = Math.min(
     1,

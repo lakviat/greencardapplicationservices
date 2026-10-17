@@ -232,9 +232,9 @@ const publicPages = fs
               c.toBlob(resolve, "image/png"),
             );
             const { scanPassport } =
-              await import("/assets/preparation/media.mjs?v=20261017-workspace-v31");
+              await import("/assets/preparation/media.mjs?v=20261017-workspace-v32");
             const { COUNTRIES } =
-              await import("/assets/preparation/countries.mjs?v=20261017-workspace-v31");
+              await import("/assets/preparation/countries.mjs?v=20261017-workspace-v32");
             return scanPassport(
               blob,
               COUNTRIES.map((c) => c.name),

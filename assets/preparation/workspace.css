@@ -119,11 +119,50 @@ a {
   z-index: 20;
   min-height: 64px;
   background: #fff;
-  display: flex;
-  align-items: center;
+  display: block;
   gap: 12px;
   border-bottom: 1px solid var(--line);
   padding: 8px max(20px, calc((100vw - 1280px) / 2));
+}
+.workspace-header-main {
+  display: flex;
+  align-items: center;
+  gap: inherit;
+  min-width: 0;
+}
+.save-feedback {
+  margin-top: 3px;
+  font-size: 11px;
+  color: #426156;
+}
+.save-feedback-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 7px;
+  line-height: 1.4;
+  min-height: 16px;
+}
+.save-time {
+  color: var(--muted);
+}
+.save-feedback[data-state="pending"],
+.save-feedback[data-state="error"] {
+  color: #86531c;
+}
+.save-feedback .save-progress {
+  margin: 3px 0 0;
+}
+.save-feedback .save-progress[hidden] {
+  display: block !important;
+  visibility: hidden;
+}
+.saving-dialog .save-progress {
+  margin: 16px 0;
+}
+body[data-view="account"] .save-feedback,
+body[data-view="dashboard"] .save-feedback {
+  display: none;
 }
 .workspace-home {
   text-decoration: none;
@@ -1245,6 +1284,9 @@ body:not([data-view="document"]) .workspace-layout {
   width: 45%;
   background: linear-gradient(90deg, #198552, #8ad3aa 65%, #fff);
   animation: scan-reading 1.8s linear infinite;
+}
+.scan-progress.save-progress::before {
+  animation-delay: -0.55s;
 }
 @keyframes scan-reading {
   from {

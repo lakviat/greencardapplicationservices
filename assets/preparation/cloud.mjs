@@ -1,4 +1,4 @@
-import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v31";
+import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v32";
 import {
   api,
   acceptAuth,
@@ -6,12 +6,17 @@ import {
   observeSession,
   PROVIDERS,
   CAPABILITIES,
+  capabilities,
   unavailable,
-} from "./backend.mjs?v=20261017-workspace-v31";
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v31";
-import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v31";
-import { passportUploadCopy } from "./media.mjs?v=20261017-workspace-v31";
-import { accountPage } from "./account-page.mjs?v=20261017-workspace-v31";
+} from "./backend.mjs?v=20261017-workspace-v32";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v32";
+import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v32";
+import { passportUploadCopy } from "./media.mjs?v=20261017-workspace-v32";
+import { accountPage } from "./account-page.mjs?v=20261017-workspace-v32";
+import {
+  savedAt,
+  savingBar,
+} from "./save-feedback.mjs?v=20261017-workspace-v32";
 const groups = new WeakMap();
 let account = null;
 const pendingSaves = new Set();
@@ -68,6 +73,7 @@ export function cloudWorkspace(ui) {
   };
   async function signIn(next) {
     const client = await ready;
+    if (!CAPABILITIES.accounts) await capabilities();
     const { data, error: sessionError } = await client.getSession();
     if (sessionError)
       throw new Error(
@@ -141,16 +147,105 @@ export function cloudWorkspace(ui) {
     );
   }
 
+  function saveState(g, phase, text) {
+    g.savePhase = text;
+    g.saveStatePhase = phase;
+    ui.saveState?.(g.documents, { phase, text, timestamp: g.updated_at });
+    if (g.feedback) g.feedback.status.textContent = text;
+  }
+  function showSaving(g, text = g.savePhase || "Saving progress…") {
+    if (g.feedback) {
+      g.feedback.status.textContent = text;
+      return;
+    }
+    const feedback = { status: el("p", { role: "status" }, text) };
+    ui.dialog(
+      "Saving progress",
+      el(
+        "div",
+        { class: "saving-dialog" },
+        feedback.status,
+        savingBar(),
+        el(
+          "p",
+          {},
+          "Keep this tab open while we save. You can continue editing.",
+        ),
+        g.updated_at
+          ? el(
+              "p",
+              { class: "hint" },
+              `Last saved ${savedAt(g.updated_at)} (your local time).`,
+            )
+          : null,
+        button("Continue editing", ui.close, { class: "button" }),
+      ),
+      () => {
+        if (g.feedback === feedback) g.feedback = null;
+      },
+    );
+    g.feedback = feedback;
+  }
+  function startSave(d) {
+    const g = group(d);
+    if (g.manualSave || g.saveRequest) {
+      showSaving(g);
+      return g.manualSave || g.saveRequest;
+    }
+    const activeSave = g.saving;
+    if (!activeSave) saveState(g, "saving", "Connecting to your account…");
+    showSaving(g);
+    g.saveRequest = signIn(() => saveProgress(d, activeSave))
+      .catch((e) => {
+        saveState(g, "error", e.message);
+        ui.status(`Not saved: ${e.message}`, g.documents);
+        if (g.feedback)
+          ui.dialog(
+            "Progress not saved",
+            el(
+              "div",
+              {},
+              el("p", { role: "alert" }, e.message),
+              el(
+                "p",
+                {},
+                "Your changes are still in this tab. Retry saving before closing it.",
+              ),
+              g.updated_at
+                ? el(
+                    "p",
+                    {},
+                    `Last saved ${savedAt(g.updated_at)} (your local time).`,
+                  )
+                : null,
+              button("Retry saving", () => startSave(d), {
+                class: "button primary",
+              }),
+              button("Continue editing", ui.close, { class: "button" }),
+            ),
+          );
+      })
+      .finally(() => {
+        g.saveRequest = null;
+        // Closing or deferring sign-in must not leave a running save indicator.
+        if (!g.manualSave && !g.saving && g.saveStatePhase === "saving")
+          ui.saveState?.(g.documents, {
+            phase: "idle",
+            timestamp: g.updated_at,
+          });
+      });
+    return g.saveRequest;
+  }
+
   async function save(d) {
     const g = group(d);
     if (!CAPABILITIES.cloudSave)
       throw new Error(
         "Account saving is temporarily unavailable. Your changes remain in this tab.",
       );
-    if (g.saving) {
-      await g.saving;
-      return save(d);
-    }
+    // Manual saves join an active autosave. Edits during that request are
+    // detected below and saved before the final acknowledgement.
+    if (g.saving) return g.saving;
     clearTimeout(g.timer);
     pendingSaves.delete(g.timer);
     const started = g.changeNumber || 0;
@@ -165,7 +260,8 @@ export function cloudWorkspace(ui) {
       g.documents.push(related);
       groups.set(related, g);
     }
-    ui.status("Saving…");
+    ui.status("Saving…", g.documents);
+    saveState(g, "saving", "Saving progress…");
     g.saving = (async () => {
       // Snapshot answers before asynchronous uploads. Further edits trigger another save.
       const documents = g.documents.map((r) => ({
@@ -187,13 +283,30 @@ export function cloudWorkspace(ui) {
         g.state = p.state;
       }
       const pendingImages = [];
+      const totalImages = documents.reduce(
+        (count, r) =>
+          count + Object.values(r.assets).filter((a) => !a.id).length,
+        0,
+      );
+      let imageNumber = 0;
       for (const r of documents) {
         for (const [field, a] of Object.entries(r.assets)) {
           if (!a.id) {
             try {
+              imageNumber++;
+              saveState(
+                g,
+                "saving",
+                `Preparing image ${imageNumber} of ${totalImages}…`,
+              );
               const blob = field.startsWith("passport.")
                 ? await passportUploadCopy(a.blob)
                 : a.blob;
+              saveState(
+                g,
+                "saving",
+                `Uploading image ${imageNumber} of ${totalImages}…`,
+              );
               const uploaded = await api(
                 "upload",
                 blob,
@@ -216,6 +329,7 @@ export function cloudWorkspace(ui) {
           r.assets[field] = { id: a.id, confirmed: !!a.confirmed };
         }
       }
+      saveState(g, "saving", "Saving your answers…");
       const { preparation: p } = await api("save", {
         id: g.id,
         revision: g.revision,
@@ -228,32 +342,72 @@ export function cloudWorkspace(ui) {
       g.package = p.package;
       g.expires_at = p.expires_at;
       g.pendingImages = pendingImages;
+      g.savedChangeNumber = started;
       if (started === (g.changeNumber || 0)) {
         if (!pendingImages.length) ui.saved(g.documents);
+        saveState(
+          g,
+          pendingImages.length ? "pending" : "saved",
+          pendingImages.length
+            ? "Answers saved · images pending"
+            : "Saved to your account",
+        );
         ui.status(
           pendingImages.length
             ? "Answers saved · some images still need saving. Keep this tab open and retry Save progress."
-            : "Saved to your account",
+            : `Saved to your account · ${savedAt(g.updated_at)}`,
+          g.documents,
         );
         return true;
       } else {
-        ui.status("Saving latest changes…");
-        scheduleSave(g, () => save(d).catch(error), 800);
+        ui.status("Saving latest changes…", g.documents);
+        saveState(g, "saving", "Saving your latest changes…");
+        scheduleSave(
+          g,
+          () =>
+            save(d).catch((e) =>
+              ui.status(`Not saved: ${e.message}`, g.documents),
+            ),
+          800,
+        );
         return false;
       }
-    })().finally(() => {
-      g.saving = null;
-    });
+    })()
+      .catch((e) => {
+        saveState(g, "error", e.message);
+        throw e;
+      })
+      .finally(() => {
+        g.saving = null;
+      });
     return g.saving;
   }
-  async function saveLatest(d) {
+  async function saveLatest(d, activeSave) {
+    if (
+      activeSave &&
+      (await activeSave) === true &&
+      group(d).savedChangeNumber === (group(d).changeNumber || 0)
+    )
+      return;
     while ((await save(d)) === false) {
       /* Wait for edits made during the save. */
     }
   }
-  async function saveProgress(d) {
-    await saveLatest(d);
+  function saveProgress(d, activeSave) {
     const g = group(d);
+    showSaving(g, g.saving ? g.savePhase : "Saving progress…");
+    if (g.manualSave) return g.manualSave;
+    g.manualSave = finishSaveProgress(d, activeSave).finally(() => {
+      g.manualSave = null;
+    });
+    return g.manualSave;
+  }
+  async function finishSaveProgress(d, activeSave) {
+    await saveLatest(d, activeSave);
+    const g = group(d);
+    // Dismissing the progress dialog means continue in the background. The
+    // header still acknowledges completion without interrupting another task.
+    if (!g.feedback) return;
     if (g.pendingImages?.length) {
       ui.dialog(
         "Answers saved — images need attention",
@@ -263,7 +417,7 @@ export function cloudWorkspace(ui) {
           el(
             "p",
             { role: "status" },
-            "Your answers are saved to your account. Some images could not be saved yet. Any previously saved copies are still there.",
+            `Your answers are saved to your account as of ${savedAt(g.updated_at)} (your local time). Some images could not be saved yet. Any previously saved copies are still there.`,
           ),
           el(
             "p",
@@ -285,7 +439,7 @@ export function cloudWorkspace(ui) {
               ),
             ),
           ),
-          button("Retry saving images", () => saveProgress(d).catch(error), {
+          button("Retry saving images", () => startSave(d), {
             class: "button primary",
           }),
           button("Continue editing", ui.close, { class: "button" }),
@@ -302,7 +456,7 @@ export function cloudWorkspace(ui) {
         el(
           "p",
           { role: "status" },
-          `Your latest changes are saved to ${account.email}. Last saved ${new Date(g.updated_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`,
+          `Your latest changes are saved to ${account.email}. Last saved ${savedAt(g.updated_at)} (your local time).`,
         ),
         el(
           "p",
@@ -522,7 +676,8 @@ export function cloudWorkspace(ui) {
     delete g.payload;
     records.forEach((r) => groups.set(r, g));
     ui.load(records);
-    ui.status("Saved preparation opened");
+    saveState(g, "saved", "Saved to your account");
+    ui.status(`Last saved ${savedAt(g.updated_at)} (your local time)`);
   }
   async function download(d) {
     const blob = await pdf(d);
@@ -569,10 +724,17 @@ export function cloudWorkspace(ui) {
           });
       }
       if (account && g?.updated_at && g.state !== "deleted") {
-        scheduleSave(g, () => save(d).catch(error), 1800);
+        scheduleSave(
+          g,
+          () =>
+            save(d).catch((e) =>
+              ui.status(`Not saved: ${e.message}`, g.documents),
+            ),
+          1800,
+        );
       }
     },
-    save: (d) => signIn(() => saveProgress(d)).catch(error),
+    save: startSave,
     checkout: (d) => signIn(() => checkout(d, { direct: true })).catch(error),
     receivePdf: (d) =>
       signIn(() => checkout(d, { receivePdf: true, direct: true })).catch(

@@ -16,6 +16,11 @@ const db = createClient(config.API_URL, config.SERVICE_ROLE_KEY, {
   email = `browser-${randomUUID()}@example.test`;
 let id;
 let rejectImages = false;
+let uploadRequests = 0;
+let holdSave = false;
+let holdHealth = true;
+let releaseHealth;
+let releaseSave;
 const uploadedDimensions = [];
 const ok = (r) => {
   assert.equal(r.error, null, r.error?.message);
@@ -58,6 +63,10 @@ try {
     async (route) => {
       const request = route.request();
       const url = new URL(request.url());
+      if (url.pathname.endsWith("/health") && holdHealth)
+        await new Promise((resolve) => {
+          releaseHealth = resolve;
+        });
       if (url.pathname.endsWith("/settings"))
         return route.fulfill({
           json: { external: { google: true, apple: true } },
@@ -88,7 +97,12 @@ try {
         );
         return route.fulfill({ json: session });
       }
+      if (url.pathname.endsWith("/save") && holdSave)
+        await new Promise((resolve) => {
+          releaseSave = resolve;
+        });
       if (url.pathname.endsWith("/upload")) {
+        uploadRequests++;
         if (rejectImages)
           return route.fulfill({
             status: 400,
@@ -119,6 +133,24 @@ try {
   await page.evaluate(() => document.activeElement.blur());
   await page.getByRole("button", { name: "More preparation actions" }).tap();
   await page.getByRole("button", { name: "Save Progress", exact: true }).tap();
+  await page
+    .getByRole("heading", { name: "Saving progress", exact: true })
+    .waitFor();
+  await page
+    .getByRole("dialog")
+    .getByRole("progressbar", { name: "Saving progress", exact: true })
+    .waitFor();
+  assert.equal(
+    await page
+      .getByRole("heading", { name: "Account setup in progress" })
+      .count(),
+    0,
+  );
+  for (let n = 0; !releaseHealth && n < 200; n++)
+    await new Promise((r) => setTimeout(r, 20));
+  assert(releaseHealth);
+  holdHealth = false;
+  releaseHealth();
   await page.getByRole("button", { name: "Continue with Google" }).click();
   await page
     .getByRole("heading", { name: "Progress saved", exact: true })
@@ -163,7 +195,7 @@ try {
   await page.locator('[id="contact.email"]').fill("julia@example.test");
   await page
     .locator(".draft-status")
-    .getByText("Saved to your account", { exact: true })
+    .getByText(/^Saved to your account ·/)
     .waitFor({ timeout: 15000 });
   const saved = ok(
     await db.from("gcas_preparations").select("*").eq("id", id).single(),
@@ -314,6 +346,75 @@ try {
     firstImage,
   );
   await page.getByRole("button", { name: "Close dialog" }).tap();
+  // Saving again shows an immediate progress bar, retains the prior timestamp
+  // until confirmed, and sends only answers/references, never the saved image.
+  const uploadCount = uploadRequests;
+  const priorSaveTime = row.updated_at;
+  holdSave = true;
+  await saveNow();
+  await page
+    .getByRole("heading", { name: "Saving progress", exact: true })
+    .waitFor();
+  const busyBar = page
+    .getByRole("dialog")
+    .getByRole("progressbar", { name: "Saving progress", exact: true });
+  await busyBar.waitFor();
+  assert.equal(
+    await busyBar.evaluate((el) => el.getBoundingClientRect().height),
+    3,
+  );
+  assert.equal(await busyBar.getAttribute("aria-valuenow"), null);
+  assert.equal(
+    await page.locator(".save-feedback time").getAttribute("datetime"),
+    new Date(priorSaveTime).toISOString(),
+  );
+  assert.equal(
+    await page
+      .getByRole("heading", { name: "Progress saved", exact: true })
+      .count(),
+    0,
+  );
+  await page.screenshot({ path: "/tmp/gcas-v32-saving-mobile.png" });
+  await page
+    .getByRole("button", { name: "Continue editing", exact: true })
+    .tap();
+  await page.locator('.save-feedback [role="progressbar"]').waitFor();
+  for (let n = 0; !releaseSave && n < 200; n++)
+    await new Promise((r) => setTimeout(r, 20));
+  assert(releaseSave);
+  holdSave = false;
+  releaseSave();
+  await page
+    .locator('.save-feedback [role="progressbar"]')
+    .waitFor({ state: "hidden" });
+  assert.equal(
+    await page.getByRole("dialog").count(),
+    0,
+    "Continue editing does not get interrupted by another popup",
+  );
+  row = ok(
+    await db.from("gcas_preparations").select("*").eq("id", id).single(),
+  );
+  assert(new Date(row.updated_at) > new Date(priorSaveTime));
+  assert.equal(
+    await page.locator(".save-feedback time").getAttribute("datetime"),
+    new Date(row.updated_at).toISOString(),
+  );
+  assert.equal(
+    uploadRequests,
+    uploadCount,
+    "Unchanged passport images are not uploaded again",
+  );
+  assert.equal(
+    ok(
+      await db
+        .from("gcas_preparations")
+        .select("id")
+        .eq("owner_id", customer.id),
+    ).length,
+    1,
+  );
+  await page.screenshot({ path: "/tmp/gcas-v32-saved-mobile.png" });
   await page
     .getByRole("button", { name: `Account: ${email}`, exact: true })
     .tap();
@@ -505,7 +606,7 @@ try {
   await page.screenshot({ path: "/tmp/gcas-backend-account-mobile.png" });
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: simulated OAuth with a real local Auth session, mobile country taps, free first save and autosave with checkout disabled, pay-later choice, reopening persisted countries/contact, 12 MP passport upload, partial answer save, preserved prior image, upload retry, account Orders/Settings, private browser storage, completed paid PDF viewing/downloading and blob cleanup.",
+    "PASS: simulated OAuth with a real local Auth session, mobile country taps, free first save and autosave with checkout disabled, pay-later choice, reopening persisted countries/contact, 12 MP passport upload, partial answer save, preserved prior image, upload retry, account Orders/Settings, immediate save feedback during delayed readiness/requests, local timestamps, no duplicate preparation or unchanged-image upload, private browser storage, completed paid PDF viewing/downloading and blob cleanup.",
   );
 } catch (error) {
   console.error("Browser failure:", error.message);
@@ -518,6 +619,8 @@ try {
   );
   throw error;
 } finally {
+  releaseHealth?.();
+  releaseSave?.();
   await context.unrouteAll({ behavior: "ignoreErrors" });
   await browser.close();
   if (customer) {

@@ -7,7 +7,7 @@ import {
   pruneExpiredSession,
   watchSessionActivity,
   storedSession,
-} from "./auth-session.mjs?v=20261017-workspace-v31";
+} from "./auth-session.mjs?v=20261017-workspace-v32";
 export const SUPABASE_URL = "https://wofazcvfvazfkvujwwcw.supabase.co";
 const PUBLIC_KEY = "sb_publishable_qPtFiEot3EAVlP3HftCm1g_4odarxBw";
 export const CAPABILITIES = {
@@ -127,7 +127,14 @@ export async function signOut() {
     await client.signOut({ scope: "local" });
   }
 }
-export async function capabilities() {
+let capabilityCheck;
+export function capabilities() {
+  capabilityCheck ||= readCapabilities().finally(() => {
+    capabilityCheck = null;
+  });
+  return capabilityCheck;
+}
+async function readCapabilities() {
   try {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/gcas-api/health`, {
       headers: { apikey: PUBLIC_KEY },

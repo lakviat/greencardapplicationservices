@@ -1,5 +1,7 @@
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v31";
-import { PACKAGES } from "./schema.mjs?v=20261017-workspace-v31";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v32";
+import { PACKAGES } from "./schema.mjs?v=20261017-workspace-v32";
+
+import { savedAt } from "./save-feedback.mjs?v=20261017-workspace-v32";
 
 export function accountPage({
   account,
@@ -55,7 +57,7 @@ export function accountPage({
                 el(
                   "p",
                   {},
-                  `Last saved ${new Date(p.updated_at).toLocaleString()}`,
+                  `Last saved ${savedAt(p.updated_at)} (your local time)`,
                 ),
                 button(
                   "Open preparation",
