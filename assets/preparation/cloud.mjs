@@ -1,4 +1,4 @@
-import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v33";
+import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v34";
 import {
   api,
   acceptAuth,
@@ -8,15 +8,15 @@ import {
   CAPABILITIES,
   capabilities,
   unavailable,
-} from "./backend.mjs?v=20261017-workspace-v33";
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v33";
-import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v33";
-import { passportUploadCopy } from "./media.mjs?v=20261017-workspace-v33";
-import { accountPage } from "./account-page.mjs?v=20261017-workspace-v33";
+} from "./backend.mjs?v=20261017-workspace-v34";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v34";
+import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v34";
+import { passportUploadCopy } from "./media.mjs?v=20261017-workspace-v34";
+import { accountPage } from "./account-page.mjs?v=20261017-workspace-v34";
 import {
   savedAt,
   savingBar,
-} from "./save-feedback.mjs?v=20261017-workspace-v33";
+} from "./save-feedback.mjs?v=20261017-workspace-v34";
 const groups = new WeakMap();
 let account = null;
 const pendingSaves = new Set();
@@ -735,6 +735,7 @@ export function cloudWorkspace(ui) {
       }
     },
     save: startSave,
+    login: () => signIn(ui.signedIn).catch(error),
     checkout: (d) => signIn(() => checkout(d, { direct: true })).catch(error),
     receivePdf: (d) =>
       signIn(() => checkout(d, { receivePdf: true, direct: true })).catch(

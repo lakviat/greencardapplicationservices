@@ -1,4 +1,4 @@
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v33";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v34";
 import {
   FORM_VERSION,
   PACKAGES,
@@ -13,33 +13,33 @@ import {
   warnings,
   recommendPackage,
   hasSpouse,
-} from "./schema.mjs?v=20261017-workspace-v33";
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v33";
+} from "./schema.mjs?v=20261017-workspace-v34";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v34";
 import {
   readImage,
   drawCrop,
   photoCopy,
   passportCopy,
   scanPassport,
-} from "./media.mjs?v=20261017-workspace-v33";
+} from "./media.mjs?v=20261017-workspace-v34";
 import {
   CAPABILITIES,
   unavailable,
   capabilities,
-} from "./backend.mjs?v=20261017-workspace-v33";
-import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v33";
-import { accountControl } from "./account-control.mjs?v=20261017-workspace-v33";
-import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v33";
-import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v33";
-import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v33";
-import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v33";
-import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v33";
-import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v33";
-import { dateControl } from "./date-control.mjs?v=20261017-workspace-v33";
+} from "./backend.mjs?v=20261017-workspace-v34";
+import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v34";
+import { accountControl } from "./account-control.mjs?v=20261017-workspace-v34";
+import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v34";
+import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v34";
+import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v34";
+import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v34";
+import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v34";
+import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v34";
+import { dateControl } from "./date-control.mjs?v=20261017-workspace-v34";
 import {
   saveIndicator,
   savedAt,
-} from "./save-feedback.mjs?v=20261017-workspace-v33";
+} from "./save-feedback.mjs?v=20261017-workspace-v34";
 const app = document.querySelector("#workspace");
 const saveFeedback = saveIndicator();
 const saveStates = new WeakMap();
@@ -55,6 +55,12 @@ const cloud = cloudWorkspace({
   records: () => sessionDrafts,
   preparations: () => navigate("dashboard"),
   accountPage: (content) => navigate("account", content),
+  signedIn: () => {
+    // Unfinished worksheet data remains only in memory. An account action must
+    // not discard it; ordinary sign-in from the site returns to the homepage.
+    if (dirty) return announce(`Signed in as ${cloud.account().email}`);
+    location.assign("/");
+  },
   saveState: (records, state) => {
     records.forEach((record) => saveStates.set(record, state));
     updateSaveFeedback();
@@ -62,6 +68,8 @@ const cloud = cloudWorkspace({
   accountReady: (account) => profile.update(account),
   accountChanged: (account) => {
     profile.update(account);
+    if (account && draftStatuses.get(draft) === "Signed out")
+      draftStatuses.delete(draft);
     announce(
       account
         ? `Signed in as ${account.email}`
@@ -217,7 +225,9 @@ const bottom = el(
   ),
   actionsButton,
 );
-const profile = accountControl(() => cloud.dashboard());
+const profile = accountControl(() =>
+  cloud.account() ? cloud.dashboard() : cloud.login(),
+);
 const header = el(
   "header",
   { class: "workspace-header" },
@@ -2449,8 +2459,10 @@ header.querySelector("a").addEventListener("click", (event) => {
     ),
   );
 });
-navigate(location.hash.slice(1) || "document");
+const signInRequested = location.hash === "#signin";
+navigate(signInRequested ? "dashboard" : location.hash.slice(1) || "document");
 activate(active, { scroll: false, focus: false });
+if (signInRequested) cloud.login();
 
 capabilities().then(() => {
   if (view === "dashboard") renderDashboard();

@@ -90,6 +90,8 @@ const publicPages = fs
       await page
         .getByRole("button", { name: "Continue with Google", exact: true })
         .click();
+      await page.waitForURL(base + "/");
+      await account().click();
       await page
         .getByRole("heading", { name: "Saved preparations", exact: true })
         .waitFor();
@@ -232,9 +234,9 @@ const publicPages = fs
               c.toBlob(resolve, "image/png"),
             );
             const { scanPassport } =
-              await import("/assets/preparation/media.mjs?v=20261017-workspace-v33");
+              await import("/assets/preparation/media.mjs?v=20261017-workspace-v34");
             const { COUNTRIES } =
-              await import("/assets/preparation/countries.mjs?v=20261017-workspace-v33");
+              await import("/assets/preparation/countries.mjs?v=20261017-workspace-v34");
             return scanPassport(
               blob,
               COUNTRIES.map((c) => c.name),

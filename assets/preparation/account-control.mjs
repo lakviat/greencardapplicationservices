@@ -1,4 +1,4 @@
-import { el, button } from "./dom.mjs?v=20261017-workspace-v33";
+import { el, button } from "./dom.mjs?v=20261017-workspace-v34";
 
 // Only Google's profile-image CDN may receive an avatar request. Metadata is
 // untrusted; arbitrary remote URLs, credentials and application answers stay out.
@@ -27,6 +27,8 @@ export function accountControl(open) {
     class: "account-control",
   });
   const update = (account) => {
+    node.removeAttribute("aria-busy");
+    face.hidden = !account;
     label.textContent = account ? "" : "Sign in";
     label.hidden = !!account;
     const description = account
@@ -45,11 +47,7 @@ export function accountControl(open) {
       .map((part) => Array.from(part)[0])
       .join("")
       .toUpperCase();
-    face.replaceChildren(
-      account
-        ? el("span", {}, initials || "✓")
-        : el("span", { class: "account-person" }),
-    );
+    face.replaceChildren(account ? el("span", {}, initials || "✓") : []);
     const photo = googlePhoto(account);
     if (photo) {
       const image = el("img", {
@@ -64,7 +62,7 @@ export function accountControl(open) {
     }
   };
   update(null);
-  label.textContent = "Checking account…";
+  node.setAttribute("aria-busy", "true");
   node.setAttribute("aria-label", "Checking account");
   return { node, update };
 }

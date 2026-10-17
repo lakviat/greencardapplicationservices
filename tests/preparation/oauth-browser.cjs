@@ -17,6 +17,11 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
           ignoreHTTPSErrors: true,
           viewport: { width: 390, height: 844 },
         });
+        await context.route("**/*", (route) =>
+          new URL(route.request().url()).origin === base
+            ? route.continue()
+            : route.abort(),
+        );
         let mode = "success",
           enabled = true,
           tokenCalls = 0,
@@ -408,6 +413,92 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         await page.screenshot({
           path: `/tmp/gcas-social-sign-in-${engine}.png`,
         });
+        await page.getByRole("button", { name: "Close dialog" }).click();
+        // Regular header sign-in returns to the public homepage, with the same
+        // verified session ready on both the homepage and account page.
+        await page.goto(`${base}/`);
+        const signIn = page.getByRole("button", {
+          name: "Sign in to your account",
+          exact: true,
+        });
+        await signIn.waitFor();
+        assert.equal(await signIn.innerText(), "Sign in");
+        assert.equal(
+          await signIn.locator(".account-avatar").isVisible(),
+          false,
+        );
+        for (const width of [320, 390, 768, 1440]) {
+          await page.setViewportSize({ width, height: 844 });
+          const bounds = await signIn.boundingBox();
+          assert(
+            Math.round(bounds.height) >= 44 &&
+              bounds.x >= 0 &&
+              bounds.x + bounds.width <= width + 1,
+            JSON.stringify({ width, bounds }),
+          );
+          assert(
+            await page.evaluate(
+              () => document.documentElement.scrollWidth <= innerWidth + 1,
+            ),
+          );
+        }
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page.screenshot({
+          path: `/tmp/gcas-v34-sign-in-${provider}-${engine}.png`,
+        });
+        await signIn.click();
+        await page
+          .getByRole("button", {
+            name: `Continue with ${provider === "apple" ? "Apple" : "Google"}`,
+          })
+          .waitFor();
+        await begin();
+        await page.waitForURL(`${base}/`);
+        await profile.waitFor();
+        assert.equal(
+          await page
+            .getByRole("heading", { name: "My account", exact: true })
+            .count(),
+          0,
+        );
+        await page.reload();
+        await profile.waitFor();
+        await profile.click();
+        await page
+          .getByRole("heading", { name: "Saved preparations", exact: true })
+          .waitFor();
+        await page
+          .getByRole("button", { name: "Settings", exact: true })
+          .click();
+        await page
+          .getByRole("button", { name: "Sign out & clear this tab" })
+          .click();
+        await signIn.waitFor();
+        // Signing in from an edited worksheet must preserve its in-memory data.
+        await page.goto(`${base}/prepare.html`);
+        await signIn.waitFor();
+        await page.locator('[id="entrant.firstName"]').fill("KEEP THIS WORK");
+        await signIn.click();
+        await page
+          .getByRole("button", {
+            name: `Continue with ${provider === "apple" ? "Apple" : "Google"}`,
+          })
+          .waitFor();
+        await begin();
+        await profile.waitFor();
+        assert.equal(new URL(page.url()).pathname, "/prepare.html");
+        assert.equal(
+          await page.locator('[id="entrant.firstName"]').inputValue(),
+          "KEEP THIS WORK",
+        );
+        await profile.click();
+        await page
+          .getByRole("button", { name: "Settings", exact: true })
+          .click();
+        await page
+          .getByRole("button", { name: "Sign out & clear this tab" })
+          .click();
+        await signIn.waitFor();
         enabled = false;
         await page.reload();
         const unavailable = page.getByRole("button", {
@@ -415,11 +506,11 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         });
         await unavailable.waitFor();
         assert.equal(await unavailable.isEnabled(), false);
-        assert.equal(authorizeCalls, 4);
+        assert.equal(authorizeCalls, 6);
         await context.close();
       }
       console.log(
-        `PASS ${engine}: Google/Apple PKCE, openerless callback, canceled exchange, retry, popup blocking, errors, private storage, preserved draft, provider gates.`,
+        `PASS ${engine}: Google/Apple PKCE, openerless callback, canceled exchange, retry, popup blocking, errors, private storage, preserved draft, homepage return after header sign-in, responsive account controls, provider gates.`,
       );
     } finally {
       await browser.close();
