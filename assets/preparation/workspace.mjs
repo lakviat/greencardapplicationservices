@@ -1,4 +1,4 @@
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v26";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v27";
 import {
   FORM_VERSION,
   PACKAGES,
@@ -13,29 +13,29 @@ import {
   warnings,
   recommendPackage,
   hasSpouse,
-} from "./schema.mjs?v=20261017-workspace-v26";
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v26";
+} from "./schema.mjs?v=20261017-workspace-v27";
+import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v27";
 import {
   readImage,
   drawCrop,
   photoCopy,
   passportCopy,
   scanPassport,
-} from "./media.mjs?v=20261017-workspace-v26";
+} from "./media.mjs?v=20261017-workspace-v27";
 import {
   CAPABILITIES,
   unavailable,
   capabilities,
-} from "./backend.mjs?v=20261017-workspace-v26";
-import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v26";
-import { accountControl } from "./account-control.mjs?v=20261017-workspace-v26";
-import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v26";
-import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v26";
-import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v26";
-import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v26";
-import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v26";
-import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v26";
-import { dateControl } from "./date-control.mjs?v=20261017-workspace-v26";
+} from "./backend.mjs?v=20261017-workspace-v27";
+import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v27";
+import { accountControl } from "./account-control.mjs?v=20261017-workspace-v27";
+import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v27";
+import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v27";
+import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v27";
+import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v27";
+import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v27";
+import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v27";
+import { dateControl } from "./date-control.mjs?v=20261017-workspace-v27";
 const app = document.querySelector("#workspace");
 let draft = initialDraft();
 const sessionDrafts = [draft];
@@ -990,13 +990,24 @@ function scanEntry() {
       el(
         "span",
         {},
-        el("span", { "aria-hidden": "true" }, "▣ "),
+        el("img", {
+          class: "scan-tap",
+          src: "/assets/preparation/scan-pointer.svg",
+          alt: "",
+          width: 20,
+          height: 20,
+        }),
         "Save time — Scan your passport",
       ),
       startPassportScan,
-      { class: "scan-entry-button", "aria-haspopup": "dialog" },
+      {
+        class: "scan-entry-button",
+        "aria-haspopup": "dialog",
+        title:
+          "Tap to auto-fill your details from a passport photo. Review everything before applying.",
+      },
     ),
-    el("span", {}, "Optional · review before applying"),
+    el("span", {}, "Auto-fill details · review before applying"),
   );
 }
 function startPassportScan() {
@@ -1150,6 +1161,12 @@ async function openScan(asset, { attach = false } = {}) {
       ["middleName", "Middle name", "entrant.middleName", "text"],
       ["fullName", "Full name on passport", "passport.name", "text"],
       ["birthDate", "Date of birth", "entrant.birthDate", "date"],
+      [
+        "birthCity",
+        "City of birth — only if printed",
+        "entrant.birthCity",
+        "text",
+      ],
       ["sex", "Sex", "entrant.sex", "select"],
       ["number", "Passport number", "passport.number", "text"],
       ["issuer", "Issuing country / authority", "passport.issuer", "text"],
@@ -1188,12 +1205,45 @@ async function openScan(asset, { attach = false } = {}) {
             "small",
             {},
             input.value
-              ? "Review this suggestion"
+              ? values.confidence?.[key] === "checked"
+                ? "MRZ check passed · compare with the image"
+                : "Read from the passport · review this suggestion"
               : "Not read reliably · enter manually or leave unchanged",
           ),
         ),
       );
     }
+    let customFullName = false;
+    inputs.fullName.addEventListener("input", () => {
+      customFullName = true;
+    });
+    for (const key of ["firstName", "middleName", "lastName"])
+      inputs[key].addEventListener("input", () => {
+        if (!customFullName)
+          inputs.fullName.value = [
+            inputs.firstName.value,
+            inputs.middleName.value,
+            inputs.lastName.value,
+          ]
+            .filter(Boolean)
+            .join(" ");
+      });
+    const count = mapping.filter(([key]) => inputs[key].value).length;
+    body.prepend(
+      el(
+        "p",
+        { class: "scan-summary" },
+        `${count} of ${mapping.length} details found. Review and correct them below before applying.`,
+      ),
+    );
+    if (values.nationality)
+      details.append(
+        el(
+          "p",
+          {},
+          `Printed nationality: ${values.nationality}. Birth country and eligibility remain separate.`,
+        ),
+      );
     if (values.nationalityCode)
       details.append(
         el(
@@ -1218,6 +1268,8 @@ async function openScan(asset, { attach = false } = {}) {
         for (const [key, , id] of mapping)
           if (inputs[key].value.trim()) {
             draft.answers[id] = inputs[key].value.trim();
+            if (key === "birthCity")
+              draft.answers["entrant.birthCityUnknown"] = false;
             if (["firstName", "middleName", "lastName"].includes(key))
               draft.answers[
                 `entrant.no${key[0].toUpperCase()}${key.slice(1)}`
@@ -2273,9 +2325,13 @@ header.querySelector("a").addEventListener("click", (event) => {
     ),
   );
 });
-navigate(location.hash.slice(1) || "document");
+const openAccountOnLoad = location.hash === "#account";
+navigate(
+  openAccountOnLoad ? "dashboard" : location.hash.slice(1) || "document",
+);
 activate(active, { scroll: false, focus: false });
 
 capabilities().then(() => {
   if (view === "dashboard") renderDashboard();
+  if (openAccountOnLoad) cloud.dashboard();
 });

@@ -29,6 +29,17 @@ export function clearStoredSession() {
 export function pruneExpiredSession() {
   if (!isCurrent()) clearStoredSession();
 }
+export function storedSession() {
+  if (!isCurrent()) return null;
+  try {
+    const session = JSON.parse(read(SESSION_KEY));
+    return session?.access_token && session?.refresh_token && session?.user?.id
+      ? session
+      : null;
+  } catch {
+    return null;
+  }
+}
 export function beginSession() {
   try {
     localStorage.setItem(ACTIVITY_KEY, String(Date.now()));
@@ -85,6 +96,8 @@ export function watchSessionActivity(expire) {
   };
   document.addEventListener("pointerdown", activity, { passive: true });
   document.addEventListener("keydown", activity);
+  document.addEventListener("input", activity);
+  document.addEventListener("change", activity);
   window.addEventListener("pageshow", activity);
   window.addEventListener("focus", activity);
   document.addEventListener("visibilitychange", activity);
@@ -100,7 +113,7 @@ export function watchSessionActivity(expire) {
         clearTimeout(timer);
         // A temporary network failure during INITIAL_SESSION must not erase
         // the refresh credentials the SDK retained for a later retry.
-        if (event === "SIGNED_OUT") clearStoredSession();
+        if (event === "SIGNED_OUT" && !read(SESSION_KEY)) clearStoredSession();
       } else if (!wasSignedIn && document.visibilityState === "visible")
         activity();
       else schedule();

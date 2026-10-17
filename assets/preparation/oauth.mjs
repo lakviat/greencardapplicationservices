@@ -1,7 +1,7 @@
 import {
   createAuth,
   SUPABASE_URL,
-} from "./backend.mjs?v=20261017-workspace-v26";
+} from "./backend.mjs?v=20261017-workspace-v27";
 
 // The worksheet never navigates away. Only a single-use authorization code
 // crosses tabs; each attempt keeps its PKCE verifier and candidate in memory.

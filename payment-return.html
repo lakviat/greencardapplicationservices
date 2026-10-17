@@ -7,7 +7,7 @@
     <meta name="referrer" content="no-referrer" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests"
+      content="default-src 'self'; connect-src 'self' https://wofazcvfvazfkvujwwcw.supabase.co; img-src 'self' https://lh3.googleusercontent.com https://lh4.googleusercontent.com https://lh5.googleusercontent.com https://lh6.googleusercontent.com; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests"
     />
     <meta
       name="description"
@@ -43,6 +43,9 @@
     />
   </head>
   <body>
+    <header class="return-account-header" data-account-header>
+      <a href="/">Green Card Application Services</a>
+    </header>
     <main class="workspace-main">
       <section class="review-heading">
         <h1>Return to your worksheet tab</h1>
@@ -58,7 +61,7 @@
         </p>
         <p>
           If you already saved your preparation, you can
-          <a href="/prepare.html#dashboard">sign in to My Preparations</a>.
+          <a href="/prepare.html#account">open My Preparations</a>.
         </p>
         <p>
           Independent preparation service. No government entry has been
@@ -66,5 +69,13 @@
         </p>
       </section>
     </main>
+    <link
+      rel="stylesheet"
+      href="/assets/preparation/auth.css?v=20261017-workspace-v27"
+    />
+    <script
+      type="module"
+      src="/assets/site-account.mjs?v=20261017-workspace-v27"
+    ></script>
   </body>
 </html>

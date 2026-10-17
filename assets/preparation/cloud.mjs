@@ -1,15 +1,15 @@
-import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v26";
+import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v27";
 import {
   api,
-  auth,
   acceptAuth,
   signOut,
+  observeSession,
   PROVIDERS,
   CAPABILITIES,
   unavailable,
-} from "./backend.mjs?v=20261017-workspace-v26";
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v26";
-import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v26";
+} from "./backend.mjs?v=20261017-workspace-v27";
+import { el, button, link } from "./dom.mjs?v=20261017-workspace-v27";
+import { price, PACKAGES } from "./schema.mjs?v=20261017-workspace-v27";
 const groups = new WeakMap();
 let account = null;
 const pendingSaves = new Set();
@@ -33,10 +33,7 @@ export function cloudWorkspace(ui) {
     }
     if (changed) ui.accountChanged?.(account);
   };
-  const ready = auth().then(async (client) => {
-    client.onAuthStateChange((_event, session) => updateAccount(session));
-    const { data } = await client.getSession();
-    updateAccount(data.session);
+  const ready = observeSession(updateAccount).then((client) => {
     ui.accountReady?.(account);
     return client;
   });
@@ -105,7 +102,12 @@ export function cloudWorkspace(ui) {
   };
   async function signIn(next) {
     const client = await ready;
-    updateAccount((await client.getSession()).data.session);
+    const { data, error: sessionError } = await client.getSession();
+    if (sessionError)
+      throw new Error(
+        "Your account is still here, but we could not reconnect. Check your connection and try again.",
+      );
+    updateAccount(data.session);
     if (account) return next();
     if (!CAPABILITIES.accounts) {
       message("Account setup in progress", unavailable);
@@ -133,6 +135,7 @@ export function cloudWorkspace(ui) {
               adopting = true;
               ui.close();
               await acceptAuth(candidate);
+              updateAccount((await client.getSession()).data.session);
               await next();
             } catch (e) {
               if (account) error(e);
@@ -529,7 +532,7 @@ export function cloudWorkspace(ui) {
                 for (const timer of pendingSaves) clearTimeout(timer);
                 pendingSaves.clear();
                 await signOut();
-                account = null;
+                updateAccount(null);
                 ui.close();
                 ui.signOut();
               },

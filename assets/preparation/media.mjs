@@ -1,4 +1,9 @@
-import { parseMRZ, scanSuggestions } from "./mrz.mjs?v=20261017-workspace-v26";
+import {
+  parseMRZ,
+  mergeMRZ,
+  scanSuggestions,
+} from "./mrz.mjs?v=20261017-workspace-v27";
+import { parsePrintedPassport } from "./passport-fields.mjs?v=20261017-workspace-v27";
 // Sensitive image data and object URLs live only in memory. Nothing is uploaded here.
 export const MAX_SOURCE_BYTES = 20 * 1024 * 1024;
 export async function imageType(file) {
@@ -185,59 +190,187 @@ export async function scanPassport(blob, countries, onProgress, signal) {
         const source = await readImage(blob);
         // Image loaders release their temporary URL. Tesseract must receive pixels,
         // not try to fetch that already-revoked URL again.
-        const full = document.createElement("canvas");
-        full.width = source.width;
-        full.height = source.height;
-        full.getContext("2d").drawImage(source.image, 0, 0);
-        const result = await worker.recognize(
-          full,
-          {},
-          { text: true, blocks: true },
+        let detected = {},
+          checked = parseMRZ("");
+        const collect = (data) => {
+          const legacy = window.gcasPassport.parsePassport(
+            data.text,
+            countries,
+            data.blocks || [],
+          );
+          const printed = parsePrintedPassport(data.text, data.blocks || []);
+          for (const [key, value] of Object.entries({
+            ...legacy,
+            ...printed,
+          })) {
+            if (key === "issues")
+              detected.issues = [
+                ...new Set([...(detected.issues || []), ...value]),
+              ];
+            else if (value && !detected[key]) detected[key] = value;
+          }
+          checked = mergeMRZ(checked, parseMRZ(data.text));
+        };
+        const enough = () => {
+          const v = scanSuggestions(detected, checked);
+          return (
+            v.firstName &&
+            v.lastName &&
+            v.number &&
+            v.birthDate &&
+            v.expiry &&
+            v.issuer
+          );
+        };
+        // Keep the original sampling for clear images: enlarging already sharp
+        // MRZ glyphs can turn chevrons into K/L and lose part of a given name.
+        const nativeScale = Math.min(
+          1,
+          2600 / Math.max(source.width, source.height),
         );
-        let detected = window.gcasPassport.parsePassport(
-          result.data.text,
-          countries,
-          result.data.blocks || [],
+        const native = document.createElement("canvas");
+        native.width = Math.round(source.width * nativeScale);
+        native.height = Math.round(source.height * nativeScale);
+        native
+          .getContext("2d")
+          .drawImage(source.image, 0, 0, native.width, native.height);
+        collect(
+          (await worker.recognize(native, {}, { text: true, blocks: true }))
+            .data,
         );
-        let checked = parseMRZ(result.data.text);
-        if (
-          checked.status !== "checked" ||
-          !detected.firstName ||
-          !detected.lastName
-        ) {
+        if (!enough()) {
           await worker.setParameters({
-            tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<",
             tessedit_pageseg_mode: "6",
+            tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<",
           });
-          const canvas = document.createElement("canvas");
-          canvas.width = source.width;
-          canvas.height = Math.round(source.height * 0.28);
-          canvas
+          const strip = document.createElement("canvas");
+          strip.width = native.width;
+          strip.height = Math.round(native.height * 0.28);
+          strip
             .getContext("2d")
             .drawImage(
-              source.image,
+              native,
               0,
-              source.height - canvas.height,
-              source.width,
-              canvas.height,
+              native.height - strip.height,
+              native.width,
+              strip.height,
               0,
               0,
-              source.width,
-              canvas.height,
+              strip.width,
+              strip.height,
             );
-          const mrz = await worker.recognize(canvas);
-          const fallback = window.gcasPassport.parsePassport(
-            mrz.data.text,
-            countries,
+          collect((await worker.recognize(strip)).data);
+          strip.width = strip.height = 0;
+        }
+        native.width = native.height = 0;
+        if (enough()) return scanSuggestions(detected, checked);
+        // Work at useful OCR resolution without retaining multiple large images.
+        const scale = Math.min(2, 2600 / Math.max(source.width, source.height));
+        for (const degrees of [0, 180, 90, 270]) {
+          if (signal?.aborted) throw new Error("Scan cancelled.");
+          const full = document.createElement("canvas");
+          const rotated = degrees % 180 !== 0;
+          full.width = Math.round(
+            (rotated ? source.height : source.width) * scale,
           );
-          const retry = parseMRZ(mrz.data.text);
-          if (retry.status === "checked" || checked.status === "unreadable")
-            checked = retry;
-          detected = {
-            ...detected,
-            firstName: detected.firstName || fallback.firstName,
-            lastName: detected.lastName || fallback.lastName,
-          };
+          full.height = Math.round(
+            (rotated ? source.width : source.height) * scale,
+          );
+          const ctx = full.getContext("2d");
+          ctx.fillStyle = "white";
+          ctx.fillRect(0, 0, full.width, full.height);
+          ctx.translate(full.width / 2, full.height / 2);
+          ctx.rotate((degrees * Math.PI) / 180);
+          ctx.drawImage(
+            source.image,
+            (-source.width * scale) / 2,
+            (-source.height * scale) / 2,
+            source.width * scale,
+            source.height * scale,
+          );
+          await worker.setParameters({
+            tessedit_pageseg_mode: "3",
+            tessedit_char_whitelist: "",
+          });
+          const result = await worker.recognize(
+            full,
+            { rotateAuto: true },
+            { text: true, blocks: true },
+          );
+          collect(result.data);
+          if (checked.status !== "checked") {
+            await worker.setParameters({
+              tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<",
+              tessedit_pageseg_mode: "6",
+            });
+            const strip = document.createElement("canvas");
+            strip.width = full.width;
+            strip.height = Math.round(full.height * 0.38);
+            const sc = strip.getContext("2d", { willReadFrequently: true });
+            sc.drawImage(
+              full,
+              0,
+              full.height - strip.height,
+              full.width,
+              strip.height,
+              0,
+              0,
+              strip.width,
+              strip.height,
+            );
+            const pixels = sc.getImageData(0, 0, strip.width, strip.height);
+            const histogram = new Uint32Array(256);
+            for (let i = 0; i < pixels.data.length; i += 4)
+              histogram[
+                Math.round(
+                  0.299 * pixels.data[i] +
+                    0.587 * pixels.data[i + 1] +
+                    0.114 * pixels.data[i + 2],
+                )
+              ]++;
+            const total = strip.width * strip.height;
+            let low = 0,
+              high = 255,
+              count = 0;
+            while (low < 254 && (count += histogram[low]) < total * 0.01) low++;
+            count = 0;
+            while (high > low + 1 && (count += histogram[high]) < total * 0.01)
+              high--;
+            for (let i = 0; i < pixels.data.length; i += 4) {
+              const gray =
+                0.299 * pixels.data[i] +
+                0.587 * pixels.data[i + 1] +
+                0.114 * pixels.data[i + 2];
+              const value = Math.max(
+                0,
+                Math.min(255, ((gray - low) * 255) / Math.max(1, high - low)),
+              );
+              pixels.data[i] = pixels.data[i + 1] = pixels.data[i + 2] = value;
+            }
+            sc.putImageData(pixels, 0, 0);
+            const mrz = await worker.recognize(strip, { rotateAuto: true });
+            collect(mrz.data);
+            strip.width = strip.height = 0;
+          }
+          // If the page is upright but labels were missed, a sparse-text pass
+          // recovers small separate fields without guessing from nationality.
+          if (!enough() && detected.firstName && detected.lastName) {
+            await worker.setParameters({
+              tessedit_pageseg_mode: "11",
+              tessedit_char_whitelist: "",
+            });
+            collect(
+              (
+                await worker.recognize(
+                  full,
+                  { rotateAuto: true },
+                  { text: true, blocks: true },
+                )
+              ).data,
+            );
+          }
+          full.width = full.height = 0;
+          if (enough() || (detected.firstName && detected.lastName)) break;
         }
         return scanSuggestions(detected, checked);
       })(),

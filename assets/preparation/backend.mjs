@@ -6,7 +6,8 @@ import {
   clearStoredSession,
   pruneExpiredSession,
   watchSessionActivity,
-} from "./auth-session.mjs?v=20261017-workspace-v26";
+  storedSession,
+} from "./auth-session.mjs?v=20261017-workspace-v27";
 export const SUPABASE_URL = "https://wofazcvfvazfkvujwwcw.supabase.co";
 const PUBLIC_KEY = "sb_publishable_qPtFiEot3EAVlP3HftCm1g_4odarxBw";
 export const CAPABILITIES = {
@@ -51,12 +52,48 @@ export async function auth() {
       // SDK listeners are synchronous: schedule SDK calls outside their lock.
       setTimeout(() => client.signOut({ scope: "local" }).catch(() => {}), 0);
     });
-    client.onAuthStateChange((event, session) =>
-      activity.update(session, event),
+    activity.update(storedSession(), "INITIAL_STORAGE");
+    client.onAuthStateChange((event) =>
+      activity.update(storedSession(), event),
     );
     return client;
   })();
   return activeAuth;
+}
+// Browser history can restore an old page without re-running its modules or
+// delivering BroadcastChannel messages sent while it was frozen. Re-read the
+// shared session on every return, including the file picker/camera round-trip.
+export async function observeSession(listener) {
+  const client = await auth();
+  let generation = 0;
+  const sync = async () => {
+    const current = ++generation;
+    const saved = storedSession();
+    activity.update(saved, "RESUME");
+    listener(saved);
+    const { data, error } = await client.getSession();
+    if (current !== generation) return;
+    // A transient refresh failure is not a logout. API requests still require
+    // a usable token; the stored profile keeps the account display consistent.
+    listener(error ? storedSession() : data.session);
+  };
+  const schedule = () => {
+    generation++;
+    // Do not call asynchronous SDK methods inside its synchronous callback.
+    setTimeout(() => sync().catch(() => listener(storedSession())), 0);
+  };
+  client.onAuthStateChange(schedule);
+  window.addEventListener("pageshow", schedule);
+  window.addEventListener("popstate", schedule);
+  window.addEventListener("focus", schedule);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") schedule();
+  });
+  window.addEventListener("storage", (event) => {
+    if (event.key === SESSION_KEY || event.key === null) schedule();
+  });
+  await sync();
+  return client;
 }
 // Adopt only after a completed, verified OAuth attempt. Canceled attempts keep
 // their verifier/session in their own short-lived client and cannot log us in.
@@ -71,6 +108,8 @@ export async function acceptAuth(candidate) {
       refresh_token: data.session.refresh_token,
     });
     if (error) throw error;
+    // Finish only after the new durable session is available to callers.
+    activity.update(storedSession(), "SIGNED_IN");
   } catch (error) {
     clearStoredSession();
     throw error;

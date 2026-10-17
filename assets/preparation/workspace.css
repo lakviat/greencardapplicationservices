@@ -1169,8 +1169,35 @@ body:not([data-view="document"]) .workspace-layout {
   min-height: 40px;
   padding: 8px 0;
   color: var(--blue);
-  background: transparent;
+  background: #eef4fd;
+  border-radius: 5px;
   font-size: 0.8rem;
+}
+.scan-entry-button > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.scan-tap {
+  flex: 0 0 20px;
+}
+.scan-entry-button:hover,
+.scan-entry-button:focus-visible {
+  background: #dfeafb;
+  text-decoration: underline;
+}
+.scan-summary {
+  font-weight: 650;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .scan-tap {
+    animation: scan-invitation 0.8s ease-in-out 2;
+  }
+  @keyframes scan-invitation {
+    50% {
+      transform: translate(2px, 2px);
+    }
+  }
 }
 .scan-entry > span {
   font-size: 0.68rem;

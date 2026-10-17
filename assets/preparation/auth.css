@@ -13,6 +13,7 @@
   padding: 24px;
 }
 .account-control {
+  cursor: pointer;
   flex: 0 0 48px;
   width: 48px;
   min-height: 48px;
@@ -24,6 +25,18 @@
   padding: 3px 0;
   border: 0;
   background: transparent;
+}
+.site-header {
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+}
+.site-header .account-control {
+  justify-self: end;
+  color: #192c42;
+}
+@media (max-width: 620px) {
+  .site-header {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
 }
 .account-avatar {
   position: relative;
@@ -71,4 +84,12 @@
   width: 16px;
   height: 8px;
   border-radius: 10px 10px 4px 4px;
+}
+.return-account-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
 }

@@ -21,10 +21,22 @@ for (const file of pages) {
     file + " retired flow",
   );
   assert.doesNotMatch(html, stale, file + " obsolete service claim");
+  if (/class="site-header"|data-account-header/.test(html)) {
+    assert.match(
+      html,
+      /assets\/site-account\.mjs\?v=20261017-workspace-v27/,
+      file + " shared account",
+    );
+    assert.match(
+      html,
+      /connect-src[^;]*https:\/\/wofazcvfvazfkvujwwcw\.supabase\.co/,
+      file + " account connection",
+    );
+  }
   assert.match(
     html,
     ["prepare.html", "auth-callback.html"].includes(file)
-      ? /20261017-workspace-v26/
+      ? /20261017-workspace-v27/
       : /20261016-workspace-v1/,
     file + " cache version",
   );
@@ -82,6 +94,7 @@ for (const name of [
   "app.js",
   "requirements.js",
   "site-metrics.js",
+  "site-account.mjs",
   "passport-autofill.js",
 ]) {
   const source = fs.readFileSync("assets/" + name, "utf8");

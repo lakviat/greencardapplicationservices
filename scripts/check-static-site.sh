@@ -4,6 +4,7 @@ node --check assets/app.js
 node --check assets/requirements.js
 node --check assets/passport-autofill.js
 node --check assets/site-metrics.js
+node --check assets/site-account.mjs
 for file in assets/preparation/*.mjs; do node --check "$file"; done
 node --test tests/preparation/*.test.mjs
 node scripts/check-passport-autofill.mjs
