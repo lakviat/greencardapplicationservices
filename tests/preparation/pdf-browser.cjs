@@ -34,7 +34,7 @@ assert.equal(new URL(base).hostname, "127.0.0.1");
       await page.goto(base + "/prepare.html");
       await page.evaluate(async (bytes) => {
         const { pdfViewer } =
-          await import("/assets/preparation/pdf-viewer.mjs?v=20261017-workspace-v36");
+          await import("/assets/preparation/pdf-viewer.mjs?v=20261019-workspace-v37");
         const root = document.createElement("main");
         document.body.replaceChildren(root);
         const dispose = pdfViewer(

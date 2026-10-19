@@ -18,6 +18,7 @@ import {
 import { makePdf } from "./pdf.mjs";
 import { emailReady, sendReadyEmail } from "./email.mjs";
 import { PAYMENT_LINKS } from "../../../assets/preparation/payment-links.mjs";
+import { entryProgress } from "../../../assets/preparation/entry-progress.mjs";
 const env = (name: string) => Deno.env.get(name) || "";
 const origin =
   env("PUBLIC_APP_ORIGIN") || "https://greencardapplicationservices.com";
@@ -297,21 +298,28 @@ async function handle(req: Request, url: URL) {
   assert(!error && data.user?.email_confirmed_at, 401, "Please sign in again.");
   const user = data.user!;
   await limited(`${user.id}:all`);
-  if (route === "list")
+  if (route === "list") {
+    const rows = check(
+      await admin
+        .from("gcas_preparations")
+        .select(
+          "id,package,version,year,revision,state,updated_at,expires_at,payload,submission_reported_at",
+        )
+        .eq("owner_id", user.id)
+        .neq("state", "deleted")
+        .or("revision.gt.0,state.eq.paid")
+        .gt("expires_at", new Date().toISOString())
+        .order("updated_at", { ascending: false }),
+    );
     return {
-      preparations: check(
-        await admin
-          .from("gcas_preparations")
-          .select(
-            "id,package,version,year,revision,state,updated_at,expires_at",
-          )
-          .eq("owner_id", user.id)
-          .neq("state", "deleted")
-          .or("revision.gt.0,state.eq.paid")
-          .gt("expires_at", new Date().toISOString())
-          .order("updated_at", { ascending: false }),
+      preparations: rows.map(
+        ({ payload, submission_reported_at, ...row }: any) => ({
+          ...row,
+          entry: entryProgress({ ...row, payload, submission_reported_at }),
+        }),
       ),
     };
+  }
   if (route === "upload") {
     await limited(`${user.id}:upload`, 20);
     const id = url.searchParams.get("id") || "",
@@ -550,6 +558,30 @@ async function handle(req: Request, url: URL) {
   }
   const p = await owned(body.id, user.id, ["pdf", "email"].includes(route!));
   if (route === "get") return { preparation: p };
+  if (route === "submission") {
+    assert(
+      typeof body.submitted === "boolean",
+      400,
+      "Choose a submission status.",
+    );
+    const updated = check(
+      await admin
+        .from("gcas_preparations")
+        .update({
+          submission_reported_at: body.submitted
+            ? p.submission_reported_at || new Date().toISOString()
+            : null,
+        })
+        .eq("id", p.id)
+        .eq("owner_id", user.id)
+        .neq("state", "deleted")
+        .gt("expires_at", new Date().toISOString())
+        .select()
+        .maybeSingle(),
+    );
+    assert(updated, 404, "Preparation not found or expired.");
+    return { entry: entryProgress(updated) };
+  }
   if (route === "save") {
     const assets = check(
       await admin.from("gcas_assets").select("*").eq("preparation_id", p.id),

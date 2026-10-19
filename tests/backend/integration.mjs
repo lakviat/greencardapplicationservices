@@ -147,6 +147,43 @@ assert.equal((await call(a, "pdf", { id })).status, 402);
 assert.equal((await call(a, "email", { id })).status, 402);
 assert.equal((await call(a, "list", {})).data.preparations[0].id, id);
 assert.equal((await call(b, "list", {})).data.preparations.length, 0);
+const listed = (await call(a, "list", {})).data.preparations[0];
+assert.equal(listed.entry.name, "EXAMPLE");
+assert(listed.entry.personal.complete > 0);
+assert.equal(listed.entry.pdfReady, false);
+assert(
+  !Object.hasOwn(listed, "payload"),
+  "account list returns counts, not full answers/images",
+);
+assert.equal(
+  (await call(b, "submission", { id, submitted: true })).status,
+  404,
+);
+assert.equal(
+  (await call(a, "submission", { id, submitted: "true" })).status,
+  400,
+);
+const submissionRecord = await call(a, "submission", { id, submitted: true });
+assert.equal(submissionRecord.status, 200);
+assert(submissionRecord.data.entry.submissionReportedAt);
+const marked = (await call(a, "get", { id })).data.preparation;
+assert.equal(
+  marked.state,
+  "unpaid",
+  "user reporting cannot grant purchase rights",
+);
+assert.equal(
+  marked.revision,
+  1,
+  "tracking cannot conflict with worksheet saves",
+);
+assert.equal(
+  (await call(a, "list", {})).data.preparations[0].entry.submissionReportedAt,
+  marked.submission_reported_at,
+);
+assert.equal((await call(a, "pdf", { id })).status, 402);
+const clearRecord = await call(a, "submission", { id, submitted: false });
+assert.equal(clearRecord.data.entry.submissionReportedAt, null);
 assert(
   new Date(saved.data.preparation.expires_at) >
     new Date(Date.now() + 364 * 86400000),

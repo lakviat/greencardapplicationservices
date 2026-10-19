@@ -1,4 +1,4 @@
-import { beginSignIn } from "./oauth.mjs?v=20261017-workspace-v36";
+import { beginSignIn } from "./oauth.mjs?v=20261019-workspace-v37";
 import {
   api,
   acceptAuth,
@@ -8,22 +8,22 @@ import {
   CAPABILITIES,
   capabilities,
   unavailable,
-} from "./backend.mjs?v=20261017-workspace-v36";
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v36";
+} from "./backend.mjs?v=20261019-workspace-v37";
+import { el, button, link } from "./dom.mjs?v=20261019-workspace-v37";
 import {
   price,
   PACKAGES,
   preparationProgress,
   checkoutEmail,
-} from "./schema.mjs?v=20261017-workspace-v36";
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v36";
-import { passportUploadCopy } from "./media.mjs?v=20261017-workspace-v36";
-import { accountPage } from "./account-page.mjs?v=20261017-workspace-v36";
-import { checkoutDestination } from "./payment-links.mjs?v=20261017-workspace-v36";
+} from "./schema.mjs?v=20261019-workspace-v37";
+import { COUNTRIES } from "./countries.mjs?v=20261019-workspace-v37";
+import { passportUploadCopy } from "./media.mjs?v=20261019-workspace-v37";
+import { accountPage } from "./account-page.mjs?v=20261019-workspace-v37";
+import { checkoutDestination } from "./payment-links.mjs?v=20261019-workspace-v37";
 import {
   savedAt,
   savingBar,
-} from "./save-feedback.mjs?v=20261017-workspace-v36";
+} from "./save-feedback.mjs?v=20261019-workspace-v37";
 const groups = new WeakMap();
 let account = null;
 const pendingSaves = new Set();
@@ -694,7 +694,7 @@ export function cloudWorkspace(ui) {
     // an explicit Continue button. That tap also works with mobile popup rules.
     if (direct && !remaining && !g.pendingImages?.length) confirm.click();
   }
-  async function load(id) {
+  async function load(id, action) {
     const { preparation: p } = await api("get", { id });
     const records = p.payload.documents;
     if (!records.length) {
@@ -716,6 +716,12 @@ export function cloudWorkspace(ui) {
     ui.load(records);
     saveState(g, "saved", "Saved to your account");
     ui.status(`Last saved ${savedAt(g.updated_at)} (your local time)`);
+    if (action === "payment" || action === "pdf")
+      await checkout(records[0], {
+        receivePdf: action === "pdf",
+        direct: true,
+      });
+    else if (action) ui.focusEntrySection?.(action);
   }
   async function download(d) {
     const blob = await pdf(d);
@@ -819,6 +825,7 @@ export function cloudWorkspace(ui) {
           open: load,
           preparations: ui.preparations,
           checkoutAvailable: CAPABILITIES.checkout,
+          submission: (id, submitted) => api("submission", { id, submitted }),
           signOut: async () => {
             for (const timer of pendingSaves) clearTimeout(timer);
             pendingSaves.clear();

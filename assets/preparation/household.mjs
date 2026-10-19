@@ -1,4 +1,4 @@
-import { initialDraft, hasSpouse } from "./schema.mjs?v=20261017-workspace-v36";
+import { initialDraft, hasSpouse } from "./schema.mjs?v=20261019-workspace-v37";
 // Explicitly called only after the adult confirms authority and asks to reuse
 // factual household answers. Eligibility, passport and confirmation answers are
 // never copied, inferred or treated as a government decision.

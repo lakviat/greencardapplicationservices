@@ -509,11 +509,11 @@ function validate(field, d, now = /* @__PURE__ */ new Date()) {
     return "Check the passport number.";
   return "";
 }
-function progress(d, countries = []) {
+function progress(d, countries2 = []) {
   const active = fields(d).filter((f2) => f2.required);
   const remaining = active.map((field) => ({
     field,
-    error: field.type === "country" && d.answers[field.id] && !countries.includes(d.answers[field.id]) ? "Choose a country from the list." : validate(field, d)
+    error: field.type === "country" && d.answers[field.id] && !countries2.includes(d.answers[field.id]) ? "Choose a country from the list." : validate(field, d)
   })).filter((x) => x.error);
   return {
     total: active.length,
@@ -2062,6 +2062,57 @@ var PAYMENT_LINKS = Object.freeze({
   })
 });
 
+// assets/preparation/entry-progress.mjs
+var countries = COUNTRIES.map((country) => country.name);
+var familyField = (field) => field.section === "family" || field.section === "spouse" || field.id.startsWith("child.");
+function entryProgress(preparation) {
+  const documents = preparation.payload?.documents || [];
+  const personal = { complete: 0, total: 0 };
+  const family = { complete: 0, total: 0 };
+  let remaining = 0;
+  for (const document of documents) {
+    const status = progress(document, countries);
+    const missing = new Set(status.remaining.map(({ field }) => field.id));
+    remaining += missing.size;
+    for (const field of fields(document).filter((field2) => field2.required)) {
+      const group = familyField(field) ? family : personal;
+      group.total++;
+      if (!missing.has(field.id)) group.complete++;
+    }
+  }
+  if (!documents.length) {
+    personal.total++;
+    family.total++;
+    remaining += 2;
+  }
+  if (documents[0]?.secondEntry && hasSpouse(documents[0]) && documents.length < 2) {
+    family.total++;
+    remaining++;
+  }
+  const complete = (group) => group.total > 0 && group.complete === group.total;
+  const fraction = (group) => group.total ? group.complete / group.total : 0;
+  const pdfReady = documents.length > 0 && !remaining && preparation.state === "paid";
+  const reported = preparation.submission_reported_at || null;
+  const first = documents[0]?.answers || {};
+  return {
+    name: [
+      first["entrant.noFirstName"] ? null : first["entrant.firstName"],
+      first["entrant.noLastName"] ? null : first["entrant.lastName"]
+    ].filter((value) => typeof value === "string").join(" ") || "Your preparation",
+    hasInformation: documents.some(
+      (document) => Object.values(document.answers || {}).some(
+        (value) => value === true || typeof value === "string" && value.trim()
+      )
+    ),
+    personal: { ...personal, done: complete(personal) },
+    family: { ...family, done: complete(family) },
+    remaining,
+    pdfReady,
+    submissionReportedAt: reported,
+    percent: Math.floor(25 * fraction(personal) + 25 * fraction(family)) + (pdfReady ? 25 : 0) + (reported ? 25 : 0)
+  };
+}
+
 // supabase/functions/gcas-api/index.ts
 var env = (name) => Deno.env.get(name) || "";
 var origin = env("PUBLIC_APP_ORIGIN") || "https://greencardapplicationservices.com";
@@ -2285,14 +2336,21 @@ async function handle(req, url) {
   assert(!error && data.user?.email_confirmed_at, 401, "Please sign in again.");
   const user = data.user;
   await limited(`${user.id}:all`);
-  if (route === "list")
+  if (route === "list") {
+    const rows = check(
+      await admin.from("gcas_preparations").select(
+        "id,package,version,year,revision,state,updated_at,expires_at,payload,submission_reported_at"
+      ).eq("owner_id", user.id).neq("state", "deleted").or("revision.gt.0,state.eq.paid").gt("expires_at", (/* @__PURE__ */ new Date()).toISOString()).order("updated_at", { ascending: false })
+    );
     return {
-      preparations: check(
-        await admin.from("gcas_preparations").select(
-          "id,package,version,year,revision,state,updated_at,expires_at"
-        ).eq("owner_id", user.id).neq("state", "deleted").or("revision.gt.0,state.eq.paid").gt("expires_at", (/* @__PURE__ */ new Date()).toISOString()).order("updated_at", { ascending: false })
+      preparations: rows.map(
+        ({ payload, submission_reported_at, ...row }) => ({
+          ...row,
+          entry: entryProgress({ ...row, payload, submission_reported_at })
+        })
       )
     };
+  }
   if (route === "upload") {
     await limited(`${user.id}:upload`, 20);
     const id = url.searchParams.get("id") || "", documentId = url.searchParams.get("document") || "", field = url.searchParams.get("field") || "";
@@ -2495,6 +2553,20 @@ async function handle(req, url) {
   }
   const p = await owned(body.id, user.id, ["pdf", "email"].includes(route));
   if (route === "get") return { preparation: p };
+  if (route === "submission") {
+    assert(
+      typeof body.submitted === "boolean",
+      400,
+      "Choose a submission status."
+    );
+    const updated = check(
+      await admin.from("gcas_preparations").update({
+        submission_reported_at: body.submitted ? p.submission_reported_at || (/* @__PURE__ */ new Date()).toISOString() : null
+      }).eq("id", p.id).eq("owner_id", user.id).neq("state", "deleted").gt("expires_at", (/* @__PURE__ */ new Date()).toISOString()).select().maybeSingle()
+    );
+    assert(updated, 404, "Preparation not found or expired.");
+    return { entry: entryProgress(updated) };
+  }
   if (route === "save") {
     const assets = check(
       await admin.from("gcas_assets").select("*").eq("preparation_id", p.id)

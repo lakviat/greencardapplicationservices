@@ -1,4 +1,5 @@
 import { build } from "esbuild";
+import { resolve } from "node:path";
 await build({
   entryPoints: ["supabase/functions/gcas-api/index.ts"],
   bundle: true,
@@ -11,6 +12,10 @@ await build({
     {
       name: "deno-imports",
       setup(b) {
+        // Browser cache versions identify URLs, not different server modules.
+        b.onResolve({ filter: /^\..*\.mjs\?v=/ }, (a) => ({
+          path: resolve(a.resolveDir, a.path.split("?")[0]),
+        }));
         b.onResolve(
           { filter: /^(@supabase\/supabase-js|jpeg-js|pdf-lib|nodemailer)$/ },
           (a) => ({

@@ -1,4 +1,4 @@
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v36";
+import { el, button, link } from "./dom.mjs?v=20261019-workspace-v37";
 import {
   FORM_VERSION,
   PACKAGES,
@@ -13,33 +13,33 @@ import {
   warnings,
   recommendPackage,
   hasSpouse,
-} from "./schema.mjs?v=20261017-workspace-v36";
-import { COUNTRIES } from "./countries.mjs?v=20261017-workspace-v36";
+} from "./schema.mjs?v=20261019-workspace-v37";
+import { COUNTRIES } from "./countries.mjs?v=20261019-workspace-v37";
 import {
   readImage,
   drawCrop,
   photoCopy,
   passportCopy,
   scanPassport,
-} from "./media.mjs?v=20261017-workspace-v36";
+} from "./media.mjs?v=20261019-workspace-v37";
 import {
   CAPABILITIES,
   unavailable,
   capabilities,
-} from "./backend.mjs?v=20261017-workspace-v36";
-import { cloudWorkspace } from "./cloud.mjs?v=20261017-workspace-v36";
-import { accountControl } from "./account-control.mjs?v=20261017-workspace-v36";
-import { pdfViewer } from "./pdf-viewer.mjs?v=20261017-workspace-v36";
-import { worksheet } from "./worksheet.mjs?v=20261017-workspace-v36";
-import { spouseWorksheet } from "./household.mjs?v=20261017-workspace-v36";
-import { enhanceCountry } from "./country-control.mjs?v=20261017-workspace-v36";
-import { attachViewport } from "./viewport.mjs?v=20261017-workspace-v36";
-import { questionGroups } from "./presentation.mjs?v=20261017-workspace-v36";
-import { dateControl } from "./date-control.mjs?v=20261017-workspace-v36";
+} from "./backend.mjs?v=20261019-workspace-v37";
+import { cloudWorkspace } from "./cloud.mjs?v=20261019-workspace-v37";
+import { accountControl } from "./account-control.mjs?v=20261019-workspace-v37";
+import { pdfViewer } from "./pdf-viewer.mjs?v=20261019-workspace-v37";
+import { worksheet } from "./worksheet.mjs?v=20261019-workspace-v37";
+import { spouseWorksheet } from "./household.mjs?v=20261019-workspace-v37";
+import { enhanceCountry } from "./country-control.mjs?v=20261019-workspace-v37";
+import { attachViewport } from "./viewport.mjs?v=20261019-workspace-v37";
+import { questionGroups } from "./presentation.mjs?v=20261019-workspace-v37";
+import { dateControl } from "./date-control.mjs?v=20261019-workspace-v37";
 import {
   saveIndicator,
   savedAt,
-} from "./save-feedback.mjs?v=20261017-workspace-v36";
+} from "./save-feedback.mjs?v=20261019-workspace-v37";
 const app = document.querySelector("#workspace");
 const saveFeedback = saveIndicator();
 const saveStates = new WeakMap();
@@ -53,7 +53,9 @@ const cloud = cloudWorkspace({
   close: closeDialog,
   related: (d) => relatedDrafts.get(d),
   records: () => sessionDrafts,
-  preparations: () => navigate("dashboard"),
+  preparations: () => navigate("document"),
+  focusEntrySection: (stage) =>
+    activate(stage === "family" ? "entrant.marital" : "entrant.lastName"),
   accountPage: (content) => navigate("account", content),
   signedIn: () => {
     // Unfinished worksheet data remains only in memory. An account action must
@@ -277,9 +279,13 @@ const header = el(
 
     el("strong", {}, "DV-2027 worksheet"),
   ),
-  button("My preparations", () => navigate("dashboard"), {
-    class: "button dashboard-link",
-  }),
+  button(
+    "My preparations",
+    () => (cloud.account() ? cloud.dashboard() : navigate("dashboard")),
+    {
+      class: "button dashboard-link",
+    },
+  ),
   profile.node,
 );
 const headerMain = el("div", { class: "workspace-header-main" }, [
@@ -2156,6 +2162,12 @@ function householdIndex() {
   );
 }
 function renderDashboard() {
+  // A returning account resumes its saved entry instead of being steered toward
+  // the empty in-memory worksheet (and accidentally saving another copy).
+  if (cloud.account()) {
+    cloud.dashboard();
+    return;
+  }
   const cards = sessionDrafts.map((record) =>
     el(
       "article",

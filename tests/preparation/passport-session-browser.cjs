@@ -93,14 +93,10 @@ const publicPages = fs
       await page.waitForURL(base + "/");
       await account().click();
       await page
-        .getByRole("heading", { name: "Saved preparations", exact: true })
+        .getByRole("heading", { name: "My DV Lottery Entry", exact: true })
         .waitFor();
-      await page
-        .getByRole("button", { name: "Back to my preparations" })
-        .click();
-      await page
-        .getByRole("button", { name: "Edit document", exact: true })
-        .click();
+      await page.getByRole("button", { name: "Back to worksheet" }).click();
+
       const image = await page.evaluate(() => {
         const c = document.createElement("canvas");
         c.width = 1800;
@@ -234,9 +230,9 @@ const publicPages = fs
               c.toBlob(resolve, "image/png"),
             );
             const { scanPassport } =
-              await import("/assets/preparation/media.mjs?v=20261017-workspace-v36");
+              await import("/assets/preparation/media.mjs?v=20261019-workspace-v37");
             const { COUNTRIES } =
-              await import("/assets/preparation/countries.mjs?v=20261017-workspace-v36");
+              await import("/assets/preparation/countries.mjs?v=20261019-workspace-v37");
             return scanPassport(
               blob,
               COUNTRIES.map((c) => c.name),
@@ -271,7 +267,7 @@ const publicPages = fs
       });
       await account().click();
       await page
-        .getByRole("heading", { name: "Saved preparations", exact: true })
+        .getByRole("heading", { name: "My DV Lottery Entry", exact: true })
         .waitFor();
       assert.equal(
         authorizations,

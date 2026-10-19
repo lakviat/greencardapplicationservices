@@ -1,4 +1,4 @@
-import { el, button } from "./dom.mjs?v=20261017-workspace-v36";
+import { el, button } from "./dom.mjs?v=20261019-workspace-v37";
 // Render the authorized PDF bytes locally. No third-party viewer or document URL.
 // One canvas keeps large family worksheets within mobile memory limits.
 export function pdfViewer(blob, root) {

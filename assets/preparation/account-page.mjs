@@ -1,7 +1,8 @@
-import { el, button, link } from "./dom.mjs?v=20261017-workspace-v36";
-import { PACKAGES } from "./schema.mjs?v=20261017-workspace-v36";
+import { el, button, link } from "./dom.mjs?v=20261019-workspace-v37";
+import { PACKAGES, price } from "./schema.mjs?v=20261019-workspace-v37";
+import { currentEntries } from "./entry-progress.mjs?v=20261019-workspace-v37";
 
-import { savedAt } from "./save-feedback.mjs?v=20261017-workspace-v36";
+import { savedAt } from "./save-feedback.mjs?v=20261019-workspace-v37";
 
 export function accountPage({
   account,
@@ -10,6 +11,7 @@ export function accountPage({
   signOut,
   preparations,
   checkoutAvailable,
+  submission,
 }) {
   const content = el("section", {
     class: "account-content",
@@ -19,6 +21,8 @@ export function accountPage({
   let selection = "orders";
   let request = 0;
   const tabs = {};
+  let selectedId;
+  let opening = false;
   const select = (next) => {
     selection = next;
     Object.entries(tabs).forEach(([key, tab]) =>
@@ -29,71 +33,15 @@ export function accountPage({
   const orders = async () => {
     select("orders");
     const current = ++request;
-    content.replaceChildren(
-      el("h2", {}, "Saved preparations"),
-      el("p", {}, "Loading your preparations…"),
-    );
+    content.replaceChildren(el("p", { role: "status" }, "Loading your entry…"));
     try {
       const result = await list();
       if (selection !== "orders" || current !== request) return;
-      content.replaceChildren(
-        el("h2", {}, "Saved preparations"),
-        el(
-          "p",
-          {},
-          "Your drafts and purchased preparations are together here. Continue anytime, and pay when you are ready for your PDF.",
-        ),
-        ...(result.preparations.length
-          ? result.preparations.map((p) =>
-              el(
-                "article",
-                { class: "dashboard-card" },
-                el(
-                  "span",
-                  { class: "edition-badge" },
-                  p.state === "paid" ? "Purchased" : "Saved draft · pay later",
-                ),
-                el("h3", {}, `DV-${p.year} · ${PACKAGES[p.package].label}`),
-                el(
-                  "p",
-                  {},
-                  `Last saved ${savedAt(p.updated_at)} (your local time)`,
-                ),
-                button(
-                  "Open preparation",
-                  async (event) => {
-                    const control = event.currentTarget;
-                    control.disabled = true;
-                    output.textContent = "Opening preparation…";
-                    try {
-                      await open(p.id);
-                    } catch (error) {
-                      output.textContent = error.message;
-                    } finally {
-                      control.disabled = false;
-                    }
-                  },
-                  { class: "button primary" },
-                ),
-              ),
-            )
-          : [
-              el(
-                "p",
-                {},
-                "No preparations have been saved yet. Open a worksheet and choose Save progress to keep it here.",
-              ),
-            ]),
-        el(
-          "p",
-          { class: "hint" },
-          "Saved files are kept for 365 days after your last save. You can delete a preparation from My preparations after opening it.",
-        ),
-      );
+      drawEntries(result.preparations);
     } catch {
       if (selection !== "orders" || current !== request) return;
       content.replaceChildren(
-        el("h2", {}, "Saved preparations"),
+        el("h2", {}, "My DV Lottery Entry"),
         el(
           "p",
           {},
@@ -103,6 +51,311 @@ export function accountPage({
       );
     }
   };
+  function drawEntries(records) {
+    const entries = currentEntries(records);
+    const p = entries.find((entry) => entry.id === selectedId) || entries[0];
+    if (!p) {
+      content.replaceChildren(
+        el(
+          "section",
+          { class: "entry-card entry-empty" },
+          el("h2", {}, "My DV Lottery Entry"),
+          el(
+            "p",
+            {},
+            "Your progress will appear here as you save your worksheet.",
+          ),
+          button("Start preparation", preparations, {
+            class: "button primary",
+          }),
+        ),
+      );
+      return;
+    }
+    selectedId = p.id;
+    const entry = p.entry;
+    const act = (label, stage, attrs = {}) =>
+      button(
+        label,
+        async (event) => {
+          if (opening) return;
+          opening = true;
+          const control = event.currentTarget;
+          control.disabled = true;
+          output.textContent = "Opening your preparation…";
+          try {
+            await open(p.id, stage);
+          } catch (error) {
+            output.textContent = error.message;
+          } finally {
+            opening = false;
+            control.disabled = false;
+          }
+        },
+        attrs,
+      );
+    const status = (group) =>
+      group?.done
+        ? "Completed"
+        : group?.complete
+          ? "In progress"
+          : "Not started";
+    const stage = (name, label, done, key) =>
+      el(
+        "li",
+        { class: `entry-stage${done ? " is-complete" : ""}` },
+        el(
+          "span",
+          { class: "entry-stage-icon", "aria-hidden": "true" },
+          done ? "✓" : "",
+        ),
+        key
+          ? act(
+              [
+                el("span", { class: "entry-stage-name" }, name),
+                el("span", { class: "entry-stage-status" }, label),
+              ],
+              key,
+              {
+                class: "entry-stage-link",
+                "aria-label": `Edit ${name.toLowerCase()}: ${label}`,
+              },
+            )
+          : el(
+              "div",
+              { class: "entry-stage-content" },
+              el("span", { class: "entry-stage-name" }, name),
+              el("span", { class: "entry-stage-status" }, label),
+            ),
+      );
+    const progressValue = entry?.percent;
+    const tracking =
+      entry && submission
+        ? el(
+            "details",
+            { class: "entry-submission-note" },
+            el(
+              "summary",
+              {},
+              entry.submissionReportedAt
+                ? "Update my submission record"
+                : "Already submitted? Record it here",
+            ),
+            el(
+              "p",
+              { class: "hint" },
+              "This is your own record. We cannot verify government submission or acceptance.",
+            ),
+          )
+        : null;
+    if (tracking) {
+      const check = el("input", {
+        type: "checkbox",
+        checked: !!entry.submissionReportedAt,
+      });
+      tracking.append(
+        el(
+          "label",
+          { class: "entry-confirmation" },
+          check,
+          "I submitted this entry on the official DV website.",
+        ),
+        button(
+          "Save submission status",
+          async (event) => {
+            const generation = request;
+            const control = event.currentTarget;
+            control.disabled = true;
+            output.textContent = "Saving submission record…";
+            try {
+              const result = await submission(p.id, check.checked);
+              p.entry = result.entry;
+              if (selection !== "orders" || generation !== request) return;
+              drawEntries(records);
+              output.textContent =
+                "Your submission record is saved. It has not been verified by the government.";
+            } catch (error) {
+              output.textContent = error.message;
+            } finally {
+              control.disabled = false;
+            }
+          },
+          { class: "button" },
+        ),
+      );
+    }
+    const otherEntries =
+      entries.length > 1
+        ? el(
+            "details",
+            { class: "entry-other" },
+            el(
+              "summary",
+              {},
+              `Other saved preparations (${entries.length - 1})`,
+            ),
+            el(
+              "p",
+              { class: "hint" },
+              "Earlier worksheets remain available. Saving an opened preparation updates that same entry.",
+            ),
+          )
+        : null;
+    if (otherEntries) {
+      const choose = el(
+        "select",
+        { id: "account-entry-choice" },
+        entries.map((item) =>
+          el(
+            "option",
+            { value: item.id, selected: item.id === p.id },
+            `${item.entry?.name || "Your preparation"} · DV-${item.year} · ${PACKAGES[item.package].label} · ${savedAt(item.updated_at)}`,
+          ),
+        ),
+      );
+      choose.addEventListener("change", () => {
+        selectedId = choose.value;
+        drawEntries(records);
+      });
+      otherEntries.append(
+        el(
+          "label",
+          { for: "account-entry-choice" },
+          "Choose a saved preparation",
+        ),
+        choose,
+      );
+    }
+    content.replaceChildren(
+      el(
+        "article",
+        { class: "entry-card" },
+        el(
+          "div",
+          { class: "entry-card-heading" },
+          el(
+            "div",
+            {},
+            el("h2", {}, "My DV Lottery Entry"),
+            el(
+              "p",
+              { class: "entry-edition" },
+              `DV-${p.year} · ${PACKAGES[p.package].label} preparation`,
+            ),
+          ),
+          el(
+            "span",
+            { class: "entry-status-badge" },
+            entry?.submissionReportedAt
+              ? "Submission reported"
+              : entry?.pdfReady
+                ? "PDF ready"
+                : "Preparing",
+          ),
+        ),
+        el(
+          "p",
+          { class: "entry-applicant" },
+          entry?.name || "Your preparation",
+        ),
+        el(
+          "div",
+          { class: "entry-progress" },
+          el(
+            "div",
+            {},
+            el("span", {}, "Preparation progress"),
+            el(
+              "strong",
+              {},
+              Number.isFinite(progressValue) ? `${progressValue}%` : "Loading…",
+            ),
+          ),
+          el("progress", {
+            max: 100,
+            value: Number.isFinite(progressValue) ? progressValue : null,
+            "aria-label": "Entry preparation progress",
+          }),
+        ),
+        el(
+          "ol",
+          { class: "entry-stages" },
+          stage(
+            "Personal information",
+            entry ? status(entry.personal) : "Open to review",
+            entry?.personal.done,
+            "personal",
+          ),
+          stage(
+            "Family information",
+            entry ? status(entry.family) : "Open to review",
+            entry?.family.done,
+            "family",
+          ),
+          stage(
+            "Preparation PDF",
+            entry?.pdfReady
+              ? "Ready"
+              : p.state === "paid"
+                ? "Finish worksheet"
+                : "Pay when ready",
+            entry?.pdfReady,
+            null,
+          ),
+          stage(
+            "Official submission",
+            entry?.submissionReportedAt ? "Reported by you" : "Not recorded",
+            !!entry?.submissionReportedAt,
+            null,
+          ),
+        ),
+        el(
+          "div",
+          { class: "entry-primary-actions" },
+          act("Continue preparation", null, { class: "button primary" }),
+          p.state === "paid"
+            ? act(
+                entry?.pdfReady ? "View preparation PDF" : "Finish my PDF",
+                "pdf",
+                { class: "button" },
+              )
+            : act(`Pay now · ${price(p.package)}`, "payment", {
+                class: "button",
+                disabled: !checkoutAvailable,
+              }),
+        ),
+        el(
+          "p",
+          { class: "entry-save-time" },
+          `Last saved ${savedAt(p.updated_at)} (your local time)`,
+        ),
+        el(
+          "p",
+          { class: "entry-save-note" },
+          "Keep editing this entry. Saving is free and updates the same preparation.",
+        ),
+        link(
+          [
+            "Continue to official website",
+            el("span", { "aria-hidden": "true" }, " ↗"),
+          ],
+          "https://dvprogram.state.gov/",
+          {
+            class: "button entry-official-link",
+            target: "_blank",
+            rel: "noopener noreferrer",
+          },
+        ),
+        el(
+          "p",
+          { class: "entry-official-note" },
+          "Submit on the government website. Saving or paying here does not submit an entry.",
+        ),
+        tracking,
+      ),
+      otherEntries,
+    );
+  }
   const settings = () => {
     select("settings");
     content.replaceChildren(
@@ -188,7 +441,7 @@ export function accountPage({
       ),
     );
   };
-  tabs.orders = button("Orders", orders, {
+  tabs.orders = button("My entry", orders, {
     class: "button",
     "aria-pressed": "true",
   });
@@ -209,7 +462,7 @@ export function accountPage({
     ),
     content,
     output,
-    button("Back to my preparations", preparations, { class: "button" }),
+    button("Back to worksheet", preparations, { class: "button" }),
   );
   orders();
   return page;

@@ -280,16 +280,14 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         mode = "success";
         await begin();
         await page
-          .getByRole("heading", { name: "Saved preparations", exact: true })
+          .getByRole("heading", { name: "My DV Lottery Entry", exact: true })
           .waitFor();
         assert.equal(tokenCalls, 2);
         await page
           .locator("#main")
           .getByText(`Signed in as ${verified.email}`, { exact: true })
           .waitFor();
-        await page
-          .getByRole("button", { name: "Back to my preparations" })
-          .click();
+        await page.getByRole("button", { name: "Back to worksheet" }).click();
         const profile = page.getByRole("button", {
           name: `Account: ${verified.email}`,
           exact: true,
@@ -298,20 +296,16 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         assert.equal(await profile.innerText(), "SU");
         assert.equal(avatarRequests, provider === "google" ? 1 : 0);
         assert.equal(
-          await page
-            .getByRole("button", {
-              name: "Open saved preparations",
-              exact: true,
-            })
-            .count(),
-          1,
+          await page.locator('[id="entrant.firstName"]').inputValue(),
+          "UNSAVED",
         );
         await page.screenshot({
           path: `/tmp/gcas-account-${provider}-${engine}.png`,
         });
-        await page
-          .getByRole("heading", { name: "UNSAVED", exact: true })
-          .waitFor();
+        assert.equal(
+          await page.locator('[id="entrant.firstName"]').inputValue(),
+          "UNSAVED",
+        );
         const stored = await page.evaluate(() => ({ ...localStorage }));
         assert.deepEqual(Object.keys(stored).sort(), [
           "gcas.auth.activity.v1",
@@ -329,9 +323,7 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         assert.deepEqual(errors, []);
         if (provider === "google") {
           // Save goes directly to the account/payment state without a consent detour.
-          await page
-            .getByRole("button", { name: "Edit document", exact: true })
-            .click();
+
           await page
             .getByRole("button", { name: "More preparation actions" })
             .click();
@@ -465,7 +457,7 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
         await profile.waitFor();
         await profile.click();
         await page
-          .getByRole("heading", { name: "Saved preparations", exact: true })
+          .getByRole("heading", { name: "My DV Lottery Entry", exact: true })
           .waitFor();
         await page
           .getByRole("button", { name: "Settings", exact: true })

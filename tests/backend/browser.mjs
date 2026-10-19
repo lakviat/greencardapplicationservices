@@ -237,12 +237,7 @@ try {
     .getByRole("button", { name: "My preparations", exact: true })
     .tap();
   await page
-    .getByRole("button", {
-      name: /^(Sign in \/ open|Open) saved preparations$/,
-    })
-    .tap();
-  await page
-    .getByRole("button", { name: "Open preparation", exact: true })
+    .getByRole("button", { name: "Continue preparation", exact: true })
     .tap();
   assert.equal(
     await page.locator('[id="entrant.birthCountry"]').inputValue(),
@@ -422,7 +417,7 @@ try {
     .getByRole("heading", { name: "My account", exact: true })
     .waitFor();
   await page
-    .getByRole("button", { name: "Open preparation", exact: true })
+    .getByRole("button", { name: "Continue preparation", exact: true })
     .waitFor();
   assert.equal(
     await page.locator(".account-control").innerText(),
@@ -438,11 +433,11 @@ try {
   );
   await page.screenshot({ path: "/tmp/gcas-v31-account-settings.png" });
   const { default: AxeBuilder } = await import("@axe-core/playwright");
-  for (const section of ["Settings", "Orders"]) {
+  for (const section of ["Settings", "My entry"]) {
     await page.getByRole("button", { name: section, exact: true }).tap();
-    if (section === "Orders")
+    if (section === "My entry")
       await page
-        .getByRole("button", { name: "Open preparation", exact: true })
+        .getByRole("button", { name: "Continue preparation", exact: true })
         .waitFor();
     const scan = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
@@ -455,9 +450,9 @@ try {
       [],
     );
   }
-  await page.getByRole("button", { name: "Orders", exact: true }).tap();
+  await page.getByRole("button", { name: "My entry", exact: true }).tap();
   await page
-    .getByRole("button", { name: "Open preparation", exact: true })
+    .getByRole("button", { name: "Continue preparation", exact: true })
     .tap();
   assert.equal(
     await page.locator('[id="entrant.firstName"]').inputValue(),
@@ -527,12 +522,7 @@ try {
     .getByRole("button", { name: "My preparations", exact: true })
     .tap();
   await page
-    .getByRole("button", {
-      name: /^(Sign in \/ open|Open) saved preparations$/,
-    })
-    .tap();
-  await page
-    .getByRole("button", { name: "Open preparation", exact: true })
+    .getByRole("button", { name: "Continue preparation", exact: true })
     .tap();
   await page.waitForFunction(
     () =>
