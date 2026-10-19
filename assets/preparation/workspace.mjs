@@ -1,4 +1,4 @@
-import { el, button, link } from "./dom.mjs?v=20261019-workspace-v38";
+import { el, button, link } from "./dom.mjs?v=20261019-workspace-v39";
 import {
   FORM_VERSION,
   PACKAGES,
@@ -13,33 +13,33 @@ import {
   warnings,
   recommendPackage,
   hasSpouse,
-} from "./schema.mjs?v=20261019-workspace-v38";
-import { COUNTRIES } from "./countries.mjs?v=20261019-workspace-v38";
+} from "./schema.mjs?v=20261019-workspace-v39";
+import { COUNTRIES } from "./countries.mjs?v=20261019-workspace-v39";
 import {
   readImage,
   drawCrop,
   photoCopy,
   passportCopy,
   scanPassport,
-} from "./media.mjs?v=20261019-workspace-v38";
+} from "./media.mjs?v=20261019-workspace-v39";
 import {
   CAPABILITIES,
   unavailable,
   capabilities,
-} from "./backend.mjs?v=20261019-workspace-v38";
-import { cloudWorkspace } from "./cloud.mjs?v=20261019-workspace-v38";
-import { accountControl } from "./account-control.mjs?v=20261019-workspace-v38";
-import { pdfViewer } from "./pdf-viewer.mjs?v=20261019-workspace-v38";
-import { worksheet } from "./worksheet.mjs?v=20261019-workspace-v38";
-import { spouseWorksheet } from "./household.mjs?v=20261019-workspace-v38";
-import { enhanceCountry } from "./country-control.mjs?v=20261019-workspace-v38";
-import { attachViewport } from "./viewport.mjs?v=20261019-workspace-v38";
-import { questionGroups } from "./presentation.mjs?v=20261019-workspace-v38";
-import { dateControl } from "./date-control.mjs?v=20261019-workspace-v38";
+} from "./backend.mjs?v=20261019-workspace-v39";
+import { cloudWorkspace } from "./cloud.mjs?v=20261019-workspace-v39";
+import { accountControl } from "./account-control.mjs?v=20261019-workspace-v39";
+import { pdfViewer } from "./pdf-viewer.mjs?v=20261019-workspace-v39";
+import { worksheet } from "./worksheet.mjs?v=20261019-workspace-v39";
+import { spouseWorksheet } from "./household.mjs?v=20261019-workspace-v39";
+import { enhanceCountry } from "./country-control.mjs?v=20261019-workspace-v39";
+import { attachViewport } from "./viewport.mjs?v=20261019-workspace-v39";
+import { questionGroups } from "./presentation.mjs?v=20261019-workspace-v39";
+import { dateControl } from "./date-control.mjs?v=20261019-workspace-v39";
 import {
   saveIndicator,
   savedAt,
-} from "./save-feedback.mjs?v=20261019-workspace-v38";
+} from "./save-feedback.mjs?v=20261019-workspace-v39";
 const app = document.querySelector("#workspace");
 const saveFeedback = saveIndicator();
 const saveStates = new WeakMap();
@@ -60,7 +60,9 @@ const cloud = cloudWorkspace({
     !!cloud.info(draft)?.updated_at,
   focusEntrySection: (stage) =>
     activate(stage === "family" ? "entrant.marital" : "entrant.lastName"),
-  accountPage: (content) => navigate("account", content),
+  accountPage: (content) => {
+    if (view === "account" || view === "dashboard") navigate("account", content);
+  },
   signedIn: () => {
     // Unfinished worksheet data remains only in memory. An account action must
     // not discard it; ordinary sign-in from the site returns to the homepage.
@@ -83,6 +85,13 @@ const cloud = cloudWorkspace({
     );
     if (view === "dashboard") renderDashboard();
     if (!account && view === "account") navigate("dashboard");
+    else if (
+      account &&
+      view === "account" &&
+      display.querySelector("[data-account-owner]")?.dataset.accountOwner !==
+        account.id
+    )
+      navigate("account");
   },
   status: (text, records = [draft]) => {
     records.forEach((record) => draftStatuses.set(record, text));
@@ -254,7 +263,7 @@ const bottom = el(
   actionsButton,
 );
 const profile = accountControl(() =>
-  cloud.account() ? cloud.dashboard() : cloud.login(),
+  cloud.account() ? navigate("account") : cloud.login(),
 );
 const header = el(
   "header",
@@ -285,7 +294,7 @@ const header = el(
   ),
   button(
     "My preparations",
-    () => (cloud.account() ? cloud.dashboard() : navigate("dashboard")),
+    () => (cloud.account() ? navigate("account") : navigate("dashboard")),
     {
       class: "button dashboard-link",
     },
@@ -2169,7 +2178,7 @@ function renderDashboard() {
   // A returning account resumes its saved entry instead of being steered toward
   // the empty in-memory worksheet (and accidentally saving another copy).
   if (cloud.account()) {
-    cloud.dashboard();
+    navigate("account");
     return;
   }
   const cards = sessionDrafts.map((record) =>
@@ -2436,11 +2445,7 @@ function navigate(next, accountContent) {
           "div",
           {},
           el("h1", {}, "My account"),
-          el(
-            "p",
-            {},
-            "Sign in to see your saved preparations and account settings.",
-          ),
+          el("p", { role: "status" }, "Connecting to your account…"),
           button("Open my account", cloud.dashboard, {
             class: "button primary",
           }),
@@ -2449,16 +2454,14 @@ function navigate(next, accountContent) {
           }),
         ),
     );
-    if (!accountContent)
-      capabilities().then(() => {
-        if (view === "account") cloud.dashboard();
-      });
+    if (!accountContent) cloud.dashboard();
   } else renderDashboard();
   bottom.hidden = view === "preview" || view === "account";
   sidebar.closest("aside").hidden = view !== "document";
   updateProgress();
   if (view !== "document") {
     display.querySelector("h1")?.setAttribute("tabindex", "-1");
+    display.querySelector("h1")?.classList.add("view-heading");
     display.querySelector("h1")?.focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: "instant" });
   }

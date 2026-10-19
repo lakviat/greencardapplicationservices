@@ -1,12 +1,14 @@
-import { el, button, link } from "./dom.mjs?v=20261019-workspace-v38";
-import { PACKAGES, price } from "./schema.mjs?v=20261019-workspace-v38";
-import { currentEntries } from "./entry-progress.mjs?v=20261019-workspace-v38";
+import { el, button, link } from "./dom.mjs?v=20261019-workspace-v39";
+import { PACKAGES, price } from "./schema.mjs?v=20261019-workspace-v39";
+import { currentEntries } from "./entry-progress.mjs?v=20261019-workspace-v39";
 
-import { savedAt } from "./save-feedback.mjs?v=20261019-workspace-v38";
+import { savedAt } from "./save-feedback.mjs?v=20261019-workspace-v39";
 
 export function accountPage({
   account,
   list,
+  snapshot,
+  subscribe,
   open,
   signOut,
   preparations,
@@ -24,6 +26,18 @@ export function accountPage({
   const tabs = {};
   let selectedId;
   let opening = false;
+  let rendered;
+  const canCheckout = () =>
+    typeof checkoutAvailable === "function"
+      ? checkoutAvailable()
+      : checkoutAvailable;
+  const show = (result) => {
+    if (selection !== "orders" || !result) return;
+    const value = JSON.stringify(result.preparations);
+    if (rendered === value) return;
+    rendered = value;
+    drawEntries(result.preparations);
+  };
   const select = (next) => {
     selection = next;
     Object.entries(tabs).forEach(([key, tab]) =>
@@ -34,13 +48,34 @@ export function accountPage({
   const orders = async () => {
     select("orders");
     const current = ++request;
-    content.replaceChildren(el("p", { role: "status" }, "Loading your entry…"));
+    const known = snapshot?.();
+    if (known) show(known);
+    else {
+      rendered = undefined;
+      content.replaceChildren(
+        el(
+          "div",
+          { class: "entry-card account-loading", role: "status" },
+          el("h2", {}, "My DV Lottery Entry"),
+          el("p", {}, "Loading your saved progress…"),
+          el("div", { class: "account-loading-bar", "aria-hidden": "true" }),
+        ),
+      );
+    }
+    if (!known) content.setAttribute("aria-busy", "true");
     try {
       const result = await list();
       if (selection !== "orders" || current !== request) return;
-      drawEntries(result.preparations);
+      show(result);
     } catch {
       if (selection !== "orders" || current !== request) return;
+      if (snapshot?.()) {
+        output.replaceChildren(
+          "Showing your last loaded progress. We could not check for updates. ",
+          button("Try again", orders, { class: "text-button" }),
+        );
+        return;
+      }
       content.replaceChildren(
         el("h2", {}, "My DV Lottery Entry"),
         el(
@@ -50,6 +85,8 @@ export function accountPage({
         ),
         button("Try again", orders, { class: "button" }),
       );
+    } finally {
+      if (current === request) content.removeAttribute("aria-busy");
     }
   };
   function drawEntries(records) {
@@ -322,7 +359,8 @@ export function accountPage({
               )
             : act(`Pay now · ${price(p.package)}`, "payment", {
                 class: "button",
-                disabled: !checkoutAvailable,
+                disabled: !canCheckout(),
+                "data-account-checkout": "",
               }),
         ),
         el(
@@ -359,6 +397,8 @@ export function accountPage({
   }
   const settings = () => {
     select("settings");
+    rendered = undefined;
+    content.removeAttribute("aria-busy");
     content.replaceChildren(
       el("h2", {}, "Settings"),
       el(
@@ -394,7 +434,7 @@ export function accountPage({
           {},
           "Saving and editing are free. Payment details are entered securely in Stripe when you choose to pay for a preparation.",
         ),
-        !checkoutAvailable
+        !canCheckout()
           ? el(
               "p",
               { class: "hint" },
@@ -452,7 +492,7 @@ export function accountPage({
   });
   const page = el(
     "div",
-    { class: "account-page" },
+    { class: "account-page", "data-account-owner": account.id },
     el("h1", {}, "My account"),
     el("p", { class: "account-email" }, `Signed in as ${account.email}`),
     el(
@@ -467,6 +507,12 @@ export function accountPage({
       ? button("Back to worksheet", backToWorksheet, { class: "button" })
       : null,
   );
+  page.dispose = subscribe?.(show);
+  page.updateAvailability = () => {
+    content.querySelectorAll("[data-account-checkout]").forEach((button) => {
+      button.disabled = !canCheckout();
+    });
+  };
   orders();
   return page;
 }

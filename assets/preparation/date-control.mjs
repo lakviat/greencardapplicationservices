@@ -1,4 +1,4 @@
-import { el } from "./dom.mjs?v=20261019-workspace-v38";
+import { el } from "./dom.mjs?v=20261019-workspace-v39";
 export function dateControl(field, value, { change, focus, blur }) {
   const [year = "", month = "", day = ""] = String(value || "").split("-");
   const group = el("div", {

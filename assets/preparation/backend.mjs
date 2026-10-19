@@ -7,7 +7,7 @@ import {
   pruneExpiredSession,
   watchSessionActivity,
   storedSession,
-} from "./auth-session.mjs?v=20261019-workspace-v38";
+} from "./auth-session.mjs?v=20261019-workspace-v39";
 export const SUPABASE_URL = "https://wofazcvfvazfkvujwwcw.supabase.co";
 const PUBLIC_KEY = "sb_publishable_qPtFiEot3EAVlP3HftCm1g_4odarxBw";
 export const CAPABILITIES = {

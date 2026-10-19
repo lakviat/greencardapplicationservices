@@ -66,6 +66,11 @@ a {
   outline: 3px solid #3978ca;
   outline-offset: 3px;
 }
+/* Route headings receive focus for screen readers, without a control outline.
+   Interactive controls retain the visible keyboard focus ring above. */
+.view-heading:focus {
+  outline: none;
+}
 [hidden] {
   display: none !important;
 }

@@ -1,5 +1,5 @@
-import { COUNTRIES } from "./countries.mjs?v=20261019-workspace-v38";
-import { PASSPORT_COUNTRIES } from "./passport-countries.mjs?v=20261019-workspace-v38";
+import { COUNTRIES } from "./countries.mjs?v=20261019-workspace-v39";
+import { PASSPORT_COUNTRIES } from "./passport-countries.mjs?v=20261019-workspace-v39";
 
 const normalize = (s) =>
   String(s)

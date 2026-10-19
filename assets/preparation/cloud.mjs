@@ -1,4 +1,4 @@
-import { beginSignIn } from "./oauth.mjs?v=20261019-workspace-v38";
+import { beginSignIn } from "./oauth.mjs?v=20261019-workspace-v39";
 import {
   api,
   acceptAuth,
@@ -8,22 +8,24 @@ import {
   CAPABILITIES,
   capabilities,
   unavailable,
-} from "./backend.mjs?v=20261019-workspace-v38";
-import { el, button, link } from "./dom.mjs?v=20261019-workspace-v38";
+} from "./backend.mjs?v=20261019-workspace-v39";
+import { el, button, link } from "./dom.mjs?v=20261019-workspace-v39";
 import {
   price,
   PACKAGES,
   preparationProgress,
   checkoutEmail,
-} from "./schema.mjs?v=20261019-workspace-v38";
-import { COUNTRIES } from "./countries.mjs?v=20261019-workspace-v38";
-import { passportUploadCopy } from "./media.mjs?v=20261019-workspace-v38";
-import { accountPage } from "./account-page.mjs?v=20261019-workspace-v38";
-import { checkoutDestination } from "./payment-links.mjs?v=20261019-workspace-v38";
+} from "./schema.mjs?v=20261019-workspace-v39";
+import { COUNTRIES } from "./countries.mjs?v=20261019-workspace-v39";
+import { passportUploadCopy } from "./media.mjs?v=20261019-workspace-v39";
+import { accountPage } from "./account-page.mjs?v=20261019-workspace-v39";
+import { accountEntries } from "./account-entries.mjs?v=20261019-workspace-v39";
+import { entryProgress } from "./entry-progress.mjs?v=20261019-workspace-v39";
+import { checkoutDestination } from "./payment-links.mjs?v=20261019-workspace-v39";
 import {
   savedAt,
   savingBar,
-} from "./save-feedback.mjs?v=20261019-workspace-v38";
+} from "./save-feedback.mjs?v=20261019-workspace-v39";
 const groups = new WeakMap();
 let account = null;
 const pendingSaves = new Set();
@@ -37,10 +39,20 @@ function scheduleSave(g, action, delay) {
   pendingSaves.add(g.timer);
 }
 export function cloudWorkspace(ui) {
+  const entries = accountEntries(() => api("list"));
+  let accountView;
+  let dashboardRequest;
+  let owner;
   const updateAccount = (session) => {
     const next = session?.user || null;
     const changed = JSON.stringify(account) !== JSON.stringify(next);
     account = next;
+    if (owner !== account?.id) {
+      accountView?.dispose?.();
+      accountView = null;
+      owner = account?.id;
+      entries.setOwner(owner);
+    }
     if (!account) {
       for (const timer of pendingSaves) clearTimeout(timer);
       pendingSaves.clear();
@@ -49,6 +61,9 @@ export function cloudWorkspace(ui) {
   };
   const ready = observeSession(updateAccount).then((client) => {
     ui.accountReady?.(account);
+    // Fetch only the small account summary while the worksheet is usable.
+    if (account) entries.refresh().catch(() => {});
+    capabilities().then(() => accountView?.updateAvailability());
     return client;
   });
   // Preserve the free worksheet even when browser account storage is blocked.
@@ -80,7 +95,6 @@ export function cloudWorkspace(ui) {
   };
   async function signIn(next) {
     const client = await ready;
-    if (!CAPABILITIES.accounts) await capabilities();
     const { data, error: sessionError } = await client.getSession();
     if (sessionError)
       throw new Error(
@@ -88,6 +102,7 @@ export function cloudWorkspace(ui) {
       );
     updateAccount(data.session);
     if (account) return next();
+    if (!CAPABILITIES.accounts) await capabilities();
     if (!CAPABILITIES.accounts) {
       message("Account setup in progress", unavailable);
       return;
@@ -151,6 +166,24 @@ export function cloudWorkspace(ui) {
         closed = true;
         attempt?.cancel();
       },
+    );
+  }
+
+  function remember(p, documents, expectedOwner) {
+    entries.update(
+      p.id,
+      {
+        id: p.id,
+        year: p.year || documents[0]?.year,
+        version: p.version || documents[0]?.version,
+        package: p.package,
+        revision: p.revision,
+        state: p.state,
+        updated_at: p.updated_at,
+        expires_at: p.expires_at,
+        entry: entryProgress({ ...p, payload: p.payload || { documents } }),
+      },
+      expectedOwner,
     );
   }
 
@@ -246,6 +279,8 @@ export function cloudWorkspace(ui) {
 
   async function save(d) {
     const g = group(d);
+    const expectedOwner = account?.id;
+    if (!CAPABILITIES.cloudSave) await capabilities();
     if (!CAPABILITIES.cloudSave)
       throw new Error(
         "Account saving is temporarily unavailable. Your changes remain in this tab.",
@@ -350,6 +385,7 @@ export function cloudWorkspace(ui) {
       g.expires_at = p.expires_at;
       g.pendingImages = pendingImages;
       g.savedChangeNumber = started;
+      remember({ ...g, ...p }, documents, expectedOwner);
       if (started === (g.changeNumber || 0)) {
         if (!pendingImages.length) ui.saved(g.documents);
         saveState(
@@ -695,8 +731,12 @@ export function cloudWorkspace(ui) {
     if (direct && !remaining && !g.pendingImages?.length) confirm.click();
   }
   async function load(id, action) {
+    const expectedOwner = account?.id;
     const { preparation: p } = await api("get", { id });
+    if (account?.id !== expectedOwner)
+      throw new Error("Your account changed. Please try again.");
     const records = p.payload.documents;
+    remember(p, records, expectedOwner);
     if (!records.length) {
       message(
         "Payment confirmed",
@@ -800,6 +840,7 @@ export function cloudWorkspace(ui) {
         );
       }).catch(error),
     async remove(d) {
+      const expectedOwner = account?.id;
       const g = groups.get(d);
       if (!g) return;
       clearTimeout(g.timer);
@@ -808,6 +849,7 @@ export function cloudWorkspace(ui) {
       clearTimeout(g.timer);
       pendingSaves.delete(g.timer);
       const result = await api("delete", { id: g.id });
+      entries.update(g.id, null, expectedOwner);
       g.state = "deleted";
       for (const r of g.documents) groups.delete(r);
       ui.remove(g.documents);
@@ -817,16 +859,26 @@ export function cloudWorkspace(ui) {
           : "Preparation and private files deleted.",
       );
     },
-    dashboard: () =>
-      signIn(() => {
+    dashboard: () => {
+      if (dashboardRequest) return dashboardRequest;
+      dashboardRequest = signIn(() => {
         const page = accountPage({
           account,
-          list: () => api("list"),
+          snapshot: entries.snapshot,
+          subscribe: entries.subscribe,
+          list: () => entries.refresh(),
           open: load,
           preparations: ui.preparations,
           backToWorksheet: ui.hasWorksheet?.() ? ui.preparations : null,
-          checkoutAvailable: CAPABILITIES.checkout,
-          submission: (id, submitted) => api("submission", { id, submitted }),
+          checkoutAvailable: () => CAPABILITIES.checkout,
+          submission: async (id, submitted) => {
+            const expectedOwner = account?.id;
+            const result = await api("submission", { id, submitted });
+            const p = entries.snapshot()?.preparations.find((p) => p.id === id);
+            if (p)
+              entries.update(id, { ...p, entry: result.entry }, expectedOwner);
+            return result;
+          },
           signOut: async () => {
             for (const timer of pendingSaves) clearTimeout(timer);
             pendingSaves.clear();
@@ -844,7 +896,15 @@ export function cloudWorkspace(ui) {
             ui.signOut();
           },
         });
+        accountView?.dispose?.();
+        accountView = page;
         ui.accountPage(page);
-      }).catch(error),
+      })
+        .catch(error)
+        .finally(() => {
+          dashboardRequest = null;
+        });
+      return dashboardRequest;
+    },
   };
 }

@@ -74,6 +74,8 @@ function session(now, sequence = 0) {
             return route.fulfill({ json: user });
           if (url.pathname.endsWith("/logout"))
             return route.fulfill({ json: {} });
+          if (url.pathname.endsWith("/list"))
+            return route.fulfill({ json: { preparations: [] } });
           throw new Error(`Unexpected request: ${url.pathname}`);
         });
         // Seed a previously completed login on a page that does not initialize Auth.

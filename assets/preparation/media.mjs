@@ -2,8 +2,8 @@ import {
   parseMRZ,
   mergeMRZ,
   scanSuggestions,
-} from "./mrz.mjs?v=20261019-workspace-v38";
-import { parsePrintedPassport } from "./passport-fields.mjs?v=20261019-workspace-v38";
+} from "./mrz.mjs?v=20261019-workspace-v39";
+import { parsePrintedPassport } from "./passport-fields.mjs?v=20261019-workspace-v39";
 // Sensitive image data and object URLs live only in memory. Nothing is uploaded here.
 export const MAX_SOURCE_BYTES = 20 * 1024 * 1024;
 export async function imageType(file) {

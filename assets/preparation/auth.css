@@ -152,6 +152,34 @@ body[data-view="account"] .draft-status {
   margin-bottom: 8px;
   letter-spacing: -0.035em;
 }
+.account-loading {
+  min-height: 440px;
+}
+.account-loading-bar {
+  height: 3px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #e5ede9;
+}
+.account-loading-bar::after {
+  content: "";
+  display: block;
+  width: 35%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--green);
+  animation: account-loading 1.6s ease-in-out infinite alternate;
+}
+@keyframes account-loading {
+  to {
+    transform: translateX(185%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .account-loading-bar::after {
+    animation: none;
+  }
+}
 .account-email {
   color: #53667b;
   font-size: 0.95rem;

@@ -2673,7 +2673,10 @@ Deno.serve(async (req) => {
     ...requestOrigin && origins.has(requestOrigin) ? {
       "Access-Control-Allow-Origin": requestOrigin,
       "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
-      "Access-Control-Allow-Methods": "POST, GET, OPTIONS"
+      "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+      // Reuse only the browser's permission check; all private responses
+      // remain no-store and every operation still authenticates the user.
+      "Access-Control-Max-Age": "3600"
     } : {}
   };
   if (requestOrigin && !origins.has(requestOrigin) && !isWebhook)
