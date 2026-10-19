@@ -190,11 +190,11 @@ const project = "https://wofazcvfvazfkvujwwcw.supabase.co";
       await context.route(base + "/checkout-test*", (route) =>
         route.fulfill({
           contentType: "text/html",
-          body: `<!doctype html><html><head><link rel="stylesheet" href="/assets/preparation/workspace.css?v=20261019-workspace-v37"></head><body><main></main><section id="dialog"></section><p id="status"></p><script type="module">
-        import {cloudWorkspace} from '/assets/preparation/cloud.mjs?v=20261019-workspace-v37';
-        import {CAPABILITIES, PROVIDERS} from '/assets/preparation/backend.mjs?v=20261019-workspace-v37';
-        import {initialDraft} from '/assets/preparation/schema.mjs?v=20261019-workspace-v37';
-        import {saveIndicator} from '/assets/preparation/save-feedback.mjs?v=20261019-workspace-v37';
+          body: `<!doctype html><html><head><link rel="stylesheet" href="/assets/preparation/workspace.css?v=20261019-workspace-v38"></head><body><main></main><section id="dialog"></section><p id="status"></p><script type="module">
+        import {cloudWorkspace} from '/assets/preparation/cloud.mjs?v=20261019-workspace-v38';
+        import {CAPABILITIES, PROVIDERS} from '/assets/preparation/backend.mjs?v=20261019-workspace-v38';
+        import {initialDraft} from '/assets/preparation/schema.mjs?v=20261019-workspace-v38';
+        import {saveIndicator} from '/assets/preparation/save-feedback.mjs?v=20261019-workspace-v38';
         const indicator=saveIndicator(); document.body.append(indicator.node);
         Object.assign(CAPABILITIES,{accounts:true,checkout:true,cloudSave:true,pdfDownload:true}); PROVIDERS.google=true;
         const scenario=new URLSearchParams(location.search);

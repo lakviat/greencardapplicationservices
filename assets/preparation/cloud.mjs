@@ -1,4 +1,4 @@
-import { beginSignIn } from "./oauth.mjs?v=20261019-workspace-v37";
+import { beginSignIn } from "./oauth.mjs?v=20261019-workspace-v38";
 import {
   api,
   acceptAuth,
@@ -8,22 +8,22 @@ import {
   CAPABILITIES,
   capabilities,
   unavailable,
-} from "./backend.mjs?v=20261019-workspace-v37";
-import { el, button, link } from "./dom.mjs?v=20261019-workspace-v37";
+} from "./backend.mjs?v=20261019-workspace-v38";
+import { el, button, link } from "./dom.mjs?v=20261019-workspace-v38";
 import {
   price,
   PACKAGES,
   preparationProgress,
   checkoutEmail,
-} from "./schema.mjs?v=20261019-workspace-v37";
-import { COUNTRIES } from "./countries.mjs?v=20261019-workspace-v37";
-import { passportUploadCopy } from "./media.mjs?v=20261019-workspace-v37";
-import { accountPage } from "./account-page.mjs?v=20261019-workspace-v37";
-import { checkoutDestination } from "./payment-links.mjs?v=20261019-workspace-v37";
+} from "./schema.mjs?v=20261019-workspace-v38";
+import { COUNTRIES } from "./countries.mjs?v=20261019-workspace-v38";
+import { passportUploadCopy } from "./media.mjs?v=20261019-workspace-v38";
+import { accountPage } from "./account-page.mjs?v=20261019-workspace-v38";
+import { checkoutDestination } from "./payment-links.mjs?v=20261019-workspace-v38";
 import {
   savedAt,
   savingBar,
-} from "./save-feedback.mjs?v=20261019-workspace-v37";
+} from "./save-feedback.mjs?v=20261019-workspace-v38";
 const groups = new WeakMap();
 let account = null;
 const pendingSaves = new Set();
@@ -824,6 +824,7 @@ export function cloudWorkspace(ui) {
           list: () => api("list"),
           open: load,
           preparations: ui.preparations,
+          backToWorksheet: ui.hasWorksheet?.() ? ui.preparations : null,
           checkoutAvailable: CAPABILITIES.checkout,
           submission: (id, submitted) => api("submission", { id, submitted }),
           signOut: async () => {

@@ -142,6 +142,9 @@
 }
 
 /* Account entry overview */
+body[data-view="account"] .draft-status {
+  display: none;
+}
 .account-page {
   max-width: 760px;
 }

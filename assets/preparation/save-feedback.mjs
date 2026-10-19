@@ -1,4 +1,4 @@
-import { el } from "./dom.mjs?v=20261019-workspace-v37";
+import { el } from "./dom.mjs?v=20261019-workspace-v38";
 
 // Server-confirmed instants, displayed in the browser's local timezone.
 export function savedAt(value) {

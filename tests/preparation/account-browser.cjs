@@ -111,6 +111,13 @@ assert.equal(new URL(base).hostname, "127.0.0.1");
         .waitFor();
       assert.equal(await page.locator(".entry-card").count(), 1);
       assert.equal(
+        await page
+          .getByRole("button", { name: "Back to worksheet", exact: true })
+          .count(),
+        0,
+        "a fresh visit resumes the saved entry instead of an empty worksheet",
+      );
+      assert.equal(
         await page.locator(".entry-applicant").innerText(),
         "SYNTHETIC PERSON",
       );

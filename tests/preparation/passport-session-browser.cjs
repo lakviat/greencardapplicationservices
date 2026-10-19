@@ -95,7 +95,9 @@ const publicPages = fs
       await page
         .getByRole("heading", { name: "My DV Lottery Entry", exact: true })
         .waitFor();
-      await page.getByRole("button", { name: "Back to worksheet" }).click();
+      await page
+        .getByRole("button", { name: "Start preparation", exact: true })
+        .click();
 
       const image = await page.evaluate(() => {
         const c = document.createElement("canvas");
@@ -230,9 +232,9 @@ const publicPages = fs
               c.toBlob(resolve, "image/png"),
             );
             const { scanPassport } =
-              await import("/assets/preparation/media.mjs?v=20261019-workspace-v37");
+              await import("/assets/preparation/media.mjs?v=20261019-workspace-v38");
             const { COUNTRIES } =
-              await import("/assets/preparation/countries.mjs?v=20261019-workspace-v37");
+              await import("/assets/preparation/countries.mjs?v=20261019-workspace-v38");
             return scanPassport(
               blob,
               COUNTRIES.map((c) => c.name),

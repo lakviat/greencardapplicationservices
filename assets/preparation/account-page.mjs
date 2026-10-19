@@ -1,8 +1,8 @@
-import { el, button, link } from "./dom.mjs?v=20261019-workspace-v37";
-import { PACKAGES, price } from "./schema.mjs?v=20261019-workspace-v37";
-import { currentEntries } from "./entry-progress.mjs?v=20261019-workspace-v37";
+import { el, button, link } from "./dom.mjs?v=20261019-workspace-v38";
+import { PACKAGES, price } from "./schema.mjs?v=20261019-workspace-v38";
+import { currentEntries } from "./entry-progress.mjs?v=20261019-workspace-v38";
 
-import { savedAt } from "./save-feedback.mjs?v=20261019-workspace-v37";
+import { savedAt } from "./save-feedback.mjs?v=20261019-workspace-v38";
 
 export function accountPage({
   account,
@@ -10,6 +10,7 @@ export function accountPage({
   open,
   signOut,
   preparations,
+  backToWorksheet,
   checkoutAvailable,
   submission,
 }) {
@@ -462,7 +463,9 @@ export function accountPage({
     ),
     content,
     output,
-    button("Back to worksheet", preparations, { class: "button" }),
+    backToWorksheet
+      ? button("Back to worksheet", backToWorksheet, { class: "button" })
+      : null,
   );
   orders();
   return page;
